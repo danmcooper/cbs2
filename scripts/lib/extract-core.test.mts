@@ -123,6 +123,14 @@ describe('extractHints', () => {
     expect(extractHints(inline)).toEqual([{ flipped: [0], clues: [0], reveals: [1] }]);
   });
 
+  it('supports hints arrays the bundler emitted as JSON.parse strings', () => {
+    const steps = '[{"flipped":[0],"clues":[0],"reveals":[1]}]';
+    const viaIdent = bundle.replace(/dv=\[.*?\],hv=/, `dv=JSON.parse('${steps}'),hv=`);
+    expect(extractHints(viaIdent)).toEqual([{ flipped: [0], clues: [0], reveals: [1] }]);
+    const inline = bundle.replace('hints:dv', `hints:JSON.parse('${steps}')`);
+    expect(extractHints(inline)).toEqual([{ flipped: [0], clues: [0], reveals: [1] }]);
+  });
+
   it('returns null when the bundle has no hints (or an empty list)', () => {
     expect(extractHints(bundle.replace('hints:dv,supportsHints:hv,', ''))).toBeNull();
     expect(extractHints(bundle.replace('hints:dv', 'hints:[]'))).toBeNull();

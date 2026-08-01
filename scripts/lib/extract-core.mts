@@ -56,9 +56,19 @@ function matchBalanced(text: string, start: number, open: string, close: string)
   return -1;
 }
 
-/** Bracket-match the array literal starting at `start` and evaluate it in a sandbox. */
+/** An array value in the bundle: a literal, or a `JSON.parse("…")` call. */
+const ARRAY_VALUE = String.raw`\[|JSON\.parse\(`;
+
+/**
+ * Delimit the array-valued expression starting at `start` and evaluate it in a
+ * sandbox. Bundlers emit large arrays as `JSON.parse("…")` (it parses faster
+ * than a literal), so match parens for that form and brackets for a literal.
+ */
 function evalArrayAt(bundle: string, start: number, stage: ExtractStage): unknown[] {
-  const end = matchBalanced(bundle, start, '[', ']');
+  const json = bundle.startsWith('JSON.parse(', start);
+  const end = json
+    ? matchBalanced(bundle, start + 'JSON.parse'.length, '(', ')')
+    : matchBalanced(bundle, start, '[', ']');
   if (end === -1) throw new ExtractError(stage, 'unbalanced brackets after array signature');
   const src = bundle.slice(start, end + 1);
   let value: unknown;
@@ -92,21 +102,22 @@ function bundleSupportsHints(bundle: string): boolean {
 
 /**
  * The bundle's level config carries a precomputed `hints:[{flipped,clues,reveals},…]`
- * ladder (inline or via a minified identifier). Older/hint-less puzzles omit it;
+ * ladder (inline or via a minified identifier, as a literal or a JSON.parse
+ * call). Older/hint-less puzzles omit it;
  * `hints:` keys elsewhere (e.g. the preferences object) don't resolve to that
  * shape and are skipped. Returns null when the puzzle has no usable hints.
  */
 export function extractHints(bundle: string): HintStep[] | null {
   let resolved = false;
-  for (const m of bundle.matchAll(/[,{]hints:(\[|[\w$]+)/g)) {
+  for (const m of bundle.matchAll(new RegExp(`[,{]hints:(${ARRAY_VALUE}|[\\w$]+)`, 'g'))) {
     let start: number;
-    if (m[1] === '[') {
-      start = m.index + m[0].length - 1;
+    if (m[1] === '[' || m[1].startsWith('JSON.parse')) {
+      start = m.index + m[0].length - m[1].length;
     } else {
       const ident = m[1].replace(/\$/g, '\\$');
-      const def = bundle.match(new RegExp(`[,;=\\s({]${ident}=\\[`));
+      const def = bundle.match(new RegExp(`[,;=\\s({]${ident}=(${ARRAY_VALUE})`));
       if (!def || def.index === undefined) continue;
-      start = def.index + def[0].length - 1;
+      start = def.index + def[0].length - def[1].length;
     }
     const value = evalArrayAt(bundle, start, 'hints-parse');
     const steps = value.filter((raw): raw is HintStep => {
