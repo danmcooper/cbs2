@@ -289,7 +289,47 @@ describe('timer display', () => {
     expect(document.querySelector('.timer')?.textContent).toMatch(/^Elapsed: 03h:06m:1\ds$/);
   });
 
-  it('elapsed keeps running on a solved puzzle', async () => {
+  it('elapsed stops when the puzzle is solved', async () => {
+    localStorage.setItem('cbs:pref:timerMode', 'elapsed');
+    const user = fakeTimersUser();
+    await renderGame(user);
+    act(() => void vi.advanceTimersByTime(9_000));
+    for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
+      await user.click(screen.getByText(name));
+      await user.click(screen.getByRole('button', { name: verdict }));
+    }
+    const timer = document.querySelector('.timer');
+    const atSolve = timer?.textContent;
+    expect(atSolve).toMatch(/^Elapsed: 00:0\d$/);
+    finishDelay();
+    act(() => void vi.advanceTimersByTime(30_000));
+    expect(timer?.textContent).toBe(atSolve);
+  });
+
+  it('elapsed on a solved puzzle survives a refresh', async () => {
+    localStorage.setItem('cbs:pref:timerMode', 'elapsed');
+    localStorage.setItem(
+      'cbs:progress:a6f09e2713b2',
+      JSON.stringify({
+        flipped: [0, 1, 2, 3],
+        mistakes: 0,
+        elapsedMs: 125_000,
+        startedAt: Date.now() - 60 * 60_000,
+        completedAt: Date.now() - 55 * 60_000,
+        completed: true,
+      }),
+    );
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    const timer = document.querySelector('.timer');
+    expect(timer?.textContent).toBe('Elapsed: 05:00');
+    await new Promise((r) => setTimeout(r, 1200));
+    expect(timer?.textContent).toBe('Elapsed: 05:00');
+  });
+
+  // Saves from before the finish time was recorded have nothing better to
+  // fall back on than the puzzle timer.
+  it('a solved puzzle with no recorded finish time shows the timed total', async () => {
     localStorage.setItem('cbs:pref:timerMode', 'elapsed');
     localStorage.setItem(
       'cbs:progress:a6f09e2713b2',
@@ -303,11 +343,7 @@ describe('timer display', () => {
     );
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    const timer = document.querySelector('.timer');
-    expect(timer?.textContent).toMatch(/^Elapsed: 05:2\d$/);
-    await new Promise((r) => setTimeout(r, 1200));
-    expect(timer?.textContent).toMatch(/^Elapsed: 05:2\d$/);
-    expect(timer?.textContent).not.toBe('Elapsed: 05:22');
+    expect(document.querySelector('.timer')?.textContent).toBe('Elapsed: 02:05');
   });
 });
 
@@ -683,6 +719,30 @@ describe('pause persistence', () => {
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeNull();
+  });
+
+  it('a solved puzzle is never paused, and cannot be paused', async () => {
+    // Paused mid-solve on the previous visit, then reopened already solved.
+    localStorage.setItem('cbs:paused:a6f09e2713b2', '1');
+    localStorage.setItem(
+      'cbs:progress:a6f09e2713b2',
+      JSON.stringify({ flipped: [0, 1, 2, 3], mistakes: 0, elapsedMs: 65_000, completed: true }),
+    );
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.pause-overlay')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Pause' })).toHaveProperty('disabled', true);
+  });
+
+  it('disables the pause button as soon as the puzzle is solved', async () => {
+    const user = fakeTimersUser();
+    await renderGame(user);
+    expect(screen.getByRole('button', { name: 'Pause' })).toHaveProperty('disabled', false);
+    for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
+      await user.click(screen.getByText(name));
+      await user.click(screen.getByRole('button', { name: verdict }));
+    }
+    expect(screen.getByRole('button', { name: 'Pause' })).toHaveProperty('disabled', true);
   });
 
   it('does not stay paused after a reset', async () => {

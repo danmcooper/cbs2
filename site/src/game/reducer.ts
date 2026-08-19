@@ -19,6 +19,8 @@ export interface GameState {
   lastActionAt: number | null;
   /** Wall-clock time the puzzle was first started (for the elapsed display). */
   startedAt: number | null;
+  /** Wall-clock time of the final flip; stops the elapsed display. */
+  completedAt: number | null;
   rejectedIndex: number | null;
   /** The verdict the player picked when rejectedIndex was set. */
   rejectedGuess: Guess | null;
@@ -60,6 +62,7 @@ export type GameAction =
       mistakes: number;
       elapsedMs: number;
       startedAt?: number | null;
+      completedAt?: number | null;
       tags?: Record<number, Tag>;
       marks?: Record<number, Tag>;
       wrong?: number[];
@@ -79,6 +82,7 @@ export function initialGameState(puzzle: Puzzle): GameState {
     elapsedMs: 0,
     lastActionAt: null,
     startedAt: null,
+    completedAt: null,
     rejectedIndex: null,
     rejectedGuess: null,
     blocked: {},
@@ -175,6 +179,7 @@ export function gameReducer(puzzle: Puzzle, state: GameState, action: GameAction
         rejectedGuess: null,
         blocked: {}, // a new reveal is new evidence; blocked verdicts open back up
         completed,
+        completedAt: completed ? action.now : null,
         // The real site's undim-all default: every clue undims at completion.
         consumed: completed ? [] : timed.consumed,
         // A pending hint taints exactly this flip, then everything resets.
@@ -231,7 +236,9 @@ export function gameReducer(puzzle: Puzzle, state: GameState, action: GameAction
           ? state.consumed.filter((i) => i !== action.index)
           : [...state.consumed, action.index],
       };
-    case 'restore':
+    case 'restore': {
+      const completed = action.flipped.length === puzzle.people.length;
+      const startedAt = action.startedAt ?? null;
       return {
         ...initialGameState(puzzle),
         flipped: [...action.flipped],
@@ -239,8 +246,13 @@ export function gameReducer(puzzle: Puzzle, state: GameState, action: GameAction
         elapsedMs: action.elapsedMs,
         // Saves from before the elapsed display have no start time; the next
         // start/tick stamps one.
-        startedAt: action.startedAt ?? null,
-        completed: action.flipped.length === puzzle.people.length,
+        startedAt,
+        // Saves from before the finish time was recorded fall back to the
+        // puzzle timer, so a solved puzzle still shows a settled elapsed time.
+        completedAt:
+          action.completedAt ??
+          (completed && startedAt !== null ? startedAt + action.elapsedMs : null),
+        completed,
         tags: { ...action.tags },
         marks: { ...action.marks },
         wrong: [...(action.wrong ?? [])],
@@ -248,5 +260,6 @@ export function gameReducer(puzzle: Puzzle, state: GameState, action: GameAction
         hinted: { ...action.hinted },
         pendingHint: action.pendingHint ?? null,
       };
+    }
   }
 }

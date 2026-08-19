@@ -276,10 +276,13 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
   // pause the player asked for is sticky: a refresh comes back paused. An
   // auto-pause only parks the puzzle - a refresh resumes, but a fresh visit
   // (the tab was closed, the phone was locked) stays paused until unpaused.
+  // A solved puzzle is never paused - there is no clock left to stop, so a
+  // pause left over from mid-solve is dropped.
   const [paused, setPaused] = useState(
     () =>
-      localStorage.getItem(`cbs:paused:${puzzle.id}`) === "1" ||
-      (localStorage.getItem(parkedKey(puzzle.id)) === "1" && !wasReload()),
+      !state.completed &&
+      (localStorage.getItem(`cbs:paused:${puzzle.id}`) === "1" ||
+        (localStorage.getItem(parkedKey(puzzle.id)) === "1" && !wasReload())),
   );
 
   // The park flag is consumed by the mount above; drop it so it can only ever
@@ -390,16 +393,18 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
     setTimerMode(next);
   };
 
-  // Elapsed mode is wall-clock since the puzzle was started - it ignores
-  // pauses and completion, so it needs its own clock.
+  // Elapsed mode is wall-clock from the start of the puzzle - it ignores
+  // pauses, so it needs its own clock. It runs to now while the puzzle is
+  // unsolved, and stops at the winning flip once it is solved.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (timerMode !== "elapsed") return;
+    if (timerMode !== "elapsed" || state.completed) return;
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [timerMode]);
-  const sinceStart = state.startedAt === null ? 0 : now - state.startedAt;
+  }, [timerMode, state.completed]);
+  const until = state.completedAt ?? now;
+  const sinceStart = state.startedAt === null ? 0 : until - state.startedAt;
   const [resetOpen, setResetOpen] = useState(false);
 
   // Only the button writes the sticky flag - it's the one pause the player
@@ -451,6 +456,7 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
             <button
               className="btn-pause"
               aria-label={paused ? "Unpause" : "Pause"}
+              disabled={state.completed}
               onClick={togglePause}
             >
               {/* The action the button performs: bars while running, triangle

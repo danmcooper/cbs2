@@ -5,6 +5,7 @@ export interface SavedProgress {
   mistakes: number;
   elapsedMs: number;
   startedAt?: number | null;
+  completedAt?: number | null;
   completed: boolean;
   tags?: Record<number, Tag>;
   marks?: Record<number, Tag>;
@@ -39,8 +40,8 @@ function isSavedProgress(v: unknown): v is SavedProgress {
     p.pendingHint === undefined ||
     p.pendingHint === null ||
     validLevels.includes(p.pendingHint as string);
-  const startedOk =
-    p.startedAt === undefined || p.startedAt === null || typeof p.startedAt === 'number';
+  const timeOk = (v: unknown) => v === undefined || v === null || typeof v === 'number';
+  const startedOk = timeOk(p.startedAt) && timeOk(p.completedAt);
   return (
     hintedOk &&
     pendingOk &&
