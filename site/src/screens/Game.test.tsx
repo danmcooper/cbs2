@@ -28,6 +28,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   vi.useRealTimers();
 });
 
@@ -261,14 +262,14 @@ describe('timer display', () => {
     const user = userEvent.setup();
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    const timer = screen.getByText('Timed: 2 min');
+    const timer = screen.getByText('Timed: < 3 min');
     await user.click(timer);
     expect(timer.textContent).toBe('Timed: 02:05');
     await user.click(timer);
     // Wall-clock since the start, not the (paused-aware) puzzle timer.
     expect(timer.textContent).toMatch(/^Elapsed: 03d:04h:00m:0\ds$/);
     await user.click(timer);
-    expect(timer.textContent).toBe('Timed: 2 min');
+    expect(timer.textContent).toBe('Timed: < 3 min');
   });
 
   it('elapsed trims the units it does not need', async () => {
@@ -314,13 +315,13 @@ describe('timer under a minute', () => {
   it('shows 0 min from the start so seconds are reachable', async () => {
     const user = userEvent.setup();
     await renderGame();
-    const timer = screen.getByText('Timed: 0 min');
+    const timer = screen.getByText('Timed: < 1 min');
     await user.click(timer);
     expect(timer.textContent).toMatch(/^Timed: 00:0\d$/);
     await user.click(timer);
     expect(timer.textContent).toMatch(/^Elapsed: 00:0\d$/);
     await user.click(timer);
-    expect(timer.textContent).toBe('Timed: 0 min');
+    expect(timer.textContent).toBe('Timed: < 1 min');
   });
 });
 
@@ -346,7 +347,7 @@ describe('control bar', () => {
   it('shows the date line with date left and time right', async () => {
     await renderGame();
     const line = document.querySelector('.date-line');
-    expect(line?.textContent).toBe('Jul 7th 2026 (Easy)Timed: 0 min');
+    expect(line?.textContent).toBe('Jul 7th 2026 (Easy)Timed: < 1 min');
     expect(screen.getByRole('button', { name: /show hint/i })).toBeTruthy();
   });
 
@@ -505,7 +506,7 @@ describe('timer resume', () => {
     const user = userEvent.setup();
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    const timer = screen.getByText('Timed: 2 min');
+    const timer = screen.getByText('Timed: < 3 min');
     await user.click(timer);
     expect(timer.textContent).toBe('Timed: 02:05');
     await new Promise((r) => setTimeout(r, 1200));
@@ -522,7 +523,7 @@ describe('seconds preference', () => {
     const user = userEvent.setup();
     const first = render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    await user.click(screen.getByText('Timed: 2 min'));
+    await user.click(screen.getByText('Timed: < 3 min'));
     expect(document.querySelector('.timer')?.textContent).toMatch(/^Timed: \d{2}:\d{2}$/);
     first.unmount();
 
@@ -586,6 +587,100 @@ describe('pause persistence', () => {
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Unpause' })).toBeTruthy();
+  });
+
+  // jsdom has no real page lifecycle, so hiding is simulated the way the
+  // browser reports it: visibilityState plus the event.
+  function setHidden(hidden: boolean) {
+    Object.defineProperty(document, 'visibilityState', {
+      value: hidden ? 'hidden' : 'visible',
+      configurable: true,
+    });
+    act(() => void document.dispatchEvent(new Event('visibilitychange')));
+  }
+
+  async function startAndPlay(user: ReturnType<typeof userEvent.setup>) {
+    await screen.findAllByRole('group');
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(screen.getByText('mira'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' }));
+  }
+
+  it('pauses on the spot when the page is hidden, and reopens paused', async () => {
+    const user = userEvent.setup();
+    const first = render(<Game date="2026-07-07" />);
+    await startAndPlay(user);
+    expect(document.querySelector('.pause-overlay')).toBeNull();
+
+    setHidden(true); // locking the phone, switching apps, switching tabs
+    expect(document.querySelector('.pause-overlay')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Unpause' })).toBeTruthy();
+    setHidden(false);
+    first.unmount();
+
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.pause-overlay')).toBeTruthy();
+  });
+
+  it('unpausing after an auto-pause clears it, so a refresh keeps playing', async () => {
+    const user = userEvent.setup();
+    const first = render(<Game date="2026-07-07" />);
+    await startAndPlay(user);
+    setHidden(true);
+    setHidden(false);
+    await user.click(screen.getByRole('button', { name: 'Unpause' }));
+    first.unmount();
+
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.pause-overlay')).toBeNull();
+  });
+
+  it('parks the puzzle when the page is left, so reopening it is paused', async () => {
+    const user = userEvent.setup();
+    const first = render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(screen.getByText('mira'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' })); // progress: now parkable
+    act(() => void window.dispatchEvent(new Event('pagehide')));
+    first.unmount();
+
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.pause-overlay')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Unpause' })).toBeTruthy();
+  });
+
+  it('a plain refresh ignores the park and keeps playing', async () => {
+    const user = userEvent.setup();
+    const first = render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(screen.getByText('mira'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' }));
+    act(() => void window.dispatchEvent(new Event('pagehide')));
+    first.unmount();
+
+    vi.spyOn(performance, 'getEntriesByType').mockReturnValue([
+      { type: 'reload' } as PerformanceNavigationTiming,
+    ]);
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.pause-overlay')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy();
+  });
+
+  it('an unstarted puzzle is not parked', async () => {
+    const first = render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    act(() => void window.dispatchEvent(new Event('pagehide')));
+    first.unmount();
+
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.pause-overlay')).toBeNull();
   });
 
   it('does not stay paused after a reset', async () => {

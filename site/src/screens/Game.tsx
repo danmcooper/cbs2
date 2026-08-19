@@ -226,6 +226,15 @@ function GuessModal({
   );
 }
 
+/** Set when the page is left with a puzzle in progress; cleared on the next mount. */
+const parkedKey = (puzzleId: string) => `cbs:parked:${puzzleId}`;
+
+/** True when this page load is a refresh, as opposed to a fresh visit. */
+function wasReload(): boolean {
+  const [nav] = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+  return nav?.type === "reload";
+}
+
 // The real site lets the final flip, Correct! bubble, and board settle play
 // out before the results popup and post-solve controls appear.
 const RESULTS_DELAY_MS = 2700;
@@ -258,21 +267,62 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
     }
   }, [state.completed]);
 
-  // Paused state persists per-puzzle, so a refresh while paused stays paused.
+  const begun =
+    state.elapsedMs > 0 ||
+    state.mistakes > 0 ||
+    state.flipped.length > puzzle.initialReveals.length;
+
+  // Two flags, because they answer different questions on the next load. A
+  // pause the player asked for is sticky: a refresh comes back paused. An
+  // auto-pause only parks the puzzle - a refresh resumes, but a fresh visit
+  // (the tab was closed, the phone was locked) stays paused until unpaused.
   const [paused, setPaused] = useState(
-    () => localStorage.getItem(`cbs:paused:${puzzle.id}`) === "1",
+    () =>
+      localStorage.getItem(`cbs:paused:${puzzle.id}`) === "1" ||
+      (localStorage.getItem(parkedKey(puzzle.id)) === "1" && !wasReload()),
   );
+
+  // The park flag is consumed by the mount above; drop it so it can only ever
+  // apply to the leave that wrote it.
   useEffect(() => {
-    localStorage.setItem(`cbs:paused:${puzzle.id}`, paused ? "1" : "0");
-  }, [paused, puzzle.id]);
+    localStorage.removeItem(parkedKey(puzzle.id));
+  }, [puzzle.id]);
+
+  // Anything that hides the page - locking the phone, switching apps or tabs,
+  // minimizing, closing - stops the clock. visibilitychange is the prompt,
+  // reliable signal (background timers are throttled, not stopped, so without
+  // this the hidden page keeps crediting time in minute-long chunks);
+  // pagehide is the backstop for a teardown that skips straight to unload.
+  useEffect(() => {
+    if (!begun || state.completed || paused) return;
+    const park = () => {
+      localStorage.setItem(parkedKey(puzzle.id), "1");
+      dispatch({ type: "pause", now: Date.now() });
+      setPaused(true);
+    };
+    const onHide = () => {
+      if (document.visibilityState === "hidden") park();
+    };
+    // Restoring from the back/forward cache keeps the live React state, so
+    // that path has to be paused here rather than at the next mount.
+    const restore = (e: PageTransitionEvent) => {
+      if (e.persisted) park();
+    };
+    // A tab restored in the background is already hidden, and no event is coming.
+    if (document.visibilityState === "hidden") park();
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", park);
+    window.addEventListener("pageshow", restore);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", park);
+      window.removeEventListener("pageshow", restore);
+    };
+  }, [begun, state.completed, paused, puzzle.id, dispatch]);
 
   // A started puzzle resumes its clock immediately after a page refresh,
   // unless it was left paused (that stays paused until unpaused).
   useEffect(() => {
-    const begun =
-      state.elapsedMs > 0 ||
-      state.mistakes > 0 ||
-      state.flipped.length > puzzle.initialReveals.length;
     if (begun && !state.completed && !paused) dispatch({ type: "start", now: Date.now() });
     // Mount-time resume only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -330,7 +380,9 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
     return () => clearInterval(id);
   }, [state.completed, dispatch]);
   const elapsed = state.elapsedMs;
-  const minutes = Math.floor(elapsed / 60_000);
+  // The coarse reading is an upper bound, so 1:20 reads "< 2 min" rather than
+  // claiming a flat minute.
+  const minutes = Math.floor(elapsed / 60_000) + 1;
   const [timerMode, setTimerMode] = useState<TimerMode>(loadTimerMode);
   const cycleTimerMode = () => {
     const next = TIMER_MODES[(TIMER_MODES.indexOf(timerMode) + 1) % TIMER_MODES.length];
@@ -350,7 +402,11 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
   const sinceStart = state.startedAt === null ? 0 : now - state.startedAt;
   const [resetOpen, setResetOpen] = useState(false);
 
+  // Only the button writes the sticky flag - it's the one pause the player
+  // chose, so it's the one that should survive a refresh.
   const togglePause = () => {
+    localStorage.setItem(`cbs:paused:${puzzle.id}`, paused ? "0" : "1");
+    localStorage.removeItem(parkedKey(puzzle.id));
     if (paused) {
       dispatch({ type: "start", now: Date.now() });
       setPaused(false);
@@ -364,6 +420,8 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
 
   const confirmReset = () => {
     dispatch({ type: "reset" });
+    localStorage.setItem(`cbs:paused:${puzzle.id}`, "0");
+    localStorage.removeItem(parkedKey(puzzle.id));
     setResetOpen(false);
     setPaused(false);
     setStartOpen(true);
@@ -436,7 +494,7 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
                 ? `Elapsed: ${formatElapsed(sinceStart)}`
                 : timerMode === "seconds"
                   ? `Timed: ${formatTime(elapsed)}`
-                  : `Timed: ${minutes} min`}
+                  : `Timed: < ${minutes} min`}
             </span>
           </p>
         </div>
