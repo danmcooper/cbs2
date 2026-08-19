@@ -351,18 +351,20 @@ describe('control bar', () => {
     expect(screen.getByRole('button', { name: /show hint/i })).toBeTruthy();
   });
 
-  it('the play/pause icon button dims the board and toggles, keeping the same icon', async () => {
+  it('the play/pause icon button dims the board and shows the action it performs', async () => {
     const user = userEvent.setup();
     await renderGame();
     const pause = screen.getByRole('button', { name: 'Pause' });
-    // A drawn play/pause icon (triangle + two bars), same in both states.
+    // Running: two bars, no triangle.
     expect(pause.querySelectorAll('svg rect')).toHaveLength(2);
-    expect(pause.querySelector('svg path')).toBeTruthy();
+    expect(pause.querySelector('svg path')).toBeNull();
     expect(pause.className).toContain('btn-pause');
     await user.click(pause);
     expect(document.querySelector('.pause-overlay')).toBeTruthy();
     const unpause = screen.getByRole('button', { name: 'Unpause' });
-    expect(unpause.querySelector('svg path')).toBeTruthy(); // icon stays while paused
+    // Paused: the play triangle instead.
+    expect(unpause.querySelector('svg path')).toBeTruthy();
+    expect(unpause.querySelectorAll('svg rect')).toHaveLength(0);
     expect(unpause.textContent).toBe(''); // no text swap
     await user.click(unpause);
     expect(document.querySelector('.pause-overlay')).toBeNull();

@@ -453,14 +453,20 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
               aria-label={paused ? "Unpause" : "Pause"}
               onClick={togglePause}
             >
-              {/* Play/pause combo (triangle + two bars), one icon for both states. */}
+              {/* The action the button performs: bars while running, triangle
+                  while paused. Drawn rather than emoji, which vary by platform. */}
               <svg viewBox="0 0 20 16" width="18" height="14" aria-hidden="true">
-                <path
-                  d="M2.6 2.6 C2.6 1.4 3.5 1 4.3 1.7 L9.6 7.1 C10.1 7.6 10.1 8.4 9.6 8.9 L4.3 14.3 C3.5 15 2.6 14.6 2.6 13.4 Z"
-                  fill="currentColor"
-                />
-                <rect x="12" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
-                <rect x="16.8" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
+                {paused ? (
+                  <path
+                    d="M6.9 2.6 C6.9 1.4 7.8 1 8.6 1.7 L13.9 7.1 C14.4 7.6 14.4 8.4 13.9 8.9 L8.6 14.3 C7.8 15 6.9 14.6 6.9 13.4 Z"
+                    fill="currentColor"
+                  />
+                ) : (
+                  <>
+                    <rect x="6.2" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
+                    <rect x="11" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
+                  </>
+                )}
               </svg>
             </button>
             <button
