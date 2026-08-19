@@ -12,6 +12,39 @@ function formatTime(ms: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+// Wall-clock elapsed, biggest-first and trimmed to what's needed. Under an
+// hour it's plain mm:ss (00:22, 12:05); past that the units are labelled
+// (03h:06m:12s, 11d:02h:05m:00s).
+function formatElapsed(ms: number): string {
+  let rest = Math.max(0, Math.floor(ms / 1000));
+  if (rest < 3_600) return formatTime(rest * 1000);
+  const parts: string[] = [];
+  for (const [suffix, size] of [
+    ["d", 86_400],
+    ["h", 3_600],
+    ["m", 60],
+    ["s", 1],
+  ] as const) {
+    const value = Math.floor(rest / size);
+    rest %= size;
+    if (parts.length === 0 && value === 0 && suffix !== "s") continue;
+    parts.push(`${String(value).padStart(2, "0")}${suffix}`);
+  }
+  return parts.join(":");
+}
+
+/** Timer display, cycled by tapping it; the choice is kept in localStorage. */
+type TimerMode = "minutes" | "seconds" | "elapsed";
+const TIMER_MODES: TimerMode[] = ["minutes", "seconds", "elapsed"];
+const TIMER_MODE_KEY = "cbs:pref:timerMode";
+
+function loadTimerMode(): TimerMode {
+  const saved = localStorage.getItem(TIMER_MODE_KEY);
+  if (TIMER_MODES.includes(saved as TimerMode)) return saved as TimerMode;
+  // Migrate the old two-state seconds toggle.
+  return localStorage.getItem("cbs:pref:showSeconds") === "1" ? "seconds" : "minutes";
+}
+
 // "2026-07-07" -> "Jul 7th 2026"
 function formatDateOrdinal(date: string): string {
   const d = new Date(`${date}T00:00:00`);
@@ -298,14 +331,23 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
   }, [state.completed, dispatch]);
   const elapsed = state.elapsedMs;
   const minutes = Math.floor(elapsed / 60_000);
-  const [showSeconds, setShowSeconds] = useState(
-    () => localStorage.getItem("cbs:pref:showSeconds") === "1",
-  );
-  const toggleSeconds = () => {
-    const next = !showSeconds;
-    localStorage.setItem("cbs:pref:showSeconds", next ? "1" : "0");
-    setShowSeconds(next);
+  const [timerMode, setTimerMode] = useState<TimerMode>(loadTimerMode);
+  const cycleTimerMode = () => {
+    const next = TIMER_MODES[(TIMER_MODES.indexOf(timerMode) + 1) % TIMER_MODES.length];
+    localStorage.setItem(TIMER_MODE_KEY, next);
+    setTimerMode(next);
   };
+
+  // Elapsed mode is wall-clock since the puzzle was started - it ignores
+  // pauses and completion, so it needs its own clock.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (timerMode !== "elapsed") return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [timerMode]);
+  const sinceStart = state.startedAt === null ? 0 : now - state.startedAt;
   const [resetOpen, setResetOpen] = useState(false);
 
   const togglePause = () => {
@@ -389,8 +431,12 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
             <span>
               {formatDateOrdinal(puzzle.date)} ({puzzle.difficulty})
             </span>
-            <span className="timer" onClick={toggleSeconds}>
-              {showSeconds ? formatTime(elapsed) : `${minutes} Minute${minutes === 1 ? '' : 's'}`}
+            <span className="timer" onClick={cycleTimerMode}>
+              {timerMode === "elapsed"
+                ? `Elapsed: ${formatElapsed(sinceStart)}`
+                : timerMode === "seconds"
+                  ? `Timed: ${formatTime(elapsed)}`
+                  : `Timed: ${minutes} min`}
             </span>
           </p>
         </div>

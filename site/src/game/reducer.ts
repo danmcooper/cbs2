@@ -17,6 +17,8 @@ export interface GameState {
   mistakes: number;
   elapsedMs: number;
   lastActionAt: number | null;
+  /** Wall-clock time the puzzle was first started (for the elapsed display). */
+  startedAt: number | null;
   rejectedIndex: number | null;
   /** The verdict the player picked when rejectedIndex was set. */
   rejectedGuess: Guess | null;
@@ -57,6 +59,7 @@ export type GameAction =
       flipped: number[];
       mistakes: number;
       elapsedMs: number;
+      startedAt?: number | null;
       tags?: Record<number, Tag>;
       marks?: Record<number, Tag>;
       wrong?: number[];
@@ -75,6 +78,7 @@ export function initialGameState(puzzle: Puzzle): GameState {
     mistakes: 0,
     elapsedMs: 0,
     lastActionAt: null,
+    startedAt: null,
     rejectedIndex: null,
     rejectedGuess: null,
     blocked: {},
@@ -117,13 +121,20 @@ export function liveElapsedMs(state: GameState, now: number): number {
 
 function tick(state: GameState, now: number): GameState {
   const delta = state.lastActionAt === null ? 0 : Math.min(now - state.lastActionAt, MAX_TICK_MS);
-  return { ...state, elapsedMs: state.elapsedMs + Math.max(delta, 0), lastActionAt: now };
+  return {
+    ...state,
+    elapsedMs: state.elapsedMs + Math.max(delta, 0),
+    lastActionAt: now,
+    startedAt: state.startedAt ?? now,
+  };
 }
 
 export function gameReducer(puzzle: Puzzle, state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'start':
-      return state.lastActionAt === null ? { ...state, lastActionAt: action.now } : state;
+      return state.lastActionAt === null
+        ? { ...state, lastActionAt: action.now, startedAt: state.startedAt ?? action.now }
+        : state;
     case 'pause':
       // Fold accrued time in, then stop the clock until the next start.
       return state.lastActionAt === null ? state : { ...tick(state, action.now), lastActionAt: null };
@@ -226,6 +237,9 @@ export function gameReducer(puzzle: Puzzle, state: GameState, action: GameAction
         flipped: [...action.flipped],
         mistakes: action.mistakes,
         elapsedMs: action.elapsedMs,
+        // Saves from before the elapsed display have no start time; the next
+        // start/tick stamps one.
+        startedAt: action.startedAt ?? null,
         completed: action.flipped.length === puzzle.people.length,
         tags: { ...action.tags },
         marks: { ...action.marks },

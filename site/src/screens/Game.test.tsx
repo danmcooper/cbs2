@@ -247,19 +247,66 @@ describe('start popup', () => {
 });
 
 describe('timer display', () => {
-  it('tapping the minutes toggles full seconds and back', async () => {
+  it('tapping cycles minutes -> seconds -> elapsed -> minutes', async () => {
     localStorage.setItem(
       'cbs:progress:a6f09e2713b2',
-      JSON.stringify({ flipped: [0, 1], mistakes: 1, elapsedMs: 125_000, completed: false }),
+      JSON.stringify({
+        flipped: [0, 1],
+        mistakes: 1,
+        elapsedMs: 125_000,
+        startedAt: Date.now() - 3 * 86_400_000 - 4 * 3_600_000,
+        completed: false,
+      }),
     );
     const user = userEvent.setup();
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    const timer = screen.getByText('2 Minutes');
+    const timer = screen.getByText('Timed: 2 min');
     await user.click(timer);
-    expect(timer.textContent).toBe('02:05');
+    expect(timer.textContent).toBe('Timed: 02:05');
     await user.click(timer);
-    expect(timer.textContent).toBe('2 Minutes');
+    // Wall-clock since the start, not the (paused-aware) puzzle timer.
+    expect(timer.textContent).toMatch(/^Elapsed: 03d:04h:00m:0\ds$/);
+    await user.click(timer);
+    expect(timer.textContent).toBe('Timed: 2 min');
+  });
+
+  it('elapsed trims the units it does not need', async () => {
+    localStorage.setItem('cbs:pref:timerMode', 'elapsed');
+    localStorage.setItem(
+      'cbs:progress:a6f09e2713b2',
+      JSON.stringify({
+        flipped: [0, 1],
+        mistakes: 1,
+        elapsedMs: 5_000,
+        startedAt: Date.now() - 3 * 3_600_000 - 6 * 60_000 - 12_000,
+        completed: false,
+      }),
+    );
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    expect(document.querySelector('.timer')?.textContent).toMatch(/^Elapsed: 03h:06m:1\ds$/);
+  });
+
+  it('elapsed keeps running on a solved puzzle', async () => {
+    localStorage.setItem('cbs:pref:timerMode', 'elapsed');
+    localStorage.setItem(
+      'cbs:progress:a6f09e2713b2',
+      JSON.stringify({
+        flipped: [0, 1, 2, 3],
+        mistakes: 0,
+        elapsedMs: 125_000,
+        startedAt: Date.now() - 5 * 60_000 - 22_000,
+        completed: true,
+      }),
+    );
+    render(<Game date="2026-07-07" />);
+    await screen.findAllByRole('group');
+    const timer = document.querySelector('.timer');
+    expect(timer?.textContent).toMatch(/^Elapsed: 05:2\d$/);
+    await new Promise((r) => setTimeout(r, 1200));
+    expect(timer?.textContent).toMatch(/^Elapsed: 05:2\d$/);
+    expect(timer?.textContent).not.toBe('Elapsed: 05:22');
   });
 });
 
@@ -267,11 +314,13 @@ describe('timer under a minute', () => {
   it('shows 0 min from the start so seconds are reachable', async () => {
     const user = userEvent.setup();
     await renderGame();
-    const timer = screen.getByText('0 Minutes');
+    const timer = screen.getByText('Timed: 0 min');
     await user.click(timer);
-    expect(timer.textContent).toMatch(/^00:0\d$/);
+    expect(timer.textContent).toMatch(/^Timed: 00:0\d$/);
     await user.click(timer);
-    expect(timer.textContent).toBe('0 Minutes');
+    expect(timer.textContent).toMatch(/^Elapsed: 00:0\d$/);
+    await user.click(timer);
+    expect(timer.textContent).toBe('Timed: 0 min');
   });
 });
 
@@ -297,7 +346,7 @@ describe('control bar', () => {
   it('shows the date line with date left and time right', async () => {
     await renderGame();
     const line = document.querySelector('.date-line');
-    expect(line?.textContent).toBe('Jul 7th 2026 (Easy)0 Minutes');
+    expect(line?.textContent).toBe('Jul 7th 2026 (Easy)Timed: 0 min');
     expect(screen.getByRole('button', { name: /show hint/i })).toBeTruthy();
   });
 
@@ -456,11 +505,11 @@ describe('timer resume', () => {
     const user = userEvent.setup();
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    const timer = screen.getByText('2 Minutes');
+    const timer = screen.getByText('Timed: 2 min');
     await user.click(timer);
-    expect(timer.textContent).toBe('02:05');
+    expect(timer.textContent).toBe('Timed: 02:05');
     await new Promise((r) => setTimeout(r, 1200));
-    expect(timer.textContent).toBe('02:06');
+    expect(timer.textContent).toBe('Timed: 02:06');
   });
 });
 
@@ -473,13 +522,13 @@ describe('seconds preference', () => {
     const user = userEvent.setup();
     const first = render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    await user.click(screen.getByText('2 Minutes'));
-    expect(document.querySelector('.timer')?.textContent).toMatch(/^\d{2}:\d{2}$/);
+    await user.click(screen.getByText('Timed: 2 min'));
+    expect(document.querySelector('.timer')?.textContent).toMatch(/^Timed: \d{2}:\d{2}$/);
     first.unmount();
 
     render(<Game date="2026-07-07" />);
     await screen.findAllByRole('group');
-    expect(document.querySelector('.timer')?.textContent).toMatch(/^\d{2}:\d{2}$/);
+    expect(document.querySelector('.timer')?.textContent).toMatch(/^Timed: \d{2}:\d{2}$/);
   });
 });
 

@@ -4,6 +4,7 @@ export interface SavedProgress {
   flipped: number[];
   mistakes: number;
   elapsedMs: number;
+  startedAt?: number | null;
   completed: boolean;
   tags?: Record<number, Tag>;
   marks?: Record<number, Tag>;
@@ -38,9 +39,12 @@ function isSavedProgress(v: unknown): v is SavedProgress {
     p.pendingHint === undefined ||
     p.pendingHint === null ||
     validLevels.includes(p.pendingHint as string);
+  const startedOk =
+    p.startedAt === undefined || p.startedAt === null || typeof p.startedAt === 'number';
   return (
     hintedOk &&
     pendingOk &&
+    startedOk &&
     Array.isArray(p.flipped) &&
     p.flipped.every((n) => Number.isInteger(n)) &&
     typeof p.mistakes === 'number' &&
