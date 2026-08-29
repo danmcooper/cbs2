@@ -1,0 +1,97 @@
+import { describe, expect, it } from 'vitest';
+import { makeGrid } from './grid';
+import { parseHint } from './hint';
+import { type Board, countTrait, evaluate, unitMembers, unitsOfKind } from './predicates';
+
+// 4x5. Criminals at 0, 1, 6, 13, 19.
+const CRIMINALS = [0, 1, 6, 13, 19];
+const PROFS = [
+  'cook', 'cook', 'cop', 'cop',
+  'cook', 'cop', 'pilot', 'pilot',
+  'pilot', 'pilot', 'cook', 'cop',
+  'cook', 'cook', 'cop', 'cop',
+  'pilot', 'pilot', 'pilot', 'cook',
+];
+const board: Board = {
+  grid: makeGrid(4, 5),
+  professions: PROFS,
+  criminal: Array.from({ length: 20 }, (_, i) => CRIMINALS.includes(i)),
+};
+
+const ok = (s: string) => evaluate(board, parseHint(s));
+
+describe('unitMembers', () => {
+  it('resolves every unit kind', () => {
+    expect(unitMembers(board, { kind: 'row', n: 2 })).toEqual([4, 5, 6, 7]);
+    expect(unitMembers(board, { kind: 'col', n: 3 })).toEqual([2, 6, 10, 14, 18]);
+    expect(unitMembers(board, { kind: 'neighbor', i: 5 })).toEqual([0, 1, 2, 4, 6, 8, 9, 10]);
+    expect(unitMembers(board, { kind: 'between', a: 2, b: 14 })).toEqual([2, 6, 10, 14]);
+    expect(unitMembers(board, { kind: 'corner' })).toEqual([0, 3, 16, 19]);
+    expect(unitMembers(board, { kind: 'profession', name: 'cop' })).toEqual([2, 3, 5, 11, 14, 15]);
+  });
+});
+
+describe('unitsOfKind', () => {
+  it('enumerates instances', () => {
+    expect(unitsOfKind(board, 'row')).toHaveLength(5);
+    expect(unitsOfKind(board, 'col')).toHaveLength(4);
+    expect(unitsOfKind(board, 'neighbor')).toHaveLength(20);
+    expect(unitsOfKind(board, 'edge')).toEqual([{ kind: 'edge' }]);
+    expect(unitsOfKind(board, 'profession').map((u) => (u as { name: string }).name).sort()).toEqual(
+      ['cook', 'cop', 'pilot'],
+    );
+  });
+});
+
+describe('countTrait', () => {
+  it('counts both traits over a member list', () => {
+    expect(countTrait(board, [0, 1, 2, 3], 'criminal')).toBe(2);
+    expect(countTrait(board, [0, 1, 2, 3], 'innocent')).toBe(2);
+  });
+});
+
+describe('counting predicates', () => {
+  it('has_trait', () => {
+    expect(ok('has_trait(0,criminal)')).toBe(true);
+    expect(ok('has_trait(0,innocent)')).toBe(false);
+    expect(ok('has_trait(2,innocent)')).toBe(true);
+  });
+  it('number_of_traits', () => {
+    expect(ok('number_of_traits(criminal,5)')).toBe(true);
+    expect(ok('number_of_traits(innocent,15)')).toBe(true);
+    expect(ok('number_of_traits(criminal,4)')).toBe(false);
+  });
+  it('number_of_traits_in_unit', () => {
+    expect(ok('number_of_traits_in_unit(unit(row,1),criminal,2)')).toBe(true);
+    expect(ok('number_of_traits_in_unit(unit(corner,void),criminal,2)')).toBe(true);
+    expect(ok('number_of_traits_in_unit(unit(between,pair(4,7)),criminal,1)')).toBe(true);
+  });
+  it('min_number_of_traits_in_unit is >=', () => {
+    expect(ok('min_number_of_traits_in_unit(unit(row,1),criminal,2)')).toBe(true);
+    expect(ok('min_number_of_traits_in_unit(unit(row,1),criminal,1)')).toBe(true);
+    expect(ok('min_number_of_traits_in_unit(unit(row,1),criminal,3)')).toBe(false);
+  });
+  it('odd_number_of_traits_in_unit', () => {
+    expect(ok('odd_number_of_traits_in_unit(unit(row,1),criminal)')).toBe(false);
+    expect(ok('odd_number_of_traits_in_unit(unit(row,2),criminal)')).toBe(true);
+  });
+  it('is_one_of_n_traits_in_unit requires membership and the trait', () => {
+    expect(ok('is_one_of_n_traits_in_unit(unit(row,1),0,criminal,2)')).toBe(true);
+    expect(ok('is_one_of_n_traits_in_unit(unit(row,1),2,criminal,2)')).toBe(false);
+    expect(ok('is_one_of_n_traits_in_unit(unit(row,2),0,criminal,2)')).toBe(false);
+  });
+  it('is_not_only_trait_in_unit', () => {
+    expect(ok('is_not_only_trait_in_unit(unit(row,1),0,criminal)')).toBe(true);
+    expect(ok('is_not_only_trait_in_unit(unit(row,2),6,criminal)')).toBe(false);
+  });
+  it('all_units_have_at_least_n_traits ranges over a bare kind', () => {
+    expect(ok('all_units_have_at_least_n_traits(row,innocent,2)')).toBe(true);
+    expect(ok('all_units_have_at_least_n_traits(row,criminal,1)')).toBe(false);
+    expect(ok('all_units_have_at_least_n_traits(col,innocent,2)')).toBe(true);
+  });
+  it('only_one_unit_has_exactly_n_traits', () => {
+    expect(ok('only_one_unit_has_exactly_n_traits(row,criminal,2)')).toBe(true);
+    expect(ok('only_one_unit_has_exactly_n_traits(row,criminal,1)')).toBe(false);
+    expect(ok('only_one_unit_has_exactly_n_traits(row,criminal,0)')).toBe(true);
+  });
+});
