@@ -1,0 +1,297 @@
+
+### unit_shares_n_out_of_n_traits_with_unit
+  (13) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(between,pair(N,N)),criminal,N,N) ||| Only N of the N criminals neighboring NAME is BTW
+  (9) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(neighbor,N),criminal,N,N) ||| Only N of the N criminals neighboring NAME is NAMES neighbor
+  (5) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(between,pair(N,N)),criminal,N,N) ||| Exactly N of the N criminals neighboring NAME are BTW
+  (4) unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(N,N)),unit(neighbor,N),criminal,N,N) ||| Exactly N of the N criminals BTW are NAMES neighbors
+  (4) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(between,pair(N,N)),innocent,N,N) ||| Only N of the N innocents neighboring NAME is BTW
+  (4) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(row,N),criminal,N,N) ||| Only N of the N criminals neighboring NAME is in row N
+  (3) unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(N,N)),unit(neighbor,N),criminal,N,N) ||| Only N of the N criminals BTW is NAMES neighbor
+  (3) unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(N,N)),unit(neighbor,N),innocent,N,N) ||| Only N of the N innocents BTW is NAMES neighbor
+  (3) unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(neighbor,N),criminal,N,N) ||| Exactly N of the N criminals on the edges are NAMES neighbors
+  (3) unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(neighbor,N),criminal,N,N) ||| Only N of the N criminals on the edges is NAMES neighbor
+  (2) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(neighbor,N),criminal,N,N) ||| Exactly N of NAMES N criminal neighbors also neighbor NAME
+  (2) unit_shares_n_out_of_n_traits_with_unit(unit(row,N),unit(between,pair(N,N)),criminal,N,N) ||| Only N of the N criminals in row N is BTW
+  (2) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(between,pair(N,N)),innocent,N,N) ||| Exactly N of the N innocents neighboring NAME are BTW
+  (2) unit_shares_n_out_of_n_traits_with_unit(unit(col,N),unit(between,pair(N,N)),criminal,N,N) ||| N of the N criminals in column COL is BTW
+  (2) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(col,N),innocent,N,N) ||| Exactly N of the N innocents neighboring NAME are in column COL
+  (2) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(row,N),innocent,N,N) ||| Only N of the N innocents neighboring NAME is in row N
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(between,pair(N,N)),criminal,N,N) ||| Exactly N of the N criminals on the edges are BTW
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(neighbor,N),innocent,N,N) ||| Only N of the N innocents on the edges is NAMES neighbor
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(between,pair(N,N)),innocent,N,N) ||| Exactly N of the N innocents on the edges are BTW
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(col,N),unit(neighbor,N),innocent,N,N) ||| Only N of the N innocents in column COL is NAMES neighbor
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(row,N),unit(neighbor,N),criminal,N,N) ||| Exactly N of the N criminals in row N are NAMES neighbors
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(col,N),criminal,N,N) ||| Only N of the N criminals neighboring NAME is in column COL
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(edge,void),criminal,N,N) ||| Only N of the N criminals neighboring NAME is on the edges
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(row,N),innocent,N,N) ||| Exactly N of the N innocents neighboring NAME are in row N
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(col,N),criminal,N,N) ||| Exactly N of the N criminals neighboring NAME are in column COL
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(neighbor,N),innocent,N,N) ||| Only N of the N innocents neighboring NAME is NAMES neighbor
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(between,pair(N,N)),criminal,N,N) ||| Only N of the N criminals on the edges is BTW
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(N,N)),unit(neighbor,N),innocent,N,N) ||| Exactly N of the N innocents BTW are NAMES neighbors
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(col,N),unit(neighbor,N),innocent,N,N) ||| Exactly N of the N innocents in column COL are NAMES neighbors
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(col,N),unit(between,pair(N,N)),criminal,N,N) ||| Only N of the N criminals in column COL is BTW
+  (1) unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,N),unit(neighbor,N),innocent,N,N) ||| Exactly N of NAMES N innocent neighbors also neighbor NAME
+
+### n_professions_have_trait_in_dir
+  (1) n_professions_have_trait_in_dir(painter,innocent,N,N,N) ||| N PROFS have an innocent directly to the right of them
+  (1) n_professions_have_trait_in_dir(cook,innocent,-N,N,N) ||| Exactly N PROF has an innocent directly to the left of them
+  (1) n_professions_have_trait_in_dir(cook,innocent,N,-N,N) ||| N of the N PROFS has an innocent directly above them
+  (1) n_professions_have_trait_in_dir(cop,innocent,N,N,N) ||| Only one PROF has an innocent directly to the right of them
+  (1) n_professions_have_trait_in_dir(mech,innocent,N,-N,N) ||| N PROFS have an innocent directly above them
+  (1) n_professions_have_trait_in_dir(farmer,criminal,N,-N,N) ||| Only N of us PROFS has a criminal directly above us
+  (1) n_professions_have_trait_in_dir(builder,criminal,N,-N,N) ||| Exactly N PROF has a criminal directly above them
+  (1) n_professions_have_trait_in_dir(mech,criminal,N,-N,N) ||| Exactly N PROF has a criminal directly above them
+  (1) n_professions_have_trait_in_dir(cop,innocent,N,N,N) ||| Exactly N PROF has an innocent directly below them
+  (1) n_professions_have_trait_in_dir(pilot,criminal,-N,N,N) ||| N PROFS have a criminal directly to the left of them
+  (1) n_professions_have_trait_in_dir(cook,innocent,N,-N,N) ||| N of the N PROFS have an innocent directly above them
+  (1) n_professions_have_trait_in_dir(painter,innocent,N,N,N) ||| N of the N PROFS has an innocent directly to the right of them
+  (1) n_professions_have_trait_in_dir(coder,criminal,N,N,N) ||| Only N of the N PROFS has a criminal directly to the right of them
+  (1) n_professions_have_trait_in_dir(teacher,innocent,-N,N,N) ||| Exactly N PROF has an innocent directly to the left of them
+  (1) n_professions_have_trait_in_dir(singer,criminal,-N,N,N) ||| Exactly N PROF has a criminal directly to the left of them
+  (1) n_professions_have_trait_in_dir(doctor,criminal,N,-N,N) ||| N PROFS have a criminal directly above them
+  (1) n_professions_have_trait_in_dir(painter,criminal,N,N,N) ||| N PROFS have a criminal directly below them
+  (1) n_professions_have_trait_in_dir(pilot,innocent,N,-N,N) ||| N PROFS have an innocent directly above them
+  (1) n_professions_have_trait_in_dir(clerk,criminal,-N,N,N) ||| Exactly N PROF has a criminal directly to the left of them
+  (1) n_professions_have_trait_in_dir(painter,criminal,N,-N,N) ||| Only N of the N PROFS has a criminal directly above them
+  (1) n_professions_have_trait_in_dir(sleuth,innocent,N,N,N) ||| N PROFS have an innocent directly to the right of them
+
+### units_share_n_traits
+  (9) units_share_n_traits(unit(between,pair(N,N)),unit(neighbor,N),innocent,N) ||| Exactly N innocent BTW is neighboring NAME
+  (5) units_share_n_traits(unit(between,pair(N,N)),unit(neighbor,N),innocent,N) ||| There are no innocents BTW who neighbor NAME
+  (5) units_share_n_traits(unit(between,pair(N,N)),unit(neighbor,N),innocent,N) ||| Exactly N innocents BTW are neighboring NAME
+  (4) units_share_n_traits(unit(neighbor,N),unit(neighbor,N),innocent,N) ||| NAME and NAME have only one innocent neighbor in common
+  (3) units_share_n_traits(unit(neighbor,N),unit(neighbor,N),innocent,N) ||| NAME and NAME have N innocent neighbors in common
+  (2) units_share_n_traits(unit(between,pair(N,N)),unit(row,N),innocent,N) ||| No innocent BTW is in row N
+  (2) units_share_n_traits(unit(neighbor,N),unit(neighbor,N),innocent,N) ||| NAME and NAME have one innocent neighbor in common
+  (1) units_share_n_traits(unit(between,pair(N,N)),unit(col,N),innocent,N) ||| No innocent BTW is in column COL
+  (1) units_share_n_traits(unit(col,N),unit(neighbor,N),innocent,N) ||| Exactly N innocent in column COL is neighboring NAME
+  (1) units_share_n_traits(unit(neighbor,N),unit(row,N),innocent,N) ||| N of NAMES neighbors in row N are innocent
+  (1) units_share_n_traits(unit(between,pair(N,N)),unit(neighbor,N),innocent,N) ||| I'm the only innocent BTW
+  (1) units_share_n_traits(unit(neighbor,N),unit(neighbor,N),criminal,N) ||| NAME and NAME have only one criminal neighbor in common
+  (1) units_share_n_traits(unit(row,N),unit(between,pair(N,N)),criminal,N) ||| Exactly N criminal in row N is BTW
+  (1) units_share_n_traits(unit(between,pair(N,N)),unit(row,N),innocent,N) ||| Exactly N innocent BTW is in row N
+  (1) units_share_n_traits(unit(between,pair(N,N)),unit(edge,void),innocent,N) ||| Exactly N innocent BTW is on the edges
+  (1) units_share_n_traits(unit(between,pair(N,N)),unit(col,N),innocent,N) ||| Exactly N innocent BTW is in column COL
+  (1) units_share_n_traits(unit(between,pair(N,N)),unit(profession,cook),innocent,N) ||| There are no innocent PROFS BTW
+  (1) units_share_n_traits(unit(neighbor,N),unit(row,N),innocent,N) ||| Exactly N innocent in row N is neighboring NAME
+  (1) units_share_n_traits(unit(row,N),unit(edge,void),criminal,N) ||| N criminals in my row are on the edges
+  (1) units_share_n_traits(unit(neighbor,N),unit(profession,coder),innocent,N) ||| N of the N PROFS neighboring NAME is innocent
+
+### number_of_traits_in_unit
+  (25) number_of_traits_in_unit(unit(between,pair(N,N)),innocent,N) ||| There is only one innocent BTW
+  (23) number_of_traits_in_unit(unit(between,pair(N,N)),innocent,N) ||| There are exactly N innocents BTW
+  (12) number_of_traits_in_unit(unit(neighbor,N),criminal,N) ||| NAME has exactly N criminal neighbors
+  (11) number_of_traits_in_unit(unit(neighbor,N),innocent,N) ||| NAME has exactly N innocent neighbors
+  (4) number_of_traits_in_unit(unit(corner,void),innocent,N) ||| There are exactly N innocents in the corners
+  (4) number_of_traits_in_unit(unit(neighbor,N),innocent,N) ||| NAME has only one innocent neighbor
+  (4) number_of_traits_in_unit(unit(col,N),innocent,N) ||| There are exactly N innocents in column COL
+  (2) number_of_traits_in_unit(unit(col,N),criminal,N) ||| There is only one criminal in column COL
+  (2) number_of_traits_in_unit(unit(edge,void),innocent,N) ||| There are N innocents on the edges
+  (2) number_of_traits_in_unit(unit(between,pair(N,N)),criminal,N) ||| There are exactly N criminals BTW
+  (2) number_of_traits_in_unit(unit(row,N),innocent,N) ||| There is only one innocent in row N
+  (1) number_of_traits_in_unit(unit(row,N),innocent,N) ||| There are exactly N innocents in my row
+  (1) number_of_traits_in_unit(unit(profession,guard),innocent,N) ||| I'm the only innocent PROF
+  (1) number_of_traits_in_unit(unit(between,pair(N,N)),innocent,N) ||| I'm one of N innocents BTW
+  (1) number_of_traits_in_unit(unit(edge,void),criminal,N) ||| There are N criminals on the edges
+  (1) number_of_traits_in_unit(unit(col,N),criminal,N) ||| I'm one of N criminals in my column
+  (1) number_of_traits_in_unit(unit(col,N),criminal,N) ||| There are exactly N criminals in column COL
+  (1) number_of_traits_in_unit(unit(row,N),innocent,N) ||| There are exactly N innocents in row N
+  (1) number_of_traits_in_unit(unit(row,N),criminal,N) ||| There is only one criminal in row N
+
+### equal_number_of_traits_in_units
+  (9) equal_number_of_traits_in_units(unit(neighbor,N),unit(neighbor,N),criminal) ||| NAME and NAME have an equal number of criminal neighbors
+  (6) equal_number_of_traits_in_units(unit(row,N),unit(row,N),innocent) ||| There's an equal number of innocents in rows N and N
+  (5) equal_number_of_traits_in_units(unit(row,N),unit(row,N),criminal) ||| There's an equal number of criminals in rows N and N
+  (4) equal_number_of_traits_in_units(unit(neighbor,N),unit(neighbor,N),innocent) ||| NAME and NAME have an equal number of innocent neighbors
+  (3) equal_number_of_traits_in_units(unit(col,N),unit(col,N),criminal) ||| There's an equal number of criminals in columns COL and COL
+  (2) equal_number_of_traits_in_units(unit(col,N),unit(col,N),innocent) ||| There's an equal number of innocents in columns COL and COL
+  (2) equal_number_of_traits_in_units(unit(profession,painter),unit(profession,pilot),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,coder),unit(profession,cook),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,clerk),unit(profession,cop),criminal) ||| There are as many criminal PROFS as there are criminal PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,sleuth),unit(profession,teacher),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,builder),unit(profession,coder),criminal) ||| There are as many criminal PROFS as there are criminal PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,doctor),unit(profession,farmer),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,coder),unit(profession,singer),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,farmer),unit(profession,judge),criminal) ||| There are as many criminal PROFS as there are criminal PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,fish),unit(profession,sleuth),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,builder),unit(profession,doctor),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,pilot),unit(profession,sleuth),criminal) ||| There are as many criminal PROFS as there are criminal PROFS
+  (1) equal_number_of_traits_in_units(unit(profession,judge),unit(profession,pilot),innocent) ||| There are as many innocent PROFS as there are innocent PROFS
+
+### n_in_unit_have_trait_in_dir
+  (1) n_in_unit_have_trait_in_dir(unit(profession,cook),criminal,N,N,N) ||| Only one PROF has a criminal directly to the right of them
+  (1) n_in_unit_have_trait_in_dir(unit(corner,void),criminal,N,N,N) ||| Only one person in a corner has a criminal directly to the right of them
+  (1) n_in_unit_have_trait_in_dir(unit(profession,builder),innocent,N,-N,N) ||| N PROFS have an innocent directly above them
+  (1) n_in_unit_have_trait_in_dir(unit(profession,cook),innocent,N,-N,N) ||| Only one PROF has an innocent directly above them
+  (1) n_in_unit_have_trait_in_dir(unit(profession,painter),innocent,-N,N,N) ||| Only N of the N PROFS has an innocent directly to the left of them
+  (1) n_in_unit_have_trait_in_dir(unit(corner,void),innocent,N,-N,N) ||| Only one person in a corner has an innocent directly above them
+  (1) n_in_unit_have_trait_in_dir(unit(profession,mech),criminal,N,N,N) ||| N PROFS have a criminal directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(profession,clerk),innocent,N,N,N) ||| Only one PROF has an innocent directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(corner,void),criminal,N,N,N) ||| Only one person in a corner has a criminal directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(corner,void),criminal,N,N,N) ||| N persons in a corner have a criminal directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(edge,void),criminal,N,N,N) ||| N persons on the edges have a criminal directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(profession,cook),innocent,N,N,N) ||| N PROFS have an innocent directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(corner,void),innocent,N,N,N) ||| Only one person in a corner has an innocent directly below them
+  (1) n_in_unit_have_trait_in_dir(unit(edge,void),criminal,N,-N,N) ||| N persons on the edges have a criminal directly above them
+  (1) n_in_unit_have_trait_in_dir(unit(edge,void),criminal,N,N,N) ||| N persons on the edges have a criminal directly to the right of them
+  (1) n_in_unit_have_trait_in_dir(unit(corner,void),criminal,N,N,N) ||| Only N person in a corner has a criminal directly to the right of them
+
+### more_traits_in_unit_than_unit
+  (9) more_traits_in_unit_than_unit(unit(neighbor,N),unit(neighbor,N),criminal) ||| NAME has more criminal neighbors than NAME
+  (7) more_traits_in_unit_than_unit(unit(row,N),unit(row,N),innocent) ||| There are more innocents in row N than row N
+  (7) more_traits_in_unit_than_unit(unit(col,N),unit(col,N),criminal) ||| There are more criminals in column COL than column COL
+  (5) more_traits_in_unit_than_unit(unit(col,N),unit(col,N),innocent) ||| There are more innocents in column COL than column COL
+  (3) more_traits_in_unit_than_unit(unit(row,N),unit(row,N),criminal) ||| There are more criminals in row N than row N
+  (3) more_traits_in_unit_than_unit(unit(neighbor,N),unit(neighbor,N),innocent) ||| NAME has more innocent neighbors than NAME
+  (2) more_traits_in_unit_than_unit(unit(profession,cook),unit(profession,teacher),criminal) ||| There are more criminal PROFS than criminal PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,clerk),unit(profession,painter),innocent) ||| There are more innocent PROFS than innocent PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,cop),unit(profession,sleuth),innocent) ||| There are more innocent PROFS than innocent PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,cop),unit(profession,guard),criminal) ||| There are more criminal PROFS than criminal PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,teacher),unit(profession,guard),innocent) ||| There are more innocent PROFS than innocent PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,farmer),unit(profession,doctor),innocent) ||| There are more innocent PROFS than innocent PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,sleuth),unit(profession,teacher),criminal) ||| There are more criminal PROFS than criminal PROFS
+  (1) more_traits_in_unit_than_unit(unit(profession,cop),unit(profession,mech),criminal) ||| There are more criminal PROFS than criminal PROFS
+
+### is_one_of_n_traits_in_unit
+  (17) is_one_of_n_traits_in_unit(unit(neighbor,N),N,innocent,N) ||| NAME is one of NAMES N innocent neighbors
+  (13) is_one_of_n_traits_in_unit(unit(neighbor,N),N,criminal,N) ||| NAME is one of NAMES N criminal neighbors
+  (13) is_one_of_n_traits_in_unit(unit(between,pair(N,N)),N,innocent,N) ||| NAME is one of N innocents BTW
+  (10) is_one_of_n_traits_in_unit(unit(between,pair(N,N)),N,criminal,N) ||| NAME is one of N criminals BTW
+  (4) is_one_of_n_traits_in_unit(unit(edge,void),N,innocent,N) ||| NAME is one of N innocents on the edges
+  (2) is_one_of_n_traits_in_unit(unit(row,N),N,criminal,N) ||| NAME is one of N criminals in row N
+  (2) is_one_of_n_traits_in_unit(unit(edge,void),N,criminal,N) ||| NAME is one of N criminals on the edges
+  (1) is_one_of_n_traits_in_unit(unit(corner,void),N,criminal,N) ||| NAME is one of N criminals in the corners
+  (1) is_one_of_n_traits_in_unit(unit(col,N),N,criminal,N) ||| NAME is one of N criminals in column COL
+  (1) is_one_of_n_traits_in_unit(unit(col,N),N,innocent,N) ||| NAME is one of N innocents in column COL
+  (1) is_one_of_n_traits_in_unit(unit(corner,void),N,innocent,N) ||| NAME is one of N innocents in the corners
+
+### only_one_person_in_unit_has_exactly_n_trait_neighbors
+  (4) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,N),innocent,N) ||| Only one person in row N has exactly N innocent neighbors
+  (3) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(col,N),innocent,N) ||| Only one person in column COL has exactly N innocent neighbors
+  (2) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,N),criminal,N) ||| Only one person in row N has exactly N criminal neighbors
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(corner,void),criminal,N) ||| Only one person in a corner has no criminal neighbors
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,builder),innocent,N) ||| Only one PROF has exactly one innocent neighbor
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,mech),criminal,N) ||| Only one PROF has exactly N criminal neighbors
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,cook),criminal,N) ||| Only one PROF has exactly N criminal neighbors
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,guard),criminal,N) ||| Only one PROF has exactly N criminal neighbors
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,farmer),criminal,N) ||| Only one PROF has exactly N criminal neighbors
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(corner,void),criminal,N) ||| Only one person in a corner has exactly one criminal neighbor
+  (1) only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,N),criminal,N) ||| Only one person in row N has exactly one criminal neighbor
+
+### n_t_in_unit_have_trait_in_dir
+  (2) n_t_in_unit_have_trait_in_dir(unit(row,N),criminal,criminal,N,N,N) ||| Exactly N criminals in row N have a criminal directly below them
+  (1) n_t_in_unit_have_trait_in_dir(unit(edge,void),innocent,innocent,N,N,N) ||| Exactly N innocents on the edges have an innocent directly to the right of them
+  (1) n_t_in_unit_have_trait_in_dir(unit(row,N),criminal,innocent,N,N,N) ||| One criminal in row N has an innocent directly to the right of them
+  (1) n_t_in_unit_have_trait_in_dir(unit(row,N),innocent,innocent,N,N,N) ||| Exactly N innocents in row N have an innocent directly below them
+  (1) n_t_in_unit_have_trait_in_dir(unit(col,N),criminal,innocent,-N,N,N) ||| Only one criminal in column COL has an innocent directly to the left of them
+  (1) n_t_in_unit_have_trait_in_dir(unit(row,N),innocent,criminal,N,-N,N) ||| Exactly N innocents in row N have a criminal directly above them
+  (1) n_t_in_unit_have_trait_in_dir(unit(edge,void),criminal,criminal,-N,N,N) ||| Only N criminals on the edges have a criminal directly to the left of them
+  (1) n_t_in_unit_have_trait_in_dir(unit(edge,void),innocent,innocent,N,N,N) ||| Exactly N innocents on the edges have an innocent directly below them
+  (1) n_t_in_unit_have_trait_in_dir(unit(row,N),innocent,criminal,N,N,N) ||| Only one innocent in row N has a criminal directly below them
+  (1) n_t_in_unit_have_trait_in_dir(unit(edge,void),criminal,criminal,N,N,N) ||| Exactly N criminals on the edges have a criminal directly below them
+  (1) n_t_in_unit_have_trait_in_dir(unit(col,N),criminal,innocent,N,N,N) ||| Only one criminal in column COL has an innocent directly below them
+
+### odd_number_of_traits_in_unit
+  (15) odd_number_of_traits_in_unit(unit(neighbor,N),innocent) ||| There's an odd number of innocents neighboring NAME
+  (9) odd_number_of_traits_in_unit(unit(neighbor,N),criminal) ||| There's an odd number of criminals neighboring NAME
+  (9) odd_number_of_traits_in_unit(unit(between,pair(N,N)),criminal) ||| There's an odd number of criminals BTW
+  (8) odd_number_of_traits_in_unit(unit(between,pair(N,N)),innocent) ||| There's an odd number of innocents BTW
+  (5) odd_number_of_traits_in_unit(unit(edge,void),innocent) ||| There's an odd number of innocents on the edges
+  (3) odd_number_of_traits_in_unit(unit(col,N),criminal) ||| There's an odd number of criminals in column COL
+  (1) odd_number_of_traits_in_unit(unit(profession,singer),criminal) ||| There's an odd number of criminal PROFS
+  (1) odd_number_of_traits_in_unit(unit(row,N),criminal) ||| There's an odd number of criminals in row N
+  (1) odd_number_of_traits_in_unit(unit(col,N),innocent) ||| There's an odd number of innocents in column COL
+  (1) odd_number_of_traits_in_unit(unit(profession,painter),innocent) ||| An odd number of us N PROFS are innocent
+
+### only_unit_has_exactly_n_traits
+  (10) only_unit_has_exactly_n_traits(unit(row,N),innocent,N) ||| Row N is the only row with exactly N innocents
+  (5) only_unit_has_exactly_n_traits(unit(col,N),criminal,N) ||| Column COL is the only column with exactly N criminals
+  (4) only_unit_has_exactly_n_traits(unit(col,N),innocent,N) ||| Column COL is the only column with exactly N innocents
+  (2) only_unit_has_exactly_n_traits(unit(row,N),criminal,N) ||| Row N is the only row with exactly N criminals
+  (1) only_unit_has_exactly_n_traits(unit(col,N),criminal,N) ||| Column COL is the only column with exactly one criminal
+  (1) only_unit_has_exactly_n_traits(unit(row,N),criminal,N) ||| Row N is the only row with exactly one criminal
+  (1) only_unit_has_exactly_n_traits(unit(row,N),innocent,N) ||| Row N is the only row with exactly one innocent
+  (1) only_unit_has_exactly_n_traits(unit(neighbor,N),criminal,N) ||| NAME is the only one with exactly N criminal neighbor
+
+### all_units_have_at_least_n_traits
+  (6) all_units_have_at_least_n_traits(col,innocent,N) ||| Each column has at least N innocents
+  (4) all_units_have_at_least_n_traits(row,innocent,N) ||| Each row has at least N innocents
+  (2) all_units_have_at_least_n_traits(row,innocent,N) ||| Each row has at least one innocent
+  (1) all_units_have_at_least_n_traits(profession,criminal,N) ||| There is at least one criminal among all professions
+  (1) all_units_have_at_least_n_traits(col,criminal,N) ||| Each column has at least N criminals
+  (1) all_units_have_at_least_n_traits(row,criminal,N) ||| Each row has at least one criminal
+  (1) all_units_have_at_least_n_traits(col,innocent,N) ||| Each column has at least one innocent
+  (1) all_units_have_at_least_n_traits(neighbor,criminal,N) ||| Everyone has at least N criminal neighbors
+
+### only_one_unit_has_exactly_n_traits
+  (4) only_one_unit_has_exactly_n_traits(row,criminal,N) ||| Only one row has exactly N criminals
+  (3) only_one_unit_has_exactly_n_traits(row,innocent,N) ||| Only one row has exactly N innocents
+  (2) only_one_unit_has_exactly_n_traits(col,criminal,N) ||| Only one column has exactly N criminals
+  (1) only_one_unit_has_exactly_n_traits(col,criminal,N) ||| Only one column has no criminals
+  (1) only_one_unit_has_exactly_n_traits(col,innocent,N) ||| Only one column has exactly one innocent
+  (1) only_one_unit_has_exactly_n_traits(col,innocent,N) ||| Only one column has exactly N innocents
+
+### has_most_traits
+  (5) has_most_traits(unit(col,N),criminal) ||| Column COL has more criminals than any other column
+  (2) has_most_traits(unit(row,N),criminal) ||| Row N has more criminals than any other row
+  (2) has_most_traits(unit(row,N),innocent) ||| Row N has more innocents than any other row
+  (1) has_most_traits(unit(col,N),innocent) ||| Column COL has more innocents than any other column
+  (1) has_most_traits(unit(neighbor,N),innocent) ||| NAME has the most innocent neighbors
+
+### both_traits_in_unit_are_in_unit
+  (1) both_traits_in_unit_are_in_unit(unit(between,pair(N,N)),unit(neighbor,N),criminal) ||| Both criminals BTW are NAMES neighbors
+  (1) both_traits_in_unit_are_in_unit(unit(between,pair(N,N)),unit(between,pair(N,N)),innocent) ||| Both innocents BTW are BTW
+  (1) both_traits_in_unit_are_in_unit(unit(neighbor,N),unit(neighbor,N),criminal) ||| Both criminals neighboring NAME are NAMES neighbors
+  (1) both_traits_in_unit_are_in_unit(unit(neighbor,N),unit(neighbor,N),innocent) ||| Both innocents neighboring NAME are NAMES neighbors
+
+### units_share_odd_n_traits
+  (8) units_share_odd_n_traits(unit(between,pair(N,N)),unit(neighbor,N),innocent) ||| An odd number of innocents BTW neighbor NAME
+  (5) units_share_odd_n_traits(unit(edge,void),unit(neighbor,N),innocent) ||| An odd number of innocents on the edges neighbor NAME
+  (1) units_share_odd_n_traits(unit(neighbor,N),unit(row,N),innocent) ||| An odd number of innocents in row N neighbor NAME
+  (1) units_share_odd_n_traits(unit(neighbor,N),unit(row,N),innocent) ||| An odd number of NAMES neighbors in row N are innocent
+
+### max_number_of_traits_in_neighbors_in_unit
+  (2) max_number_of_traits_in_neighbors_in_unit(unit(row,N),innocent,N) ||| No one in row N has more than N innocent neighbors
+  (1) max_number_of_traits_in_neighbors_in_unit(unit(col,N),criminal,N) ||| No one in column COL has more than N criminal neighbors
+  (1) max_number_of_traits_in_neighbors_in_unit(unit(corner,void),innocent,N) ||| No one in the corners has more than one innocent neighbor
+  (1) max_number_of_traits_in_neighbors_in_unit(unit(col,N),innocent,N) ||| No one in column COL has more than N innocent neighbors
+
+### more_traits_than_traits_in_unit
+  (2) more_traits_than_traits_in_unit(unit(between,pair(N,N)),innocent,criminal) ||| There are more innocents than criminals BTW
+  (1) more_traits_than_traits_in_unit(unit(neighbor,N),criminal,innocent) ||| NAME has more criminal than innocent neighbors
+  (1) more_traits_than_traits_in_unit(unit(between,pair(N,N)),criminal,innocent) ||| There are more criminals than innocents BTW
+  (1) more_traits_than_traits_in_unit(unit(col,N),criminal,innocent) ||| There are more criminals than innocents in column COL
+
+### min_number_of_traits_in_unit
+  (1) min_number_of_traits_in_unit(unit(between,pair(N,N)),innocent,N) ||| There are at least N innocents BTW
+  (1) min_number_of_traits_in_unit(unit(between,pair(N,N)),innocent,N) ||| There is at least one innocent BTW
+  (1) min_number_of_traits_in_unit(unit(col,N),innocent,N) ||| There are at least N innocents in column COL
+  (1) min_number_of_traits_in_unit(unit(edge,void),innocent,N) ||| There are at least N innocents on the edges
+
+### only_trait_in_unit_is_in_unit
+  (1) only_trait_in_unit_is_in_unit(unit(row,N),unit(neighbor,N),criminal) ||| The only criminal in row N is NAMES neighbor
+  (1) only_trait_in_unit_is_in_unit(unit(between,pair(N,N)),unit(neighbor,N),criminal) ||| The only criminal BTW is NAMES neighbor
+  (1) only_trait_in_unit_is_in_unit(unit(between,pair(N,N)),unit(between,pair(N,N)),criminal) ||| The only criminal BTW is BTW
+
+### both_traits_are_neighbors_in_unit
+  (17) both_traits_are_neighbors_in_unit(unit(between,pair(N,N)),innocent) ||| Both innocents BTW are connected
+  (13) both_traits_are_neighbors_in_unit(unit(between,pair(N,N)),criminal) ||| Both criminals BTW are connected
+
+### all_traits_are_neighbors_in_unit
+  (15) all_traits_are_neighbors_in_unit(unit(between,pair(N,N)),innocent) ||| All innocents BTW are connected
+  (9) all_traits_are_neighbors_in_unit(unit(between,pair(N,N)),criminal) ||| All criminals BTW are connected
+
+### number_of_traits
+  (4) number_of_traits(criminal,N) ||| There are N criminals in total
+  (2) number_of_traits(innocent,N) ||| There are N innocents in total
+
+### equal_traits_and_traits_in_unit
+  (1) equal_traits_and_traits_in_unit(unit(between,pair(N,N)),criminal,innocent) ||| There are as many criminals as innocents BTW
+  (1) equal_traits_and_traits_in_unit(unit(profession,cop),innocent,criminal) ||| There's an equal number of innocent and criminal PROFS
+
+### has_trait
+  (6) has_trait(N,innocent) ||| NAME is innocent
+  (1) has_trait(N,criminal) ||| NAME is a criminal
+
+### is_not_only_trait_in_unit
+  (1) is_not_only_trait_in_unit(unit(row,N),N,innocent) ||| NAME is one of two or more innocents in row N

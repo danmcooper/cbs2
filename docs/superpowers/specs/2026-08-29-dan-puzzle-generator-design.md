@@ -41,8 +41,13 @@ Probed against the 53-puzzle archive rather than assumed:
 - `unit(edge,void)` is the perimeter (3/3), `unit(corner,void)` the four
   corners (4/4), and `number_of_traits` counts the whole grid (6/6).
 - `unit(row,n)` and `unit(col,n)` are **1-based**; `#C:1` renders as column A.
-- `unit(between,pair(a,b))` is the **inclusive index range** a..b, rendered
-  positionally by `ClueText.tsx` ("in row 3", "above Mary").
+- `unit(between,pair(a,b))` is the **inclusive line segment** from a to b, not
+  the inclusive index range. The endpoints always share a row or a column (all
+  56 distinct pairs in the archive do), so the unit is either a contiguous
+  row-run or a column-run stepping by `width`. Checked against every
+  `number_of_traits_in_unit(unit(between,…))` instance: segment 51/51, index
+  range 26/51. `ClueText.tsx`'s `sameRow` branch assumes the same reading.
+  Rendered positionally ("in row 3", "above Mary").
 
 Every archived puzzle is 4×5 with 4–16 criminals, 7–16 clue-bearing cards, and
 labels drawn from Easy / Medium / Tricky / Hard / Brutal.
@@ -91,8 +96,9 @@ functions of geometry and an assignment; `enumerate` and `solve` depend only on
 ### Unit kinds
 
 `row(n)`, `col(n)` (1-based), `neighbor(i)` (8-way, excludes i itself),
-`between(a,b)` (inclusive index range), `profession(name)`, `edge` (perimeter),
-`corner` (four corners). Predicates that quantify over "any other unit"
+`between(a,b)` (inclusive line segment — a row-run when the endpoints share a
+row, a column-run stepping by `width` when they share a column),
+`profession(name)`, `edge` (perimeter), `corner` (four corners). Predicates that quantify over "any other unit"
 (`has_most_traits`, `only_unit_has_exactly_n_traits`) range over units of the
 same kind; `all_units_have_at_least_n_traits` and
 `only_one_unit_has_exactly_n_traits` take a bare kind (`row` or `col`) rather
