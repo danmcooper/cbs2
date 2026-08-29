@@ -41,6 +41,12 @@ describe('parseHint', () => {
     expect(() => parseHint('no_such_predicate(criminal)')).toThrow(HintParseError);
     expect(() => parseHint('number_of_traits(criminal)')).toThrow(HintParseError);
   });
+
+  it('rejects a malformed kind literal', () => {
+    expect(() => parseHint('all_units_have_at_least_n_traits(rowz,criminal,1)')).toThrow(
+      HintParseError,
+    );
+  });
 });
 
 describe('formatHint', () => {

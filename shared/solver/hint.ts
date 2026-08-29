@@ -113,7 +113,18 @@ function parseArg(raw: string, want: ArgKind): HintArg {
     case 'unit':
       return { t: 'unit', unit: parseUnit(s) };
     case 'kind':
-      return { t: 'kind', kind: s as UnitKind };
+      if (
+        s !== 'row' &&
+        s !== 'col' &&
+        s !== 'neighbor' &&
+        s !== 'between' &&
+        s !== 'profession' &&
+        s !== 'edge' &&
+        s !== 'corner'
+      ) {
+        throw new HintParseError(`bad kind: ${s}`);
+      }
+      return { t: 'kind', kind: s };
     case 'trait':
       if (s !== 'criminal' && s !== 'innocent') throw new HintParseError(`bad trait: ${s}`);
       return { t: 'trait', trait: s };
