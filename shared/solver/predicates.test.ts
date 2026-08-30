@@ -95,3 +95,51 @@ describe('counting predicates', () => {
     expect(ok('only_one_unit_has_exactly_n_traits(row,criminal,0)')).toBe(true);
   });
 });
+
+describe('comparison predicates', () => {
+  it('more_traits_in_unit_than_unit is strict', () => {
+    expect(ok('more_traits_in_unit_than_unit(unit(row,1),unit(row,2),criminal)')).toBe(true);
+    expect(ok('more_traits_in_unit_than_unit(unit(row,2),unit(row,1),criminal)')).toBe(false);
+    expect(ok('more_traits_in_unit_than_unit(unit(row,2),unit(row,4),criminal)')).toBe(false);
+  });
+  it('equal_number_of_traits_in_units', () => {
+    expect(ok('equal_number_of_traits_in_units(unit(row,2),unit(row,4),criminal)')).toBe(true);
+    expect(ok('equal_number_of_traits_in_units(unit(row,1),unit(row,2),criminal)')).toBe(false);
+  });
+  it('more_traits_than_traits_in_unit compares two traits inside one unit', () => {
+    expect(ok('more_traits_than_traits_in_unit(unit(row,1),criminal,innocent)')).toBe(false);
+    expect(ok('more_traits_than_traits_in_unit(unit(row,3),innocent,criminal)')).toBe(true);
+  });
+  it('equal_traits_and_traits_in_unit', () => {
+    expect(ok('equal_traits_and_traits_in_unit(unit(row,1),criminal,innocent)')).toBe(true);
+    expect(ok('equal_traits_and_traits_in_unit(unit(row,2),criminal,innocent)')).toBe(false);
+  });
+  it('has_most_traits is a strict maximum over the same kind', () => {
+    expect(ok('has_most_traits(unit(row,1),criminal)')).toBe(true);
+    expect(ok('has_most_traits(unit(row,2),criminal)')).toBe(false);
+    expect(ok('has_most_traits(unit(col,2),criminal)')).toBe(true);
+  });
+  it('only_unit_has_exactly_n_traits', () => {
+    expect(ok('only_unit_has_exactly_n_traits(unit(row,1),criminal,2)')).toBe(true);
+    expect(ok('only_unit_has_exactly_n_traits(unit(row,2),criminal,1)')).toBe(false);
+  });
+  it('units_share_n_traits counts the intersection', () => {
+    expect(ok('units_share_n_traits(unit(row,1),unit(col,1),criminal,1)')).toBe(true);
+    expect(ok('units_share_n_traits(unit(row,1),unit(row,2),criminal,0)')).toBe(true);
+  });
+  it('units_share_odd_n_traits', () => {
+    expect(ok('units_share_odd_n_traits(unit(row,1),unit(col,1),criminal)')).toBe(true);
+    expect(ok('units_share_odd_n_traits(unit(row,1),unit(row,2),criminal)')).toBe(false);
+  });
+  it('unit_shares_n_out_of_n_traits_with_unit constrains total and overlap', () => {
+    expect(ok('unit_shares_n_out_of_n_traits_with_unit(unit(row,1),unit(col,1),criminal,1,2)')).toBe(
+      true,
+    );
+    expect(ok('unit_shares_n_out_of_n_traits_with_unit(unit(row,1),unit(col,1),criminal,1,1)')).toBe(
+      false,
+    );
+    expect(ok('unit_shares_n_out_of_n_traits_with_unit(unit(row,1),unit(col,1),criminal,2,2)')).toBe(
+      false,
+    );
+  });
+});

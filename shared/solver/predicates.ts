@@ -103,6 +103,15 @@ function cnt(b: Board, a: HintArg[], k: number, t: Trait): number {
   return countTrait(b, unitMembers(b, argUnit(a, k)), t);
 }
 
+function sameUnit(a: Unit, b: Unit): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function shared(b: Board, a: HintArg[], t: Trait): number {
+  const first = new Set(unitMembers(b, argUnit(a, 0)));
+  return unitMembers(b, argUnit(a, 1)).filter((i) => first.has(i) && hasTrait(b, i, t)).length;
+}
+
 export const EVALUATORS: Record<string, (b: Board, a: HintArg[]) => boolean> = {
   has_trait: (b, a) => hasTrait(b, argIndex(a, 0), argTrait(a, 1)),
 
@@ -140,6 +149,54 @@ export const EVALUATORS: Record<string, (b: Board, a: HintArg[]) => boolean> = {
     const n = argNum(a, 2);
     const units = unitsOfKind(b, argKind(a, 0));
     return units.filter((u) => countTrait(b, unitMembers(b, u), t) === n).length === 1;
+  },
+
+  more_traits_in_unit_than_unit: (b, a) => {
+    const t = argTrait(a, 2);
+    return cnt(b, a, 0, t) > cnt(b, a, 1, t);
+  },
+
+  equal_number_of_traits_in_units: (b, a) => {
+    const t = argTrait(a, 2);
+    return cnt(b, a, 0, t) === cnt(b, a, 1, t);
+  },
+
+  more_traits_than_traits_in_unit: (b, a) => {
+    const members = unitMembers(b, argUnit(a, 0));
+    return countTrait(b, members, argTrait(a, 1)) > countTrait(b, members, argTrait(a, 2));
+  },
+
+  equal_traits_and_traits_in_unit: (b, a) => {
+    const members = unitMembers(b, argUnit(a, 0));
+    return countTrait(b, members, argTrait(a, 1)) === countTrait(b, members, argTrait(a, 2));
+  },
+
+  has_most_traits: (b, a) => {
+    const u = argUnit(a, 0);
+    const t = argTrait(a, 1);
+    const mine = countTrait(b, unitMembers(b, u), t);
+    return unitsOfKind(b, u.kind).every(
+      (other) => sameUnit(other, u) || countTrait(b, unitMembers(b, other), t) < mine,
+    );
+  },
+
+  only_unit_has_exactly_n_traits: (b, a) => {
+    const u = argUnit(a, 0);
+    const t = argTrait(a, 1);
+    const n = argNum(a, 2);
+    if (countTrait(b, unitMembers(b, u), t) !== n) return false;
+    return unitsOfKind(b, u.kind).every(
+      (other) => sameUnit(other, u) || countTrait(b, unitMembers(b, other), t) !== n,
+    );
+  },
+
+  units_share_n_traits: (b, a) => shared(b, a, argTrait(a, 2)) === argNum(a, 3),
+
+  units_share_odd_n_traits: (b, a) => shared(b, a, argTrait(a, 2)) % 2 === 1,
+
+  unit_shares_n_out_of_n_traits_with_unit: (b, a) => {
+    const t = argTrait(a, 2);
+    return cnt(b, a, 0, t) === argNum(a, 4) && shared(b, a, t) === argNum(a, 3);
   },
 };
 
