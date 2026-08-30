@@ -6,8 +6,8 @@ import { validatePuzzle } from '../shared/puzzle.ts';
 import type { LabelBand } from '../shared/solver/difficulty.ts';
 import { gatesPass, loadBands, measure } from '../shared/solver/difficulty.ts';
 import { makeGrid } from '../shared/solver/grid.ts';
-import { isUniquelySolvable, parseClues } from '../shared/solver/solve.ts';
-import { type GenerateRunResult, runGenerate, seedForDate } from './generate.mts';
+import { isUniquelySolvable, parseClues, solveChain } from '../shared/solver/solve.ts';
+import { type GenerateRunResult, runGenerate, seedForDate, unionCriminals } from './generate.mts';
 
 // A real puzzle file only needs the fields runGenerate reads plus schema validity.
 function realPuzzle(date: string, id: string, difficulty: string) {
@@ -187,5 +187,102 @@ describe('runGenerate cross-label salvage', () => {
 
     expect(gatesPass(parsedBands[puzzle.difficulty], metrics)).toBe(true);
     expect(isUniquelySolvable(shape, clues, truth)).toBe(true);
+    // Close the loop on the written file, not just the schema: these hold
+    // transitively through the re-stamp today, but assert them directly so a
+    // future change to what gets spread into the re-stamped object can't
+    // quietly break the no-guessing guarantee.
+    expect(solveChain(shape, clues, truth, puzzle.initialReveals).solvedAll).toBe(true);
+    puzzle.people.forEach((person, i) => {
+      if (puzzle.initialReveals.includes(i)) return;
+      expect(person.paths, `people[${i}]`).not.toBeNull();
+      expect((person.paths as number[][]).length).toBeGreaterThan(0);
+    });
   });
+});
+
+// --- Criminals sampling uses the union of all calibrated labels (task-20
+// addendum, second correction) ----------------------------------------------
+//
+// Criminal count carries no difficulty signal in the archive (Medium/Tricky/
+// Hard cluster within 0.23 of each other's mean; the Easy/Brutal split is an
+// artifact of Brutal's 3-sample band). So `runGenerate` must sample criminals
+// from the union of every calibrated label's `criminals` range, not the
+// target label's own range — see `unionCriminals` in `generate.mts`.
+
+describe('unionCriminals', () => {
+  it("spans the min of every label's min and the max of every label's max", () => {
+    const twoBands = {
+      Narrow: {
+        samples: 5,
+        criminals: { min: 11, max: 16 },
+        clueCards: { min: 0, max: 20 },
+        chainLength: { min: 0, max: 20 },
+        meanRevealsPerStep: { min: 0, max: 20 },
+        meanPathSize: { min: 0, max: 20 },
+      },
+      Wide: {
+        samples: 5,
+        criminals: { min: 4, max: 10 },
+        clueCards: { min: 0, max: 20 },
+        chainLength: { min: 0, max: 20 },
+        meanRevealsPerStep: { min: 0, max: 20 },
+        meanPathSize: { min: 0, max: 20 },
+      },
+    };
+    expect(unionCriminals(twoBands)).toEqual({ min: 4, max: 16 });
+  });
+});
+
+describe('runGenerate samples criminals from the union of all calibrated labels', () => {
+  // "Narrow" only calibrates 11-16 criminals; "Wide" calibrates 4-10. Their
+  // union is exactly {4,16}. Empirically (see the task report), attempt 0 for
+  // 2026-07-02's derived seed lands on 7 criminals when sampled from a
+  // {4,16} range — a value only reachable if the criminals range actually
+  // handed to `generatePuzzle` was the union, since Narrow's own {11,16}
+  // range cannot produce 7. Every other gated field is wide open so this
+  // attempt is also a same-attempt success (no extra generation cost).
+  const narrowBand: LabelBand = {
+    samples: 5,
+    criminals: { min: 11, max: 16 },
+    clueCards: { min: 0, max: 20 },
+    chainLength: { min: 0, max: 20 },
+    meanRevealsPerStep: { min: 0, max: 20 },
+    meanPathSize: { min: 0, max: 20 },
+  };
+  const wideBand: LabelBand = {
+    samples: 5,
+    criminals: { min: 4, max: 10 },
+    clueCards: { min: 0, max: 20 },
+    chainLength: { min: 0, max: 20 },
+    meanRevealsPerStep: { min: 0, max: 20 },
+    meanPathSize: { min: 0, max: 20 },
+  };
+
+  it(
+    "generates a puzzle whose criminal count falls outside its own label's narrow range",
+    async () => {
+      const dir = await mkdtemp(path.join(tmpdir(), 'cbs-generate-union-'));
+      const bandsPath = path.join(dir, 'difficulty.json');
+      await writeFile(bandsPath, JSON.stringify({ Narrow: narrowBand, Wide: wideBand }));
+      await writeFile(
+        path.join(dir, '2026-07-02.json'),
+        JSON.stringify(realPuzzle('2026-07-02', 'dddddddddddd', 'Narrow')),
+      );
+
+      const result = await runGenerate({ puzzlesDir: dir, bandsPath });
+      expect(result.written).toEqual(['2026-07-02']);
+      expect(result.failed).toEqual([]);
+
+      const raw = JSON.parse(await readFile(path.join(dir, '2026-07-02-dan.json'), 'utf8'));
+      const puzzle = validatePuzzle(raw);
+      expect(puzzle.difficulty).toBe('Narrow');
+      const criminals = puzzle.people.filter((p) => p.criminal).length;
+
+      // Only reachable if generatePuzzle sampled from the union {4,16}
+      // rather than Narrow's own {11,16}.
+      expect(criminals).toBeGreaterThanOrEqual(4);
+      expect(criminals).toBeLessThan(11);
+    },
+    60_000,
+  );
 });

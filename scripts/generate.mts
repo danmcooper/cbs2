@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Puzzle } from '../shared/puzzle.ts';
 import { validatePuzzle } from '../shared/puzzle.ts';
+import type { Band, Bands } from '../shared/solver/difficulty.ts';
 import { gatesPass, loadBands } from '../shared/solver/difficulty.ts';
 import { GenerationError, generatePuzzle } from '../shared/solver/generate.ts';
 import { regenerateManifest } from './manifest.mts';
@@ -35,6 +36,27 @@ export function seedForDate(date: string): number {
 }
 
 const REAL_FILE = /^(\d{4}-\d{2}-\d{2})\.json$/;
+
+/**
+ * The union of every calibrated label's `criminals` range (min of the mins,
+ * max of the maxes). Measured across the 54 archived puzzles, criminal count
+ * carries no difficulty signal: Medium/Tricky/Hard cluster within 0.23 of
+ * each other's mean, and the two largest samples (Tricky, Hard) each span
+ * nearly the full observed range — the apparent Easy/Brutal split is an
+ * artifact of Brutal having only 3 samples. So generation samples criminals
+ * from this union rather than the target label's own narrow range. Do not
+ * narrow this back to a single label's `criminals` band — that would force,
+ * e.g., every Brutal puzzle into 11-16 criminals on the strength of 3
+ * samples. Calibration still records per-label criminals as information; it
+ * just isn't used as a generation constraint.
+ */
+export function unionCriminals(bands: Bands): Band {
+  const labels = Object.values(bands);
+  return {
+    min: Math.min(...labels.map((b) => b.criminals.min)),
+    max: Math.max(...labels.map((b) => b.criminals.max)),
+  };
+}
 
 /** Remove `date` from `needed.get(label)`, if present. */
 function takeFromNeeded(needed: Map<string, string[]>, label: string, date: string): void {
@@ -99,6 +121,7 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
   }
 
   const pool = new Map<string, Puzzle>();
+  const criminalsUnion = unionCriminals(bands);
 
   for (const { date, label } of inScope) {
     takeFromNeeded(needed, label, date);
@@ -126,7 +149,7 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
       const { puzzle } = generatePuzzle({
         date,
         difficulty: label,
-        band,
+        band: { ...band, criminals: criminalsUnion },
         seed: seedForDate(date),
         onOffBand: (candidate) => {
           const labels = [...needed.keys()]
