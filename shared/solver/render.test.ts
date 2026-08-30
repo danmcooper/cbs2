@@ -112,6 +112,128 @@ describe('counting clue templates', () => {
   });
 });
 
+describe('comparison clue templates', () => {
+  it('more_traits_in_unit_than_unit', () => {
+    expect(r('more_traits_in_unit_than_unit(unit(neighbor,3),unit(neighbor,9),criminal)')).toBe(
+      '#NAME:3 has more criminal neighbors than #NAME:9',
+    );
+    expect(r('more_traits_in_unit_than_unit(unit(row,1),unit(row,4),innocent)')).toBe(
+      'There are more innocents in row 1 than row 4',
+    );
+    expect(r('more_traits_in_unit_than_unit(unit(col,1),unit(col,3),criminal)')).toBe(
+      'There are more criminals in column #C:1 than column #C:3',
+    );
+    expect(
+      r('more_traits_in_unit_than_unit(unit(profession,cook),unit(profession,cop),criminal)'),
+    ).toBe('There are more criminal #PROFS:cook than criminal #PROFS:cop');
+  });
+  it('equal_number_of_traits_in_units', () => {
+    expect(r('equal_number_of_traits_in_units(unit(neighbor,3),unit(neighbor,9),criminal)')).toBe(
+      '#NAME:3 and #NAME:9 have an equal number of criminal neighbors',
+    );
+    expect(r('equal_number_of_traits_in_units(unit(row,1),unit(row,4),innocent)')).toBe(
+      "There's an equal number of innocents in rows 1 and 4",
+    );
+    expect(r('equal_number_of_traits_in_units(unit(col,1),unit(col,3),criminal)')).toBe(
+      "There's an equal number of criminals in columns #C:1 and #C:3",
+    );
+    expect(
+      r('equal_number_of_traits_in_units(unit(profession,cook),unit(profession,cop),innocent)'),
+    ).toBe('There are as many innocent #PROFS:cook as there are innocent #PROFS:cop');
+  });
+  it('more_traits_than_traits_in_unit', () => {
+    expect(r('more_traits_than_traits_in_unit(unit(between,pair(0,3)),innocent,criminal)')).toBe(
+      'There are more innocents than criminals #BETWEEN:pair(0,3)',
+    );
+    expect(r('more_traits_than_traits_in_unit(unit(neighbor,5),criminal,innocent)')).toBe(
+      '#NAME:5 has more criminal than innocent neighbors',
+    );
+  });
+  it('equal_traits_and_traits_in_unit', () => {
+    expect(r('equal_traits_and_traits_in_unit(unit(between,pair(0,3)),criminal,innocent)')).toBe(
+      'There are as many criminals as innocents #BETWEEN:pair(0,3)',
+    );
+    expect(r('equal_traits_and_traits_in_unit(unit(profession,cop),innocent,criminal)')).toBe(
+      "There's an equal number of innocent and criminal #PROFS:cop",
+    );
+  });
+  it('has_most_traits', () => {
+    expect(r('has_most_traits(unit(col,2),criminal)')).toBe(
+      'Column #C:2 has more criminals than any other column',
+    );
+    expect(r('has_most_traits(unit(row,3),innocent)')).toBe(
+      'Row 3 has more innocents than any other row',
+    );
+    expect(r('has_most_traits(unit(neighbor,7),innocent)')).toBe(
+      '#NAME:7 has the most innocent neighbors',
+    );
+  });
+  it('only_unit_has_exactly_n_traits', () => {
+    expect(r('only_unit_has_exactly_n_traits(unit(row,2),innocent,3)')).toBe(
+      'Row 2 is the only row with exactly 3 innocents',
+    );
+    expect(r('only_unit_has_exactly_n_traits(unit(col,4),criminal,1)')).toBe(
+      'Column #C:4 is the only column with exactly one criminal',
+    );
+    // Ground truth (only_unit_has_exactly_n_traits, line 214) attests this neighbor-shaped
+    // clue: "NAME is the only one with exactly N criminal neighbor" — singular "neighbor"
+    // verbatim regardless of the count. The brief's step-1 test expected this shape to
+    // throw UnsupportedShapeError; ground truth wins per task instructions.
+    expect(r('only_unit_has_exactly_n_traits(unit(neighbor,4),criminal,2)')).toBe(
+      '#NAME:4 is the only one with exactly 2 criminal neighbor',
+    );
+  });
+  it('units_share_n_traits', () => {
+    expect(r('units_share_n_traits(unit(neighbor,3),unit(neighbor,9),innocent,1)')).toBe(
+      '#NAME:3 and #NAME:9 have only one innocent neighbor in common',
+    );
+    expect(r('units_share_n_traits(unit(neighbor,3),unit(neighbor,9),innocent,2)')).toBe(
+      '#NAME:3 and #NAME:9 have 2 innocent neighbors in common',
+    );
+    expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent,1)')).toBe(
+      'Exactly 1 innocent #BETWEEN:pair(0,3) is neighboring #NAME:9',
+    );
+    expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent,2)')).toBe(
+      'Exactly 2 innocents #BETWEEN:pair(0,3) are neighboring #NAME:9',
+    );
+    expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(row,2),innocent,0)')).toBe(
+      'No innocent #BETWEEN:pair(0,3) is in row 2',
+    );
+    // Ground truth (units_share_n_traits, line 60) attests a distinct zero-count phrasing for
+    // a neighbor target: "There are no innocents BTW who neighbor NAME" — not the generic
+    // "No X ... is neighboring NAME" the row/col branch above uses. Added beyond the brief's
+    // step-1 test to cover this deviation.
+    expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent,0)')).toBe(
+      'There are no innocents #BETWEEN:pair(0,3) who neighbor #NAME:9',
+    );
+  });
+  it('units_share_odd_n_traits', () => {
+    expect(r('units_share_odd_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent)')).toBe(
+      'An odd number of innocents #BETWEEN:pair(0,3) neighbor #NAME:9',
+    );
+    expect(r('units_share_odd_n_traits(unit(neighbor,9),unit(row,2),innocent)')).toBe(
+      'An odd number of innocents in row 2 neighbor #NAME:9',
+    );
+    expect(() => r('units_share_odd_n_traits(unit(row,1),unit(row,2),innocent)')).toThrow(
+      UnsupportedShapeError,
+    );
+  });
+  it('unit_shares_n_out_of_n_traits_with_unit', () => {
+    expect(
+      r('unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,5),unit(between,pair(0,3)),criminal,1,3)'),
+    ).toBe('Only 1 of the 3 criminals neighboring #NAME:5 is #BETWEEN:pair(0,3)');
+    expect(
+      r('unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,5),unit(neighbor,9),criminal,1,2)'),
+    ).toBe('Only 1 of the 2 criminals neighboring #NAME:5 is #NAMES:9 neighbor');
+    expect(
+      r('unit_shares_n_out_of_n_traits_with_unit(unit(edge,void),unit(neighbor,9),criminal,2,5)'),
+    ).toBe('Exactly 2 of the 5 criminals on the edges are #NAMES:9 neighbors');
+    expect(
+      r('unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,5),unit(row,3),criminal,2,4)'),
+    ).toBe('Exactly 2 of the 4 criminals neighboring #NAME:5 are in row 3');
+  });
+});
+
 describe('unsupported shapes', () => {
   it('throws rather than inventing a phrasing', () => {
     expect(() => r('number_of_traits_in_unit(unit(profession,cook),innocent,2)')).toThrow(

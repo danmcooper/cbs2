@@ -106,6 +106,19 @@ function argProfession(a: HintArg[], k: number): string {
   return x.name;
 }
 
+/** The "…is/are X" side of a two-unit clue. */
+function predicateTail(u: Unit, singular: boolean): string {
+  if (u.kind === 'neighbor') return `${names(u.i)} neighbor${singular ? '' : 's'}`;
+  return where(u);
+}
+
+function pairOfSameKind(u1: Unit, u2: Unit): UnitKind {
+  if (u1.kind !== u2.kind) {
+    throw new UnsupportedShapeError(`mixed unit kinds ${u1.kind}/${u2.kind}`);
+  }
+  return u1.kind;
+}
+
 export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
   has_trait: (a) => {
     const t = argTrait(a, 1);
@@ -173,6 +186,137 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const n = argNum(a, 2);
     const tail = n === 0 ? `no ${t}s` : `exactly ${bareQuantity(n, t)}`;
     return `Only one ${kindWord(k)} has ${tail}`;
+  },
+
+  more_traits_in_unit_than_unit: (a) => {
+    const u1 = argUnit(a, 0);
+    const u2 = argUnit(a, 1);
+    const t = argTrait(a, 2);
+    switch (pairOfSameKind(u1, u2)) {
+      case 'neighbor':
+        return `${name((u1 as { i: number }).i)} has more ${t} neighbors than ${name((u2 as { i: number }).i)}`;
+      case 'row':
+        return `There are more ${t}s in row ${(u1 as { n: number }).n} than row ${(u2 as { n: number }).n}`;
+      case 'col':
+        return `There are more ${t}s in column ${col((u1 as { n: number }).n)} than column ${col((u2 as { n: number }).n)}`;
+      case 'profession':
+        return `There are more ${t} ${profs((u1 as { name: string }).name)} than ${t} ${profs((u2 as { name: string }).name)}`;
+      default:
+        throw new UnsupportedShapeError(`more_traits_in_unit_than_unit over ${u1.kind}`);
+    }
+  },
+
+  equal_number_of_traits_in_units: (a) => {
+    const u1 = argUnit(a, 0);
+    const u2 = argUnit(a, 1);
+    const t = argTrait(a, 2);
+    switch (pairOfSameKind(u1, u2)) {
+      case 'neighbor':
+        return `${name((u1 as { i: number }).i)} and ${name((u2 as { i: number }).i)} have an equal number of ${t} neighbors`;
+      case 'row':
+        return `There's an equal number of ${t}s in rows ${(u1 as { n: number }).n} and ${(u2 as { n: number }).n}`;
+      case 'col':
+        return `There's an equal number of ${t}s in columns ${col((u1 as { n: number }).n)} and ${col((u2 as { n: number }).n)}`;
+      case 'profession':
+        return `There are as many ${t} ${profs((u1 as { name: string }).name)} as there are ${t} ${profs((u2 as { name: string }).name)}`;
+      default:
+        throw new UnsupportedShapeError(`equal_number_of_traits_in_units over ${u1.kind}`);
+    }
+  },
+
+  more_traits_than_traits_in_unit: (a) => {
+    const u = argUnit(a, 0);
+    const t1 = argTrait(a, 1);
+    const t2 = argTrait(a, 2);
+    if (u.kind === 'neighbor') return `${name(u.i)} has more ${t1} than ${t2} neighbors`;
+    return `There are more ${t1}s than ${t2}s ${where(u)}`;
+  },
+
+  equal_traits_and_traits_in_unit: (a) => {
+    const u = argUnit(a, 0);
+    const t1 = argTrait(a, 1);
+    const t2 = argTrait(a, 2);
+    if (u.kind === 'profession') {
+      return `There's an equal number of ${t1} and ${t2} ${profs(u.name)}`;
+    }
+    return `There are as many ${t1}s as ${t2}s ${where(u)}`;
+  },
+
+  has_most_traits: (a) => {
+    const u = argUnit(a, 0);
+    const t = argTrait(a, 1);
+    switch (u.kind) {
+      case 'row':
+        return `Row ${u.n} has more ${t}s than any other row`;
+      case 'col':
+        return `Column ${col(u.n)} has more ${t}s than any other column`;
+      case 'neighbor':
+        return `${name(u.i)} has the most ${t} neighbors`;
+      default:
+        throw new UnsupportedShapeError(`has_most_traits over ${u.kind}`);
+    }
+  },
+
+  only_unit_has_exactly_n_traits: (a) => {
+    const u = argUnit(a, 0);
+    const t = argTrait(a, 1);
+    const n = argNum(a, 2);
+    const tail = n === 0 ? `no ${t}s` : `exactly ${bareQuantity(n, t)}`;
+    if (u.kind === 'row') return `Row ${u.n} is the only row with ${tail}`;
+    if (u.kind === 'col') return `Column ${col(u.n)} is the only column with ${tail}`;
+    if (u.kind === 'neighbor') {
+      // Ground truth (only_unit_has_exactly_n_traits, line 214) attests a neighbor-shaped
+      // clue: "NAME is the only one with exactly N criminal neighbor" — singular "neighbor"
+      // verbatim regardless of n. The brief's step-1 test expected this shape to throw;
+      // ground truth wins per task instructions, so we render it (bug-for-bug) instead.
+      return `${name(u.i)} is the only one with exactly ${n} ${t} neighbor`;
+    }
+    throw new UnsupportedShapeError(`only_unit_has_exactly_n_traits over ${u.kind}`);
+  },
+
+  units_share_n_traits: (a) => {
+    const u1 = argUnit(a, 0);
+    const u2 = argUnit(a, 1);
+    const t = argTrait(a, 2);
+    const n = argNum(a, 3);
+    if (u1.kind === 'neighbor' && u2.kind === 'neighbor') {
+      const q = n === 1 ? `only one ${t} neighbor` : `${n} ${t} neighbors`;
+      return `${name(u1.i)} and ${name(u2.i)} have ${q} in common`;
+    }
+    if (n === 0 && u2.kind === 'neighbor') {
+      // Ground truth (units_share_n_traits, line 60) attests a distinct zero-count phrasing
+      // for a neighbor target: "There are no innocents BTW who neighbor NAME" — not the
+      // generic "No X ... is neighboring NAME" the brief's fallback would otherwise produce.
+      return `There are no ${t}s ${where(u1)} who neighbor ${name(u2.i)}`;
+    }
+    const tail = u2.kind === 'neighbor' ? `neighboring ${name(u2.i)}` : where(u2);
+    if (n === 0) return `No ${t} ${where(u1)} is ${tail}`;
+    const verb = n === 1 ? 'is' : 'are';
+    return `Exactly ${n} ${plural(t, n)} ${where(u1)} ${verb} ${tail}`;
+  },
+
+  units_share_odd_n_traits: (a) => {
+    const u1 = argUnit(a, 0);
+    const u2 = argUnit(a, 1);
+    const t = argTrait(a, 2);
+    const nbr = u1.kind === 'neighbor' ? u1 : u2.kind === 'neighbor' ? u2 : null;
+    if (nbr === null) throw new UnsupportedShapeError('units_share_odd_n_traits needs a neighbor unit');
+    const other = nbr === u1 ? u2 : u1;
+    if (other.kind === 'neighbor') {
+      throw new UnsupportedShapeError('units_share_odd_n_traits over two neighbor units');
+    }
+    return `An odd number of ${t}s ${where(other)} neighbor ${name(nbr.i)}`;
+  },
+
+  unit_shares_n_out_of_n_traits_with_unit: (a) => {
+    const u1 = argUnit(a, 0);
+    const u2 = argUnit(a, 1);
+    const t = argTrait(a, 2);
+    const n = argNum(a, 3);
+    const m = argNum(a, 4);
+    const head = n === 1 ? `Only 1 of the ${m} ${t}s` : `Exactly ${n} of the ${m} ${t}s`;
+    const verb = n === 1 ? 'is' : 'are';
+    return `${head} ${where(u1)} ${verb} ${predicateTail(u2, n === 1)}`;
   },
 };
 
