@@ -15,11 +15,14 @@ export interface Board {
   grid: Grid;
   professions: string[];
   criminal: boolean[];
+  /** Memoises unit membership; safe because membership depends only on grid and
+   * professions, never on `criminal`. */
+  cache?: Map<string, number[]>;
 }
 
 export class UnknownPredicateError extends Error {}
 
-export function unitMembers(b: Board, u: Unit): number[] {
+function computeUnitMembers(b: Board, u: Unit): number[] {
   switch (u.kind) {
     case 'row':
       return rowMembers(b.grid, u.n);
@@ -36,6 +39,21 @@ export function unitMembers(b: Board, u: Unit): number[] {
     case 'corner':
       return cornerMembers(b.grid);
   }
+}
+
+export function makeBoard(grid: Grid, professions: string[], criminal: boolean[]): Board {
+  return { grid, professions, criminal, cache: new Map() };
+}
+
+export function unitMembers(b: Board, u: Unit): number[] {
+  if (!b.cache) return computeUnitMembers(b, u);
+  const key = JSON.stringify(u);
+  let members = b.cache.get(key);
+  if (!members) {
+    members = computeUnitMembers(b, u);
+    b.cache.set(key, members);
+  }
+  return members;
 }
 
 export function unitsOfKind(b: Board, kind: UnitKind): Unit[] {

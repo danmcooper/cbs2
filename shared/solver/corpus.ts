@@ -3,7 +3,7 @@ import path from 'node:path';
 import { type Puzzle, validatePuzzle } from '../puzzle';
 import { makeGrid } from './grid';
 import { parseHint } from './hint';
-import { type Board, unitMembers } from './predicates';
+import { type Board, makeBoard, unitMembers } from './predicates';
 
 export interface ArchivePuzzle {
   file: string;
@@ -14,11 +14,11 @@ export interface ArchivePuzzle {
 const PUZZLES_DIR = path.join(process.cwd(), 'puzzles');
 
 export function boardFor(puzzle: Puzzle): Board {
-  return {
-    grid: makeGrid(puzzle.width, puzzle.height),
-    professions: puzzle.people.map((p) => p.profession),
-    criminal: puzzle.people.map((p) => p.criminal),
-  };
+  return makeBoard(
+    makeGrid(puzzle.width, puzzle.height),
+    puzzle.people.map((p) => p.profession),
+    puzzle.people.map((p) => p.criminal),
+  );
 }
 
 /** Real (non-Dan) archived puzzles, in date order. */
