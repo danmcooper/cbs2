@@ -53,10 +53,12 @@ export function sortDifficulties(difficulties: string[]): string[] {
 export interface ArchiveFilters {
   difficulty?: string;
   status?: PuzzleStatus;
+  variant?: 'real' | 'dan';
 }
 
 export function filterEntries(entries: ManifestEntry[], filters: ArchiveFilters): ManifestEntry[] {
   return entries.filter((entry) => {
+    if (filters.variant && entry.variant !== filters.variant) return false;
     if (filters.difficulty && entry.difficulty !== filters.difficulty) return false;
     if (filters.status && statusFor(entry.id) !== filters.status) return false;
     return true;

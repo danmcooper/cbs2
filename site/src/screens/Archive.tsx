@@ -7,14 +7,20 @@ export default function Archive() {
   const { data, error, retry } = useFetch<ManifestEntry[]>('puzzles/index.json');
   const [difficulty, setDifficulty] = useState('');
   const [status, setStatus] = useState<PuzzleStatus | ''>('');
+  const [variant, setVariant] = useState<'real' | 'dan'>('real');
 
   const difficulties = useMemo(
-    () => sortDifficulties([...new Set((data ?? []).map((e) => e.difficulty))]),
-    [data],
+    () => sortDifficulties([...new Set((data ?? []).filter((e) => e.variant === variant).map((e) => e.difficulty))]),
+    [data, variant],
   );
   const filtered = useMemo(
-    () => filterEntries(data ?? [], { difficulty: difficulty || undefined, status: status || undefined }),
-    [data, difficulty, status],
+    () =>
+      filterEntries(data ?? [], {
+        variant,
+        difficulty: difficulty || undefined,
+        status: status || undefined,
+      }),
+    [data, difficulty, status, variant],
   );
 
   if (error) {
@@ -32,6 +38,18 @@ export default function Archive() {
       {data.length === 0 && <p>No puzzles yet — the scraper runs daily.</p>}
       {data.length > 0 && (
         <div className="archive-filters">
+          <div className="variant-toggle" role="group" aria-label="Puzzle set">
+            <button
+              type="button"
+              aria-pressed={variant === 'real'}
+              onClick={() => setVariant('real')}
+            >
+              Real
+            </button>
+            <button type="button" aria-pressed={variant === 'dan'} onClick={() => setVariant('dan')}>
+              Dan
+            </button>
+          </div>
           <label>
             Difficulty
             <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
@@ -63,8 +81,8 @@ export default function Archive() {
               <h2>{group.month}</h2>
               <ul>
                 {group.entries.map((entry) => (
-                  <li key={entry.date}>
-                    <a href={`#/play/${entry.date}`}>
+                  <li key={entry.slug}>
+                    <a href={`#/play/${entry.slug}`}>
                       <span className="arch-date">{entry.date}</span>
                       <span className="arch-title">{entry.title}</span>
                       <span className="arch-difficulty">{entry.difficulty}</span>

@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Archive from './Archive';
 
 const manifest = [
-  { date: '2026-07-03', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
-  { date: '2026-07-01', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
+  { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
+  { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'dddddddddddd', difficulty: 'Hard', title: 'Second (Dan)' },
+  { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
 ];
 
 beforeEach(() => {
@@ -44,9 +45,9 @@ describe('Archive', () => {
         async () =>
           new Response(
             JSON.stringify([
-              { date: '2026-07-03', id: 'c', difficulty: 'Brutal', title: 'Third' },
-              { date: '2026-07-02', id: 'b', difficulty: 'Tricky', title: 'Second' },
-              { date: '2026-07-01', id: 'a', difficulty: 'Easy', title: 'First' },
+              { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'c', difficulty: 'Brutal', title: 'Third' },
+              { date: '2026-07-02', slug: '2026-07-02', variant: 'real', id: 'b', difficulty: 'Tricky', title: 'Second' },
+              { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'a', difficulty: 'Easy', title: 'First' },
             ]),
             { status: 200 },
           ),
@@ -84,5 +85,19 @@ describe('Archive', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('gone', { status: 500 })));
     render(<Archive />);
     expect(await screen.findByRole('button', { name: /retry/i })).toBeTruthy();
+  });
+
+  it('shows real puzzles by default and swaps to Dan puzzles on the toggle', async () => {
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03',
+      '#/play/2026-07-01',
+    ]);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Dan' }));
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03-dan',
+    ]);
   });
 });

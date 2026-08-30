@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 async function renderGame(user: ReturnType<typeof userEvent.setup> = userEvent.setup()) {
-  render(<Game date="2026-07-07" />);
+  render(<Game slug="2026-07-07" />);
   await screen.findAllByRole('group');
   // Fresh puzzles open with the start popup; click through it.
   const start = screen.queryByRole('button', { name: 'Start' });
@@ -137,7 +137,7 @@ describe('Game', () => {
 
   it('shows an error screen with retry when the fetch fails', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('gone', { status: 404 })));
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     expect(await screen.findByRole('button', { name: /retry/i })).toBeTruthy();
   });
 });
@@ -213,7 +213,7 @@ describe('revisiting a completed puzzle', () => {
       'cbs:progress:a6f09e2713b2',
       JSON.stringify({ flipped: [0, 1, 2, 3], mistakes: 1, elapsedMs: 65_000, completed: true }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     const dialog = screen.getByRole('dialog');
     expect(dialog.querySelectorAll('.share-cell')).toHaveLength(4);
@@ -227,7 +227,7 @@ describe('revisiting a completed puzzle', () => {
 describe('start popup', () => {
   it('welcomes on a fresh puzzle and dismisses on Start', async () => {
     const user = userEvent.setup();
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     const dialog = await screen.findByRole('dialog');
     expect(dialog.textContent).toContain('Welcome to Clues by Sam!');
     expect(dialog.textContent).toContain('Jul 7th 2026');
@@ -241,7 +241,7 @@ describe('start popup', () => {
       'cbs:progress:a6f09e2713b2',
       JSON.stringify({ flipped: [0, 1], mistakes: 1, elapsedMs: 5_000, completed: false }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
@@ -260,7 +260,7 @@ describe('timer display', () => {
       }),
     );
     const user = userEvent.setup();
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     const timer = screen.getByText('Timed: < 3 min');
     await user.click(timer);
@@ -284,7 +284,7 @@ describe('timer display', () => {
         completed: false,
       }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.timer')?.textContent).toMatch(/^Elapsed: 03h:06m:1\ds$/);
   });
@@ -319,7 +319,7 @@ describe('timer display', () => {
         completed: true,
       }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     const timer = document.querySelector('.timer');
     expect(timer?.textContent).toBe('Elapsed: 05:00');
@@ -341,7 +341,7 @@ describe('timer display', () => {
         completed: true,
       }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.timer')?.textContent).toBe('Elapsed: 02:05');
   });
@@ -542,7 +542,7 @@ describe('timer resume', () => {
       JSON.stringify({ flipped: [0, 1], mistakes: 1, elapsedMs: 125_000, completed: false }),
     );
     const user = userEvent.setup();
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     const timer = screen.getByText('Timed: < 3 min');
     await user.click(timer);
@@ -559,13 +559,13 @@ describe('seconds preference', () => {
       JSON.stringify({ flipped: [0, 1], mistakes: 1, elapsedMs: 125_000, completed: false }),
     );
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     await user.click(screen.getByText('Timed: < 3 min'));
     expect(document.querySelector('.timer')?.textContent).toMatch(/^Timed: \d{2}:\d{2}$/);
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.timer')?.textContent).toMatch(/^Timed: \d{2}:\d{2}$/);
   });
@@ -588,7 +588,7 @@ describe('correct-guess animation', () => {
       'cbs:progress:a6f09e2713b2',
       JSON.stringify({ flipped: [0, 1], mistakes: 0, elapsedMs: 5_000, completed: false }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     const cards = await screen.findAllByRole('group');
     expect(cards[1].querySelector('.speech-bubble')?.textContent).toBe('Correct!');
     expect(cards[0].querySelector('.speech-bubble')).toBeNull(); // initial reveal, not a guess
@@ -613,7 +613,7 @@ describe('correct-guess animation', () => {
 describe('pause persistence', () => {
   it('stays paused across a refresh', async () => {
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     const start = screen.queryByRole('button', { name: 'Start' });
     if (start) await user.click(start);
@@ -621,7 +621,7 @@ describe('pause persistence', () => {
     expect(document.querySelector('.pause-overlay')).toBeTruthy();
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Unpause' })).toBeTruthy();
@@ -646,7 +646,7 @@ describe('pause persistence', () => {
 
   it('pauses on the spot when the page is hidden, and reopens paused', async () => {
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await startAndPlay(user);
     expect(document.querySelector('.pause-overlay')).toBeNull();
 
@@ -656,28 +656,28 @@ describe('pause persistence', () => {
     setHidden(false);
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeTruthy();
   });
 
   it('unpausing after an auto-pause clears it, so a refresh keeps playing', async () => {
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await startAndPlay(user);
     setHidden(true);
     setHidden(false);
     await user.click(screen.getByRole('button', { name: 'Unpause' }));
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeNull();
   });
 
   it('parks the puzzle when the page is left, so reopening it is paused', async () => {
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     await user.click(screen.getByRole('button', { name: 'Start' }));
     await user.click(screen.getByText('mira'));
@@ -685,7 +685,7 @@ describe('pause persistence', () => {
     act(() => void window.dispatchEvent(new Event('pagehide')));
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Unpause' })).toBeTruthy();
@@ -693,7 +693,7 @@ describe('pause persistence', () => {
 
   it('a plain refresh ignores the park and keeps playing', async () => {
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     await user.click(screen.getByRole('button', { name: 'Start' }));
     await user.click(screen.getByText('mira'));
@@ -704,19 +704,19 @@ describe('pause persistence', () => {
     vi.spyOn(performance, 'getEntriesByType').mockReturnValue([
       { type: 'reload' } as PerformanceNavigationTiming,
     ]);
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeNull();
     expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy();
   });
 
   it('an unstarted puzzle is not parked', async () => {
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     act(() => void window.dispatchEvent(new Event('pagehide')));
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeNull();
   });
@@ -728,7 +728,7 @@ describe('pause persistence', () => {
       'cbs:progress:a6f09e2713b2',
       JSON.stringify({ flipped: [0, 1, 2, 3], mistakes: 0, elapsedMs: 65_000, completed: true }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeNull();
     expect(screen.getByRole('button', { name: 'Pause' })).toHaveProperty('disabled', true);
@@ -747,7 +747,7 @@ describe('pause persistence', () => {
 
   it('does not stay paused after a reset', async () => {
     const user = userEvent.setup();
-    const first = render(<Game date="2026-07-07" />);
+    const first = render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     const start = screen.queryByRole('button', { name: 'Start' });
     if (start) await user.click(start);
@@ -757,7 +757,7 @@ describe('pause persistence', () => {
     await user.click(within(confirm).getByRole('button', { name: 'Reset' }));
     first.unmount();
 
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     await screen.findAllByRole('group');
     expect(document.querySelector('.pause-overlay')).toBeNull();
   });
@@ -796,7 +796,7 @@ describe('reference bounce animation', () => {
       'cbs:progress:a6f09e2713b2',
       JSON.stringify({ flipped: [0, 1], mistakes: 0, elapsedMs: 5_000, completed: false }),
     );
-    render(<Game date="2026-07-07" />);
+    render(<Game slug="2026-07-07" />);
     const cards = await screen.findAllByRole('group');
     const ozanName = cards[2].querySelector('.card-name');
     expect(ozanName?.className).toContain('referenced'); // still statically highlighted

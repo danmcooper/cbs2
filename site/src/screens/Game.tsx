@@ -56,6 +56,11 @@ function formatDateOrdinal(date: string): string {
   return `${d.toLocaleString("en-US", { month: "short" })} ${day}${suffix} ${d.getFullYear()}`;
 }
 
+function puzzleLabel(puzzle: Puzzle): string {
+  const dan = puzzle.variant === "dan" ? " · Dan" : "";
+  return `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})${dan}`;
+}
+
 // Results grid: green = clean solve, yellow square = had a bad answer,
 // yellow circle = flipped with a hint, orange circle = with the hint's
 // reveal level. Hints outrank bad answers, like on the real site.
@@ -91,7 +96,7 @@ function ResultsModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const title = `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})`;
+  const title = puzzleLabel(puzzle);
   const solvedIn = `Solved in ${formatTime(state.elapsedMs)}`;
   const colors = cellColors(puzzle, state);
   const rows = [...Array(puzzle.height)].map((_, r) =>
@@ -498,9 +503,7 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
             </button>
           </div>
           <p className="date-line">
-            <span>
-              {formatDateOrdinal(puzzle.date)} ({puzzle.difficulty})
-            </span>
+            <span>{puzzleLabel(puzzle)}</span>
             <span className="timer" onClick={cycleTimerMode}>
               {timerMode === "elapsed"
                 ? `Elapsed: ${formatElapsed(sinceStart)}`
@@ -601,8 +604,8 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
   );
 }
 
-export default function Game({ date }: { date: string }) {
-  const { data, error, retry } = useFetch<unknown>(`puzzles/${date}.json`);
+export default function Game({ slug }: { slug: string }) {
+  const { data, error, retry } = useFetch<unknown>(`puzzles/${slug}.json`);
   if (error) {
     return (
       <main>
@@ -611,7 +614,7 @@ export default function Game({ date }: { date: string }) {
       </main>
     );
   }
-  if (!data) return <p>Loading {date}</p>;
+  if (!data) return <p>Loading {slug}</p>;
   let puzzle: Puzzle;
   try {
     puzzle = validatePuzzle(data);
