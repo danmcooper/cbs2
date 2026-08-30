@@ -1,0 +1,117 @@
+{
+  "Medium": {
+    "samples": 9,
+    "criminals": {
+      "min": 6,
+      "max": 15
+    },
+    "clueCards": {
+      "min": 12,
+      "max": 15
+    },
+    "chainLength": {
+      "min": 8,
+      "max": 15
+    },
+    "meanRevealsPerStep": {
+      "min": 1.2666666666666666,
+      "max": 2.375
+    },
+    "meanPathSize": {
+      "min": 6.2105263157894735,
+      "max": 9.052631578947368
+    }
+  },
+  "Tricky": {
+    "samples": 22,
+    "criminals": {
+      "min": 4,
+      "max": 16
+    },
+    "clueCards": {
+      "min": 7,
+      "max": 15
+    },
+    "chainLength": {
+      "min": 6,
+      "max": 15
+    },
+    "meanRevealsPerStep": {
+      "min": 1.2666666666666666,
+      "max": 3.1666666666666665
+    },
+    "meanPathSize": {
+      "min": 4.578947368421052,
+      "max": 9.263157894736842
+    }
+  },
+  "Hard": {
+    "samples": 11,
+    "criminals": {
+      "min": 4,
+      "max": 16
+    },
+    "clueCards": {
+      "min": 9,
+      "max": 14
+    },
+    "chainLength": {
+      "min": 7,
+      "max": 14
+    },
+    "meanRevealsPerStep": {
+      "min": 1.3571428571428572,
+      "max": 2.7142857142857144
+    },
+    "meanPathSize": {
+      "min": 5.578947368421052,
+      "max": 8.894736842105264
+    }
+  },
+  "Brutal": {
+    "samples": 3,
+    "criminals": {
+      "min": 11,
+      "max": 16
+    },
+    "clueCards": {
+      "min": 9,
+      "max": 11
+    },
+    "chainLength": {
+      "min": 8,
+      "max": 10
+    },
+    "meanRevealsPerStep": {
+      "min": 1.9,
+      "max": 2.375
+    },
+    "meanPathSize": {
+      "min": 6.368421052631579,
+      "max": 7.052631578947368
+    }
+  },
+  "Easy": {
+    "samples": 9,
+    "criminals": {
+      "min": 4,
+      "max": 10
+    },
+    "clueCards": {
+      "min": 13,
+      "max": 16
+    },
+    "chainLength": {
+      "min": 10,
+      "max": 16
+    },
+    "meanRevealsPerStep": {
+      "min": 1.1875,
+      "max": 1.9
+    },
+    "meanPathSize": {
+      "min": 6.894736842105263,
+      "max": 9.631578947368421
+    }
+  }
+}

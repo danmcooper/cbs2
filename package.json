@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "extract": "tsx scripts/extract.mts",
-    "manifest": "tsx scripts/manifest.mts"
+    "manifest": "tsx scripts/manifest.mts",
+    "calibrate": "tsx scripts/calibrate.mts"
   },
   "dependencies": {
     "react": "^19.2.7",
