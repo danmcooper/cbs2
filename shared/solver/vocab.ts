@@ -88,7 +88,7 @@ export const TITLES: string[] = [
 
 export const FLAVOUR: string[] = [
   'I was tying my shoelace the whole time.',
-  "Don't look at me, I only work weekends.",
+  'I only work weekends, so ask someone on shift.',
   'I have nothing useful to add, sorry.',
   'Ask someone with a better view.',
   'I was facing the other way.',
