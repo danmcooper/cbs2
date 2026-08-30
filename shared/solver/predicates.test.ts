@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeGrid } from './grid';
-import { parseHint } from './hint';
-import { type Board, countTrait, evaluate, unitMembers, unitsOfKind } from './predicates';
+import { ARG_KINDS, parseHint } from './hint';
+import { type Board, countTrait, evaluate, EVALUATORS, unitMembers, unitsOfKind } from './predicates';
 
 // 4x5. Criminals at 0, 1, 6, 13, 19.
 const CRIMINALS = [0, 1, 6, 13, 19];
@@ -141,5 +141,62 @@ describe('comparison predicates', () => {
     expect(ok('unit_shares_n_out_of_n_traits_with_unit(unit(row,1),unit(col,1),criminal,2,2)')).toBe(
       false,
     );
+  });
+});
+
+describe('adjacency and direction predicates', () => {
+  it('covers every predicate in the signature table', () => {
+    expect(Object.keys(EVALUATORS).sort()).toEqual(Object.keys(ARG_KINDS).sort());
+  });
+  it('max_number_of_traits_in_neighbors_in_unit caps every member', () => {
+    // row 5 is 16..19; criminal-neighbour counts: 16->1 (13), 17->1 (13), 18->2 (13,19), 19->0.
+    // Max across the unit is 2.
+    expect(ok('max_number_of_traits_in_neighbors_in_unit(unit(row,5),criminal,2)')).toBe(true);
+    expect(ok('max_number_of_traits_in_neighbors_in_unit(unit(row,5),criminal,1)')).toBe(false);
+  });
+  it('both_traits_are_neighbors_in_unit needs exactly two, adjacent', () => {
+    expect(ok('both_traits_are_neighbors_in_unit(unit(row,1),criminal)')).toBe(true);
+    expect(ok('both_traits_are_neighbors_in_unit(unit(col,1),criminal)')).toBe(false);
+    expect(ok('both_traits_are_neighbors_in_unit(unit(between,pair(0,2)),criminal)')).toBe(true);
+  });
+  it('all_traits_are_neighbors_in_unit is 8-way connectivity', () => {
+    expect(ok('all_traits_are_neighbors_in_unit(unit(row,1),criminal)')).toBe(true);
+    // col 2 criminals are 1 and 13, not neighbours of each other.
+    expect(ok('all_traits_are_neighbors_in_unit(unit(col,2),criminal)')).toBe(false);
+  });
+  it('both_traits_in_unit_are_in_unit', () => {
+    expect(ok('both_traits_in_unit_are_in_unit(unit(row,1),unit(col,1),criminal)')).toBe(false);
+    expect(ok('both_traits_in_unit_are_in_unit(unit(row,1),unit(row,1),criminal)')).toBe(true);
+  });
+  it('only_trait_in_unit_is_in_unit', () => {
+    expect(ok('only_trait_in_unit_is_in_unit(unit(row,2),unit(col,3),criminal)')).toBe(true);
+    expect(ok('only_trait_in_unit_is_in_unit(unit(row,1),unit(col,3),criminal)')).toBe(false);
+  });
+  it('only_one_person_in_unit_has_exactly_n_trait_neighbors', () => {
+    // row 1 members 0..3, criminal-neighbour counts: 0->1, 1->2, 2->2, 3->1 (two members tie at 1).
+    expect(ok('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,1),criminal,1)')).toBe(
+      false,
+    );
+    // row 3 members 8..11, criminal-neighbour counts: 8->1, 9->2, 10->2, 11->1 (none reach 3).
+    expect(ok('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,3),criminal,3)')).toBe(
+      false,
+    );
+  });
+  it('n_in_unit_have_trait_in_dir counts on-grid offsets only', () => {
+    // corners 0,3,16,19 with an innocent directly to the right: 0->1 criminal (no),
+    // 3 off-grid, 16->17 innocent (yes), 19 off-grid.
+    expect(ok('n_in_unit_have_trait_in_dir(unit(corner,void),innocent,1,0,1)')).toBe(true);
+    expect(ok('n_in_unit_have_trait_in_dir(unit(corner,void),innocent,1,0,2)')).toBe(false);
+  });
+  it('n_t_in_unit_have_trait_in_dir filters the source by trait too', () => {
+    // criminals in row 1 are 0 and 1; to the right: 1 (criminal), 2 (innocent).
+    expect(ok('n_t_in_unit_have_trait_in_dir(unit(row,1),criminal,innocent,1,0,1)')).toBe(true);
+    expect(ok('n_t_in_unit_have_trait_in_dir(unit(row,1),criminal,criminal,1,0,1)')).toBe(true);
+  });
+  it('n_professions_have_trait_in_dir ranges over a profession', () => {
+    // cooks are 0,1,4,10,12,13,19; directly below each: 4,5,8,14,16,17,off-grid.
+    // innocent among those: 4(y),5(y),8(y),14(y),16(y),17(y) -> 6
+    expect(ok('n_professions_have_trait_in_dir(cook,innocent,0,1,6)')).toBe(true);
+    expect(ok('n_professions_have_trait_in_dir(cook,innocent,0,1,7)')).toBe(false);
   });
 });

@@ -112,6 +112,23 @@ function shared(b: Board, a: HintArg[], t: Trait): number {
   return unitMembers(b, argUnit(a, 1)).filter((i) => first.has(i) && hasTrait(b, i, t)).length;
 }
 
+function traitNeighborCount(b: Board, i: number, t: Trait): number {
+  return countTrait(b, neighbors(b.grid, i), t);
+}
+
+function inDirCount(b: Board, members: number[], t: Trait, dx: number, dy: number): number {
+  let n = 0;
+  for (const i of members) {
+    const j = offsetIndex(b.grid, i, dx, dy);
+    if (j !== null && hasTrait(b, j, t)) n++;
+  }
+  return n;
+}
+
+function traitMembers(b: Board, u: Unit, t: Trait): number[] {
+  return unitMembers(b, u).filter((i) => hasTrait(b, i, t));
+}
+
 export const EVALUATORS: Record<string, (b: Board, a: HintArg[]) => boolean> = {
   has_trait: (b, a) => hasTrait(b, argIndex(a, 0), argTrait(a, 1)),
 
@@ -198,6 +215,64 @@ export const EVALUATORS: Record<string, (b: Board, a: HintArg[]) => boolean> = {
     const t = argTrait(a, 2);
     return cnt(b, a, 0, t) === argNum(a, 4) && shared(b, a, t) === argNum(a, 3);
   },
+
+  max_number_of_traits_in_neighbors_in_unit: (b, a) => {
+    const t = argTrait(a, 1);
+    const n = argNum(a, 2);
+    return unitMembers(b, argUnit(a, 0)).every((i) => traitNeighborCount(b, i, t) <= n);
+  },
+
+  both_traits_in_unit_are_in_unit: (b, a) => {
+    const t = argTrait(a, 2);
+    const mine = traitMembers(b, argUnit(a, 0), t);
+    const other = new Set(unitMembers(b, argUnit(a, 1)));
+    return mine.length === 2 && mine.every((i) => other.has(i));
+  },
+
+  only_trait_in_unit_is_in_unit: (b, a) => {
+    const t = argTrait(a, 2);
+    const mine = traitMembers(b, argUnit(a, 0), t);
+    const other = new Set(unitMembers(b, argUnit(a, 1)));
+    return mine.length === 1 && other.has(mine[0]);
+  },
+
+  both_traits_are_neighbors_in_unit: (b, a) => {
+    const mine = traitMembers(b, argUnit(a, 0), argTrait(a, 1));
+    return mine.length === 2 && neighbors(b.grid, mine[0]).includes(mine[1]);
+  },
+
+  all_traits_are_neighbors_in_unit: (b, a) =>
+    isConnected(b.grid, traitMembers(b, argUnit(a, 0), argTrait(a, 1))),
+
+  only_one_person_in_unit_has_exactly_n_trait_neighbors: (b, a) => {
+    const t = argTrait(a, 1);
+    const n = argNum(a, 2);
+    return (
+      unitMembers(b, argUnit(a, 0)).filter((i) => traitNeighborCount(b, i, t) === n).length === 1
+    );
+  },
+
+  n_in_unit_have_trait_in_dir: (b, a) =>
+    inDirCount(b, unitMembers(b, argUnit(a, 0)), argTrait(a, 1), argNum(a, 2), argNum(a, 3)) ===
+    argNum(a, 4),
+
+  n_t_in_unit_have_trait_in_dir: (b, a) =>
+    inDirCount(
+      b,
+      traitMembers(b, argUnit(a, 0), argTrait(a, 1)),
+      argTrait(a, 2),
+      argNum(a, 3),
+      argNum(a, 4),
+    ) === argNum(a, 5),
+
+  n_professions_have_trait_in_dir: (b, a) =>
+    inDirCount(
+      b,
+      unitMembers(b, { kind: 'profession', name: argProfession(a, 0) }),
+      argTrait(a, 1),
+      argNum(a, 2),
+      argNum(a, 3),
+    ) === argNum(a, 4),
 };
 
 export function evaluate(b: Board, h: Hint): boolean {
