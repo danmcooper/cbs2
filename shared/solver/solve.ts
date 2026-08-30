@@ -41,13 +41,26 @@ export function forcedGiven(
   return forcedFromMasks(masks, shape.grid.size);
 }
 
-export function isUniquelySolvable(shape: Shape, clues: Clues, truth: boolean[]): boolean {
+/**
+ * True when the full clue set — every non-null hint, active simultaneously,
+ * regardless of which card it lives on — pins exactly one assignment.
+ *
+ * `revealed` seeds those card indices as known (from `truth`) rather than
+ * free; all other cards start unknown. The default `[]` is the strictly
+ * stronger, no-prior-knowledge condition: every card, including any that are
+ * only ever handed to the player as a pre-flipped given, must be recoverable
+ * from clue text alone. Passing a puzzle's `initialReveals` here checks the
+ * weaker, still-fair condition that real archived puzzles actually satisfy:
+ * unique *given* what the game hands the player up front.
+ */
+export function isUniquelySolvable(
+  shape: Shape,
+  clues: Clues,
+  truth: boolean[],
+  revealed: number[] = [],
+): boolean {
   const all = clues.flatMap((h) => (h ? [h] : []));
-  const masks = survivors(
-    shape,
-    truth.map(() => null),
-    all,
-  );
+  const masks = survivors(shape, knownFrom(truth, revealed), all);
   return masks.length === 1;
 }
 

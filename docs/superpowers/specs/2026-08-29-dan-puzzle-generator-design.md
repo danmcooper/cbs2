@@ -187,6 +187,39 @@ already-reviewed judgment calls.
 Test 3 is the fairness proof. If our notion of "forced" agrees with the source's
 on 53 real puzzles, generated puzzles inherit that guarantee.
 
+**Measured solver agreement (Task 13, 2026-08-29):** `shared/solver/corpus.test.ts`'s
+path-sufficiency test passes cleanly: all **1,027** real `paths` entries across
+54 archived puzzles are genuinely sufficient under `forcedGiven` (~35s).
+
+The unique-solvability test initially asserted the wrong proposition: it
+called `isUniquelySolvable(shapeOf(puzzle), clues, truth)` with *zero* prior
+knowledge, asking whether the full set of 20 `origHint`s alone — with no
+card pre-flipped — pins every card. That failed on **8 of 54** puzzles
+(`2026-07-13`, `2026-07-19`, `2026-07-31`, `2026-08-13`, `2026-08-15`,
+`2026-08-16`, `2026-08-20`, `2026-08-25`; ~34s). Root-caused, not an
+evaluator bug: in every failing case the puzzle's `initialReveals` card
+carries a clue (or no clue) that never mentions its own index, and no other
+card's clue pins it either — it is a "freebie" whose criminal/innocent
+status is handed to the player directly by being pre-flipped, not something
+recoverable from clue text with zero prior knowledge (confirmed by seeding
+that one card as known instead of free: all 8 collapse to a unique solution,
+including the multi-card case `2026-08-16`, where cards 0-3 are all
+simultaneously undetermined from clue text alone but share exactly one true
+degree of freedom — the puzzle's single `initialReveals` card).
+
+This means the spec's own solving model — which starts the flipped set from
+`initialReveals`, not from nothing (see `solveChain`) — was misrepresented
+by the test. `isUniquelySolvable` now takes an optional `revealed: number[]
+= []` parameter (seeding those indices as known via `knownFrom`, activating
+every clue exactly as before); the default reproduces the old
+zero-knowledge behavior unchanged for Task 12's `solve.test.ts` and future
+Task 17 call sites, and `corpus.test.ts` passes `puzzle.initialReveals`.
+Under that corrected, still-fair proposition — unique *given* what the game
+actually hands the player up front — **all 54 puzzles pass** (~34s). The
+8 puzzles named above remain a genuine, worth-recording property of the
+source material: they are **not** uniquely solvable from clue text with no
+prior knowledge, only once their one initial reveal is taken as given.
+
 ## Generation algorithm
 
 Clue placement is part of the puzzle: a clue is unreadable until its card is

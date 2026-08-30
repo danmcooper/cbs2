@@ -3,6 +3,9 @@ import { parseHint } from './hint';
 import { evaluate } from './predicates';
 import { loadArchive, isSelfReferential } from './corpus';
 import { canRender, render } from './render';
+import type { Shape } from './enumerate';
+import { forcedGiven, isUniquelySolvable, parseClues } from './solve';
+import { makeGrid } from './grid';
 
 const archive = loadArchive();
 
@@ -68,5 +71,53 @@ describe('renderer fidelity', () => {
     );
     expect(ratio).toBeGreaterThanOrEqual(0.95);
     expect(mismatches.sort()).toMatchSnapshot();
+  });
+});
+
+function shapeOf(puzzle: (typeof archive)[number]['puzzle']): Shape {
+  return {
+    grid: makeGrid(puzzle.width, puzzle.height),
+    professions: puzzle.people.map((p) => p.profession),
+  };
+}
+
+describe('solver agreement', () => {
+  it('every archived puzzle is uniquely solvable under its full clue set', { timeout: 600_000 }, () => {
+    const failures: string[] = [];
+    let checked = 0;
+    for (const { file, puzzle } of archive) {
+      const clues = parseClues(puzzle.people.map((p) => p.origHint));
+      const truth = puzzle.people.map((p) => p.criminal);
+      checked++;
+      if (!isUniquelySolvable(shapeOf(puzzle), clues, truth, puzzle.initialReveals)) {
+        failures.push(file);
+      }
+    }
+    console.log(`puzzles checked: ${checked}`);
+    expect(checked).toBeGreaterThan(50);
+    expect(failures).toEqual([]);
+  });
+
+  it('every stored path is genuinely sufficient', { timeout: 600_000 }, () => {
+    const failures: string[] = [];
+    let pathsChecked = 0;
+    for (const { file, puzzle } of archive) {
+      const shape = shapeOf(puzzle);
+      const clues = parseClues(puzzle.people.map((p) => p.origHint));
+      const truth = puzzle.people.map((p) => p.criminal);
+      puzzle.people.forEach((person, i) => {
+        if (person.paths === null) return;
+        for (const path of person.paths) {
+          if (path.includes(i)) continue; // trivially known once flipped
+          pathsChecked++;
+          if (forcedGiven(shape, clues, truth, path)[i] === null) {
+            failures.push(`${file} [${i}] path ${path.join(',')}`);
+          }
+        }
+      });
+    }
+    console.log(`paths checked: ${pathsChecked}`);
+    expect(pathsChecked).toBeGreaterThan(1000);
+    expect(failures).toEqual([]);
   });
 });
