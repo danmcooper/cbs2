@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseHint } from './hint';
-import { canRender, render, UnsupportedShapeError } from './render';
+import { ARG_KINDS, parseHint } from './hint';
+import { canRender, render, RENDERERS, UnsupportedShapeError } from './render';
 
 const r = (s: string) => render(parseHint(s));
 
@@ -244,6 +244,93 @@ describe('comparison clue templates', () => {
         'unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,14),unit(neighbor,12),criminal,2,4)',
       ),
     ).toBe('Exactly 2 of #NAMES:14 4 criminal neighbors also neighbor #NAME:12');
+  });
+});
+
+describe('adjacency and direction clue templates', () => {
+  it('covers every predicate', () => {
+    expect(Object.keys(RENDERERS).sort()).toEqual(Object.keys(ARG_KINDS).sort());
+  });
+  it('max_number_of_traits_in_neighbors_in_unit', () => {
+    expect(r('max_number_of_traits_in_neighbors_in_unit(unit(row,2),innocent,3)')).toBe(
+      'No one in row 2 has more than 3 innocent neighbors',
+    );
+    expect(r('max_number_of_traits_in_neighbors_in_unit(unit(corner,void),innocent,1)')).toBe(
+      'No one in the corners has more than one innocent neighbor',
+    );
+  });
+  it('both_traits_in_unit_are_in_unit', () => {
+    expect(
+      r('both_traits_in_unit_are_in_unit(unit(between,pair(0,3)),unit(neighbor,9),criminal)'),
+    ).toBe('Both criminals #BETWEEN:pair(0,3) are #NAMES:9 neighbors');
+    expect(
+      r('both_traits_in_unit_are_in_unit(unit(neighbor,5),unit(neighbor,9),innocent)'),
+    ).toBe('Both innocents neighboring #NAME:5 are #NAMES:9 neighbors');
+  });
+  it('only_trait_in_unit_is_in_unit', () => {
+    expect(r('only_trait_in_unit_is_in_unit(unit(row,2),unit(neighbor,9),criminal)')).toBe(
+      'The only criminal in row 2 is #NAMES:9 neighbor',
+    );
+    expect(
+      r('only_trait_in_unit_is_in_unit(unit(between,pair(0,3)),unit(between,pair(4,7)),criminal)'),
+    ).toBe('The only criminal #BETWEEN:pair(0,3) is #BETWEEN:pair(4,7)');
+  });
+  it('both_traits_are_neighbors_in_unit and all_traits_are_neighbors_in_unit', () => {
+    expect(r('both_traits_are_neighbors_in_unit(unit(between,pair(0,3)),innocent)')).toBe(
+      'Both innocents #BETWEEN:pair(0,3) are connected',
+    );
+    expect(r('all_traits_are_neighbors_in_unit(unit(between,pair(0,3)),criminal)')).toBe(
+      'All criminals #BETWEEN:pair(0,3) are connected',
+    );
+  });
+  it('only_one_person_in_unit_has_exactly_n_trait_neighbors', () => {
+    expect(r('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,2),innocent,3)')).toBe(
+      'Only one person in row 2 has exactly 3 innocent neighbors',
+    );
+    expect(
+      r('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(corner,void),criminal,0)'),
+    ).toBe('Only one person in a corner has no criminal neighbors');
+    expect(
+      r('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,mech),criminal,2)'),
+    ).toBe('Only one #PROF:mech has exactly 2 criminal neighbors');
+  });
+  it('n_in_unit_have_trait_in_dir', () => {
+    expect(r('n_in_unit_have_trait_in_dir(unit(profession,cook),criminal,1,0,1)')).toBe(
+      'Only one #PROF:cook has a criminal directly to the right of them',
+    );
+    expect(r('n_in_unit_have_trait_in_dir(unit(corner,void),criminal,0,1,2)')).toBe(
+      '2 persons in a corner have a criminal directly below them',
+    );
+    expect(r('n_in_unit_have_trait_in_dir(unit(edge,void),criminal,0,-1,3)')).toBe(
+      '3 persons on the edges have a criminal directly above them',
+    );
+    expect(r('n_in_unit_have_trait_in_dir(unit(profession,builder),innocent,0,-1,2)')).toBe(
+      '2 #PROFS:builder have an innocent directly above them',
+    );
+  });
+  it('n_t_in_unit_have_trait_in_dir', () => {
+    expect(r('n_t_in_unit_have_trait_in_dir(unit(row,2),criminal,criminal,0,1,2)')).toBe(
+      'Exactly 2 criminals in row 2 have a criminal directly below them',
+    );
+    // Ground truth (docs/superpowers/specs/2026-08-29-clue-templates.txt,
+    // n_t_in_unit_have_trait_in_dir section) anonymizes numbers, but cross-referencing real
+    // archive occurrences shows 3 of 4 n=1 cases use "Only one X in UNIT has ..."
+    // (puzzles/2026-08-02.json col case, puzzles/2026-08-20.json and puzzles/2026-08-27.json
+    // row/col cases) while only 1 of 4 (puzzles/2026-07-21.json, the exact args used here)
+    // drops "Only". The brief's step-1 test expected the bare "One criminal ..." form (the
+    // minority variant); ground truth's dominant phrasing — also the convention used
+    // everywhere else in this file for n=1 subjects — wins per task instructions.
+    expect(r('n_t_in_unit_have_trait_in_dir(unit(row,2),criminal,innocent,1,0,1)')).toBe(
+      'Only one criminal in row 2 has an innocent directly to the right of them',
+    );
+  });
+  it('n_professions_have_trait_in_dir', () => {
+    expect(r('n_professions_have_trait_in_dir(painter,innocent,1,0,2)')).toBe(
+      '2 #PROFS:painter have an innocent directly to the right of them',
+    );
+    expect(r('n_professions_have_trait_in_dir(cook,innocent,-1,0,1)')).toBe(
+      'Exactly 1 #PROF:cook has an innocent directly to the left of them',
+    );
   });
 });
 

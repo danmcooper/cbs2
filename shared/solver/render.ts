@@ -118,6 +118,14 @@ function pairOfSameKind<U extends Unit>(u1: U, u2: Unit): asserts u2 is U {
   }
 }
 
+/** Subject phrase for direction clues: "3 persons on the edges" / "2 #PROFS:cook". */
+function dirSubject(u: Unit, n: number): string {
+  if (u.kind === 'profession') {
+    return n === 1 ? `Only one ${prof(u.name)}` : `${n} ${profs(u.name)}`;
+  }
+  return n === 1 ? `Only one person ${wherePerson(u)}` : `${n} persons ${wherePerson(u)}`;
+}
+
 export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
   has_trait: (a) => {
     const t = argTrait(a, 1);
@@ -340,6 +348,68 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const head = n === 1 ? `Only 1 of the ${m} ${t}s` : `Exactly ${n} of the ${m} ${t}s`;
     const verb = n === 1 ? 'is' : 'are';
     return `${head} ${where(u1)} ${verb} ${predicateTail(u2, n === 1)}`;
+  },
+
+  max_number_of_traits_in_neighbors_in_unit: (a) => {
+    const t = argTrait(a, 1);
+    const n = argNum(a, 2);
+    const tail = n === 1 ? `one ${t} neighbor` : `${n} ${t} neighbors`;
+    return `No one ${where(argUnit(a, 0))} has more than ${tail}`;
+  },
+
+  both_traits_in_unit_are_in_unit: (a) =>
+    `Both ${argTrait(a, 2)}s ${where(argUnit(a, 0))} are ${predicateTail(argUnit(a, 1), false)}`,
+
+  only_trait_in_unit_is_in_unit: (a) =>
+    `The only ${argTrait(a, 2)} ${where(argUnit(a, 0))} is ${predicateTail(argUnit(a, 1), true)}`,
+
+  both_traits_are_neighbors_in_unit: (a) =>
+    `Both ${argTrait(a, 1)}s ${where(argUnit(a, 0))} are connected`,
+
+  all_traits_are_neighbors_in_unit: (a) =>
+    `All ${argTrait(a, 1)}s ${where(argUnit(a, 0))} are connected`,
+
+  only_one_person_in_unit_has_exactly_n_trait_neighbors: (a) => {
+    const u = argUnit(a, 0);
+    const t = argTrait(a, 1);
+    const n = argNum(a, 2);
+    const head = u.kind === 'profession' ? `Only one ${prof(u.name)}` : `Only one person ${wherePerson(u)}`;
+    const tail =
+      n === 0 ? `no ${t} neighbors` : n === 1 ? `exactly one ${t} neighbor` : `exactly ${n} ${t} neighbors`;
+    return `${head} has ${tail}`;
+  },
+
+  n_in_unit_have_trait_in_dir: (a) => {
+    const u = argUnit(a, 0);
+    const t = argTrait(a, 1);
+    const n = argNum(a, 4);
+    const verb = n === 1 ? 'has' : 'have';
+    return `${dirSubject(u, n)} ${verb} ${article(t)} ${dirPhrase(argNum(a, 2), argNum(a, 3))}`;
+  },
+
+  n_t_in_unit_have_trait_in_dir: (a) => {
+    const u = argUnit(a, 0);
+    const t1 = argTrait(a, 1);
+    const t2 = argTrait(a, 2);
+    const n = argNum(a, 5);
+    // Ground truth (docs/superpowers/specs/2026-08-29-clue-templates.txt,
+    // n_t_in_unit_have_trait_in_dir section) anonymizes numbers, but cross-referencing real
+    // archive occurrences of n=1 shows the dominant phrasing is "Only one X in UNIT has ..."
+    // (3 of 4 real occurrences, e.g. puzzles/2026-08-02.json, puzzles/2026-08-20.json,
+    // puzzles/2026-08-27.json) — matching this file's convention of always saying "Only one"
+    // for a singular subject elsewhere. The brief's bare "One X ..." matched only the minority
+    // instance (puzzles/2026-07-21.json); ground truth's dominant form wins per task instructions.
+    const head = n === 1 ? `Only one ${t1}` : `Exactly ${n} ${t1}s`;
+    const verb = n === 1 ? 'has' : 'have';
+    return `${head} ${where(u)} ${verb} ${article(t2)} ${dirPhrase(argNum(a, 3), argNum(a, 4))}`;
+  },
+
+  n_professions_have_trait_in_dir: (a) => {
+    const p = argProfession(a, 0);
+    const t = argTrait(a, 1);
+    const n = argNum(a, 4);
+    const head = n === 1 ? `Exactly 1 ${prof(p)} has` : `${n} ${profs(p)} have`;
+    return `${head} ${article(t)} ${dirPhrase(argNum(a, 2), argNum(a, 3))}`;
   },
 };
 
