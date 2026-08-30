@@ -162,6 +162,28 @@ over every `puzzles/*.json`:
    under its full clue set, and each real `paths` entry must be a genuinely
    sufficient set under our forcing query.
 
+**Measured fidelity (Task 10, 2026-08-29):** `shared/solver/corpus.test.ts`'s
+renderer-fidelity test measures **97.2%** exact-match on the real archive: 460
+comparable cases, 447 exact matches, 13 mismatches, out of 660 total
+`origHint`-bearing clue cards across the archive (196 excluded as
+self-referential first-person phrasings the source uses and our renderer
+deliberately never produces; 4 excluded as unsupported hint shapes
+`canRender` correctly declines to render). The fix that got this from an
+initial 79.3% to 97.2%: the archive
+glues "row"/"column" to the number or `#C:` token that immediately follows
+it with a U+00A0 non-breaking space rather than a plain space, in locative
+("in row 3") and comparative ("row 3 than row 5") phrasings specifically
+(not in the bare-noun "Only one row has…" or "Row 3 has more…" phrasings,
+which use a plain space) — `render.ts` now reproduces that convention via an
+`NBSP` constant used in `where()` and the two other row/column call sites
+that needed it. The remaining 13 mismatches are all previously-disclosed,
+accepted minority-phrasing gaps from Tasks 8-9's ledger (the unrenderable
+"N of the M #PROFS:X" fraction phrasing for `n_professions_have_trait_in_dir`
+/ `n_in_unit_have_trait_in_dir`; the `unit_shares_n_out_of_n_traits_with_unit`
+n=1-vs-n≠1 split at m≥3; a couple of single-occurrence phrasing ties with no
+AST discriminator) — not fixed, per the plan's instruction not to touch
+already-reviewed judgment calls.
+
 Test 3 is the fairness proof. If our notion of "forced" agrees with the source's
 on 53 real puzzles, generated puzzles inherit that guarantee.
 

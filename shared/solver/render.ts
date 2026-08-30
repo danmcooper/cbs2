@@ -9,6 +9,17 @@ const profs = (p: string) => `#PROFS:${p}`;
 const col = (n: number) => `#C:${n}`;
 const between = (a: number, b: number) => `#BETWEEN:pair(${a},${b})`;
 
+/**
+ * Non-breaking space. The archive glues "row"/"column" to the number or #C:
+ * token that immediately follows it with a U+00A0 rather than a regular
+ * space — but only in locative ("in row 3", "Row 3 is the only …") and
+ * comparative ("row 3 than row 5") phrasings. The bare-noun ("Only one row
+ * has …") and "Row 3 has more …" / "rows 3 and 5" phrasings use a plain
+ * space instead. Confirmed against every row/column+number occurrence in
+ * puzzles/*.json — corpus.test.ts's renderer-fidelity test pins this.
+ */
+const NBSP = ' ';
+
 export function plural(t: Trait, n: number): string {
   return n === 1 ? t : `${t}s`;
 }
@@ -40,9 +51,9 @@ function bareQuantity(n: number, t: Trait): string {
 export function where(u: Unit): string {
   switch (u.kind) {
     case 'row':
-      return `in row ${u.n}`;
+      return `in row${NBSP}${u.n}`;
     case 'col':
-      return `in column ${col(u.n)}`;
+      return `in column${NBSP}${col(u.n)}`;
     case 'neighbor':
       return `neighboring ${name(u.i)}`;
     case 'between':
@@ -205,10 +216,10 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
         return `${name(u1.i)} has more ${t} neighbors than ${name(u2.i)}`;
       case 'row':
         pairOfSameKind(u1, u2);
-        return `There are more ${t}s in row ${u1.n} than row ${u2.n}`;
+        return `There are more ${t}s in row${NBSP}${u1.n} than row${NBSP}${u2.n}`;
       case 'col':
         pairOfSameKind(u1, u2);
-        return `There are more ${t}s in column ${col(u1.n)} than column ${col(u2.n)}`;
+        return `There are more ${t}s in column${NBSP}${col(u1.n)} than column${NBSP}${col(u2.n)}`;
       case 'profession':
         pairOfSameKind(u1, u2);
         return `There are more ${t} ${profs(u1.name)} than ${t} ${profs(u2.name)}`;
@@ -277,8 +288,8 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const t = argTrait(a, 1);
     const n = argNum(a, 2);
     const tail = n === 0 ? `no ${t}s` : `exactly ${bareQuantity(n, t)}`;
-    if (u.kind === 'row') return `Row ${u.n} is the only row with ${tail}`;
-    if (u.kind === 'col') return `Column ${col(u.n)} is the only column with ${tail}`;
+    if (u.kind === 'row') return `Row${NBSP}${u.n} is the only row with ${tail}`;
+    if (u.kind === 'col') return `Column${NBSP}${col(u.n)} is the only column with ${tail}`;
     if (u.kind === 'neighbor') {
       // Ground truth (only_unit_has_exactly_n_traits, line 214) attests a neighbor-shaped
       // clue: "NAME is the only one with exactly N criminal neighbor" — singular "neighbor"

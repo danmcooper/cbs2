@@ -4,6 +4,13 @@ import { canRender, render, RENDERERS, UnsupportedShapeError } from './render';
 
 const r = (s: string) => render(parseHint(s));
 
+// NOTE: many expected strings below join "row"/"column" to the following number
+// or #C: token with a U+00A0 non-breaking space rather than a plain space (looks
+// identical in a diff/editor). That matches the archive's convention for locative
+// and comparative phrasings — see the `NBSP` constant in render.ts and
+// corpus.test.ts's renderer-fidelity test, which measures this against every
+// real puzzle in puzzles/*.json.
+
 describe('counting clue templates', () => {
   it('has_trait', () => {
     expect(r('has_trait(11,innocent)')).toBe('#NAME:11 is innocent');
@@ -34,10 +41,10 @@ describe('counting clue templates', () => {
       '#NAME:5 has no criminal neighbors',
     );
     expect(r('number_of_traits_in_unit(unit(row,3),innocent,2)')).toBe(
-      'There are exactly 2 innocents in row 3',
+      'There are exactly 2 innocents in row 3',
     );
     expect(r('number_of_traits_in_unit(unit(col,2),criminal,1)')).toBe(
-      'There is only one criminal in column #C:2',
+      'There is only one criminal in column #C:2',
     );
     // Ground truth (docs/superpowers/specs/2026-08-29-clue-templates.txt, "number_of_traits_in_unit"
     // section) attests only the bare-number phrasing for the edge unit ("There are N innocents on
@@ -52,7 +59,7 @@ describe('counting clue templates', () => {
   });
   it('min_number_of_traits_in_unit', () => {
     expect(r('min_number_of_traits_in_unit(unit(col,2),innocent,3)')).toBe(
-      'There are at least 3 innocents in column #C:2',
+      'There are at least 3 innocents in column #C:2',
     );
     expect(r('min_number_of_traits_in_unit(unit(between,pair(0,3)),innocent,1)')).toBe(
       'There is at least one innocent #BETWEEN:pair(0,3)',
@@ -63,7 +70,7 @@ describe('counting clue templates', () => {
       "There's an odd number of innocents neighboring #NAME:12",
     );
     expect(r('odd_number_of_traits_in_unit(unit(col,3),criminal)')).toBe(
-      "There's an odd number of criminals in column #C:3",
+      "There's an odd number of criminals in column #C:3",
     );
     expect(r('odd_number_of_traits_in_unit(unit(profession,singer),criminal)')).toBe(
       "There's an odd number of criminal #PROFS:singer",
@@ -82,7 +89,7 @@ describe('counting clue templates', () => {
   });
   it('is_not_only_trait_in_unit', () => {
     expect(r('is_not_only_trait_in_unit(unit(row,2),5,innocent)')).toBe(
-      '#NAME:5 is one of two or more innocents in row 2',
+      '#NAME:5 is one of two or more innocents in row 2',
     );
   });
   it('all_units_have_at_least_n_traits', () => {
@@ -118,10 +125,10 @@ describe('comparison clue templates', () => {
       '#NAME:3 has more criminal neighbors than #NAME:9',
     );
     expect(r('more_traits_in_unit_than_unit(unit(row,1),unit(row,4),innocent)')).toBe(
-      'There are more innocents in row 1 than row 4',
+      'There are more innocents in row 1 than row 4',
     );
     expect(r('more_traits_in_unit_than_unit(unit(col,1),unit(col,3),criminal)')).toBe(
-      'There are more criminals in column #C:1 than column #C:3',
+      'There are more criminals in column #C:1 than column #C:3',
     );
     expect(
       r('more_traits_in_unit_than_unit(unit(profession,cook),unit(profession,cop),criminal)'),
@@ -170,10 +177,10 @@ describe('comparison clue templates', () => {
   });
   it('only_unit_has_exactly_n_traits', () => {
     expect(r('only_unit_has_exactly_n_traits(unit(row,2),innocent,3)')).toBe(
-      'Row 2 is the only row with exactly 3 innocents',
+      'Row 2 is the only row with exactly 3 innocents',
     );
     expect(r('only_unit_has_exactly_n_traits(unit(col,4),criminal,1)')).toBe(
-      'Column #C:4 is the only column with exactly one criminal',
+      'Column #C:4 is the only column with exactly one criminal',
     );
     // Ground truth (only_unit_has_exactly_n_traits, line 214) attests this neighbor-shaped
     // clue: "NAME is the only one with exactly N criminal neighbor" — singular "neighbor"
@@ -197,7 +204,7 @@ describe('comparison clue templates', () => {
       'Exactly 2 innocents #BETWEEN:pair(0,3) are neighboring #NAME:9',
     );
     expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(row,2),innocent,0)')).toBe(
-      'No innocent #BETWEEN:pair(0,3) is in row 2',
+      'No innocent #BETWEEN:pair(0,3) is in row 2',
     );
     // Ground truth (units_share_n_traits, line 60) attests a distinct zero-count phrasing for
     // a neighbor target: "There are no innocents BTW who neighbor NAME" — not the generic
@@ -218,7 +225,7 @@ describe('comparison clue templates', () => {
       'An odd number of innocents #BETWEEN:pair(0,3) neighbor #NAME:9',
     );
     expect(r('units_share_odd_n_traits(unit(neighbor,9),unit(row,2),innocent)')).toBe(
-      'An odd number of innocents in row 2 neighbor #NAME:9',
+      'An odd number of innocents in row 2 neighbor #NAME:9',
     );
     expect(() => r('units_share_odd_n_traits(unit(row,1),unit(row,2),innocent)')).toThrow(
       UnsupportedShapeError,
@@ -236,7 +243,7 @@ describe('comparison clue templates', () => {
     ).toBe('Exactly 2 of the 5 criminals on the edges are #NAMES:9 neighbors');
     expect(
       r('unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,5),unit(row,3),criminal,2,4)'),
-    ).toBe('Exactly 2 of the 4 criminals neighboring #NAME:5 are in row 3');
+    ).toBe('Exactly 2 of the 4 criminals neighboring #NAME:5 are in row 3');
     // Fix round 1, Finding 2: neighbor+neighbor pair with n!==1 uses a distinct "also
     // neighbor" construction, derived from real archive data (puzzles/2026-07-12.json).
     expect(
@@ -253,7 +260,7 @@ describe('adjacency and direction clue templates', () => {
   });
   it('max_number_of_traits_in_neighbors_in_unit', () => {
     expect(r('max_number_of_traits_in_neighbors_in_unit(unit(row,2),innocent,3)')).toBe(
-      'No one in row 2 has more than 3 innocent neighbors',
+      'No one in row 2 has more than 3 innocent neighbors',
     );
     expect(r('max_number_of_traits_in_neighbors_in_unit(unit(corner,void),innocent,1)')).toBe(
       'No one in the corners has more than one innocent neighbor',
@@ -269,7 +276,7 @@ describe('adjacency and direction clue templates', () => {
   });
   it('only_trait_in_unit_is_in_unit', () => {
     expect(r('only_trait_in_unit_is_in_unit(unit(row,2),unit(neighbor,9),criminal)')).toBe(
-      'The only criminal in row 2 is #NAMES:9 neighbor',
+      'The only criminal in row 2 is #NAMES:9 neighbor',
     );
     expect(
       r('only_trait_in_unit_is_in_unit(unit(between,pair(0,3)),unit(between,pair(4,7)),criminal)'),
@@ -285,7 +292,7 @@ describe('adjacency and direction clue templates', () => {
   });
   it('only_one_person_in_unit_has_exactly_n_trait_neighbors', () => {
     expect(r('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(row,2),innocent,3)')).toBe(
-      'Only one person in row 2 has exactly 3 innocent neighbors',
+      'Only one person in row 2 has exactly 3 innocent neighbors',
     );
     expect(
       r('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(corner,void),criminal,0)'),
@@ -310,7 +317,7 @@ describe('adjacency and direction clue templates', () => {
   });
   it('n_t_in_unit_have_trait_in_dir', () => {
     expect(r('n_t_in_unit_have_trait_in_dir(unit(row,2),criminal,criminal,0,1,2)')).toBe(
-      'Exactly 2 criminals in row 2 have a criminal directly below them',
+      'Exactly 2 criminals in row 2 have a criminal directly below them',
     );
     // Ground truth (docs/superpowers/specs/2026-08-29-clue-templates.txt,
     // n_t_in_unit_have_trait_in_dir section) anonymizes numbers, but cross-referencing real
@@ -321,7 +328,7 @@ describe('adjacency and direction clue templates', () => {
     // minority variant); ground truth's dominant phrasing — also the convention used
     // everywhere else in this file for n=1 subjects — wins per task instructions.
     expect(r('n_t_in_unit_have_trait_in_dir(unit(row,2),criminal,innocent,1,0,1)')).toBe(
-      'Only one criminal in row 2 has an innocent directly to the right of them',
+      'Only one criminal in row 2 has an innocent directly to the right of them',
     );
   });
   it('n_professions_have_trait_in_dir', () => {
