@@ -292,8 +292,14 @@ export function candidateHints(b: Board): Hint[] {
 export function referencedCards(b: Board, h: Hint): Set<number> {
   const cards = new Set<number>();
   for (const arg of h.args) {
-    if (arg.t === 'unit') for (const i of unitMembers(b, arg.unit)) cards.add(i);
-    else if (arg.t === 'index') cards.add(arg.i);
+    if (arg.t === 'unit') {
+      for (const i of unitMembers(b, arg.unit)) cards.add(i);
+      // A `neighbor` unit's anchor card is never one of its own neighbors, so
+      // `unitMembers` never includes it — but every rendering of a neighbor
+      // unit names the anchor explicitly (e.g. "neighboring #NAME:5"), so the
+      // anchor card is referenced by the clue even though it isn't a member.
+      if (arg.unit.kind === 'neighbor') cards.add(arg.unit.i);
+    } else if (arg.t === 'index') cards.add(arg.i);
     else if (arg.t === 'profession') {
       for (const i of unitMembers(b, { kind: 'profession', name: arg.name })) cards.add(i);
     }

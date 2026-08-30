@@ -120,4 +120,12 @@ describe('referencedCards', () => {
       1,
     );
   });
+
+  it('includes a neighbor unit\'s own anchor card, not just its members', () => {
+    // unitMembers(neighbor,5) is 5's neighbors, which never includes 5 itself — but every
+    // rendering of a neighbor unit names the anchor card explicitly (e.g. "neighboring
+    // #NAME:5"), so the anchor must be treated as referenced too.
+    const cards = referencedCards(board, parseHint('has_most_traits(unit(neighbor,5),criminal)'));
+    expect(cards).toContain(5);
+  });
 });

@@ -31,6 +31,9 @@ export interface Puzzle {
   people: Person[];
   /** Absent in older puzzle files and when the source puzzle has no hints. */
   hints?: HintStep[];
+  /** Present only on generated puzzles. Validation for this field belongs to
+   * the task that introduces it beyond generation. */
+  variant?: 'dan';
 }
 
 export class PuzzleValidationError extends Error {}
