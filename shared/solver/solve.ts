@@ -24,6 +24,13 @@ export function activeHints(clues: Clues, flipped: number[]): Hint[] {
   return out;
 }
 
+/**
+ * Precondition: `truth` must be consistent with `clues` — the flipped truth
+ * values, together with the hints on the flipped cards, must admit at least
+ * one satisfying assignment. If they don't (the puzzle's own truth violates
+ * its own clues), `forcedFromMasks` throws `ContradictionError`; this
+ * function does not catch it.
+ */
 export function forcedGiven(
   shape: Shape,
   clues: Clues,
@@ -50,6 +57,12 @@ export interface Chain {
   revealedAt: (number | null)[];
 }
 
+/**
+ * Precondition: `truth` must be consistent with `clues` (see `forcedGiven`).
+ * Each step calls `forcedGiven` on the currently-flipped set; if `truth`
+ * ever violates the active hints, that call throws `ContradictionError`
+ * instead of returning a `Chain`.
+ */
 export function solveChain(
   shape: Shape,
   clues: Clues,
@@ -94,8 +107,14 @@ function forces(
   return forcedGiven(shape, clues, truth, flipped)[index] !== null;
 }
 
-/** Distinct minimal subsets of `flipped` that still force `index`. Greedy drop
- * over several shuffles; every result is genuinely sufficient. */
+/**
+ * Distinct minimal subsets of `flipped` that still force `index`. Greedy drop
+ * over several shuffles; every result is genuinely sufficient.
+ *
+ * Precondition: `truth` must be consistent with `clues` (see `forcedGiven`).
+ * A contradictory combination surfaces as an uncaught `ContradictionError`
+ * from the underlying `forces`/`forcedGiven` call, not as an empty result.
+ */
 export function minimalPaths(
   shape: Shape,
   clues: Clues,
@@ -104,7 +123,23 @@ export function minimalPaths(
   flipped: number[],
   attempts = 3,
 ): number[][] {
-  if (!forces(shape, clues, truth, index, flipped)) return [];
+  // Cache `forces` by sorted-subset key, shared across every attempt in this
+  // call: different rotation orders repeatedly probe identical or
+  // overlapping subsets, and each probe is up to O(2^free) work, so this
+  // eliminates a large amount of redundant re-evaluation without changing
+  // the worst-case complexity or the result.
+  const cache = new Map<string, boolean>();
+  const cachedForces = (subset: number[]): boolean => {
+    const key = [...subset].sort((a, b) => a - b).join(',');
+    let result = cache.get(key);
+    if (result === undefined) {
+      result = forces(shape, clues, truth, index, subset);
+      cache.set(key, result);
+    }
+    return result;
+  };
+
+  if (!cachedForces(flipped)) return [];
   const found = new Map<string, number[]>();
   for (let attempt = 0; attempt < attempts; attempt++) {
     const order = [...flipped];
@@ -114,7 +149,7 @@ export function minimalPaths(
     let current = [...flipped];
     for (const candidate of order) {
       const trial = current.filter((i) => i !== candidate);
-      if (forces(shape, clues, truth, index, trial)) current = trial;
+      if (cachedForces(trial)) current = trial;
     }
     const path = [...current].sort((a, b) => a - b);
     found.set(path.join(','), path);

@@ -74,7 +74,11 @@ describe('minimalPaths', () => {
     const paths = minimalPaths(shape, c, truth, 19, [0, 1, 2], 4);
     expect(paths.length).toBeGreaterThan(0);
     for (const path of paths) {
-      expect(path).toContain(1); // the clue on card 1 is what forces 19
+      // unit(between,pair(2,19)) is non-collinear (row 0 vs row 4, col 2 vs
+      // col 3), so card 1's clue is vacuously true and contributes nothing;
+      // what forces 19 is card 1's own identity combined with card 0's
+      // whole-board criminal count.
+      expect(path).toContain(1);
       expect(path).not.toContain(2); // card 2's clue is irrelevant to card 19
     }
   });
