@@ -168,7 +168,18 @@ export function candidateHints(b: Board): Hint[] {
 
       const nbrCounts = members.map((i) => countTrait(b, neighbors(b.grid, i), trait));
       if (nbrCounts.length > 0) {
-        push('max_number_of_traits_in_neighbors_in_unit', [u(unit), t(trait), n(Math.max(...nbrCounts))]);
+        const maxCount = Math.max(...nbrCounts);
+        // A cell's trait-neighbor count can never exceed its own degree
+        // (neighbors(grid, i).length), which depends only on grid position, never on the
+        // assignment. So whenever the pushed threshold is >= the largest degree among the
+        // unit's members, "no one has more than N trait neighbors" is true of every
+        // conceivable board — e.g. every corner cell has exactly 3 neighbors, so
+        // "no one in the corners has more than 3 innocent neighbors" is always true.
+        // Only push when the threshold is still below that structural ceiling.
+        const maxDegree = Math.max(...members.map((i) => neighbors(b.grid, i).length));
+        if (maxCount < maxDegree) {
+          push('max_number_of_traits_in_neighbors_in_unit', [u(unit), t(trait), n(maxCount)]);
+        }
       }
       for (const value of new Set(nbrCounts)) {
         push('only_one_person_in_unit_has_exactly_n_trait_neighbors', [u(unit), t(trait), n(value)]);

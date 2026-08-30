@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeGrid } from './grid';
-import { formatHint, parseHint } from './hint';
+import { type Hint, formatHint, parseHint } from './hint';
 import { type Board, makeBoard, evaluate } from './predicates';
 import { canRender } from './render';
 import { candidateHints, candidateUnits, referencedCards } from './candidates';
@@ -57,31 +57,57 @@ describe('candidateHints', () => {
 });
 
 describe('candidateHints exhaustive tautology regression', () => {
-  it('every candidate hint is false for at least one of the 512 possible assignments on a 3x3 board', () => {
-    // 3x3 (9 cells) keeps 2^9 = 512 assignments small enough to enumerate exhaustively —
-    // exact rather than sampled — while still exercising every unit kind (row, col,
-    // neighbor, between, edge, corner, profession) and every direction, including the
-    // boundary geometry (topmost row + "above", corner-cell neighbor cliques, etc.) that
-    // only shows up on a real grid shape. A hint that is true of literally every possible
-    // assignment constrains nothing, no matter how confident the rendered English sounds,
-    // so this test only passes if every emitted hint is false somewhere in that space.
-    const grid = makeGrid(3, 3);
-    const professions = Array.from({ length: 9 }, (_, i) => (i % 2 === 0 ? 'cook' : 'cop'));
-    const fixedAssignment = Array.from({ length: 9 }, (_, i) => [0, 4, 8].includes(i));
-    const smallBoard = makeBoard(grid, professions, fixedAssignment);
-    const hints = candidateHints(smallBoard);
+  it(
+    'every hint from every possible 3x3 assignment is false for at least one of the 512 possible assignments',
+    () => {
+      // 3x3 (9 cells) keeps 2^9 = 512 assignments small enough to enumerate exhaustively —
+      // exact rather than sampled — while still exercising every unit kind (row, col,
+      // neighbor, between, edge, corner, profession) and every direction, including the
+      // boundary geometry (topmost row + "above", corner-cell neighbor cliques, etc.) that
+      // only shows up on a real grid shape.
+      //
+      // Building the *pool* from a single fixed assignment (an earlier version of this
+      // test did exactly that) only audits whichever candidates that one assignment
+      // happens to generate — a filter that is wrong only for some *other* assignment's
+      // pool would sail through untested. That is precisely how the
+      // max_number_of_traits_in_neighbors_in_unit tautology (a corner cell can never have
+      // more than 3 neighbors, so "no one in the corners has more than 3 innocent
+      // neighbors" is true of every board) escaped detection. So instead: build
+      // candidateHints for EVERY one of the 512 assignments, pool the results
+      // (deduplicated by formatHint so equivalent hints from different pools are only
+      // checked once), and require every distinct hint to be false for at least one of
+      // the 512 assignments.
+      const grid = makeGrid(3, 3);
+      const professions = Array.from({ length: 9 }, (_, i) => (i % 2 === 0 ? 'cook' : 'cop'));
 
-    const allBoards: Board[] = [];
-    for (let mask = 0; mask < 512; mask++) {
-      const criminal = Array.from({ length: 9 }, (_, i) => ((mask >> i) & 1) === 1);
-      allBoards.push(makeBoard(grid, professions, criminal));
-    }
+      const allBoards: Board[] = [];
+      for (let mask = 0; mask < 512; mask++) {
+        const criminal = Array.from({ length: 9 }, (_, i) => ((mask >> i) & 1) === 1);
+        allBoards.push(makeBoard(grid, professions, criminal));
+      }
 
-    for (const h of hints) {
-      const isFalsifiable = allBoards.some((other) => !evaluate(other, h));
-      expect(isFalsifiable, formatHint(h)).toBe(true);
-    }
-  });
+      const distinct = new Map<string, Hint>();
+      for (const b of allBoards) {
+        for (const h of candidateHints(b)) {
+          const key = formatHint(h);
+          if (!distinct.has(key)) distinct.set(key, h);
+        }
+      }
+
+      // Guards against a vacuous pass: if candidateHints ever regressed to emitting
+      // nothing (or near-nothing, e.g. from an over-eager filter), the loop below would
+      // trivially "pass" having checked almost nothing. Measured distinct count across all
+      // 512 pools on this fixture is ~18,800; 15,000 leaves headroom for incidental
+      // variation without masking a real regression.
+      expect(distinct.size).toBeGreaterThan(15_000);
+
+      for (const h of distinct.values()) {
+        const isFalsifiable = allBoards.some((other) => !evaluate(other, h));
+        expect(isFalsifiable, formatHint(h)).toBe(true);
+      }
+    },
+    60_000,
+  );
 });
 
 describe('referencedCards', () => {
