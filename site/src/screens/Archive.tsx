@@ -8,6 +8,13 @@ export default function Archive() {
   const [difficulty, setDifficulty] = useState('');
   const [status, setStatus] = useState<PuzzleStatus | ''>('');
   const [variant, setVariant] = useState<'real' | 'dan'>('real');
+  // Difficulty options are scoped to the current variant, so a selection made
+  // under one variant may not exist under the other; drop it on toggle rather
+  // than leave the <select> holding a value with no matching option.
+  const chooseVariant = (next: 'real' | 'dan') => {
+    setVariant(next);
+    setDifficulty('');
+  };
 
   const difficulties = useMemo(
     () => sortDifficulties([...new Set((data ?? []).filter((e) => e.variant === variant).map((e) => e.difficulty))]),
@@ -42,11 +49,11 @@ export default function Archive() {
             <button
               type="button"
               aria-pressed={variant === 'real'}
-              onClick={() => setVariant('real')}
+              onClick={() => chooseVariant('real')}
             >
               Real
             </button>
-            <button type="button" aria-pressed={variant === 'dan'} onClick={() => setVariant('dan')}>
+            <button type="button" aria-pressed={variant === 'dan'} onClick={() => chooseVariant('dan')}>
               Dan
             </button>
           </div>

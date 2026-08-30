@@ -142,6 +142,36 @@ describe('Game', () => {
   });
 });
 
+describe('puzzle variant label', () => {
+  it('shows no Dan suffix in the date line or results modal for a puzzle without variant', async () => {
+    const user = fakeTimersUser();
+    await renderGame(user);
+    expect(document.querySelector('.date-line span')?.textContent).toBe('Jul 7th 2026 (Easy)');
+    for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
+      await user.click(screen.getByText(name));
+      await user.click(screen.getByRole('button', { name: verdict }));
+    }
+    finishDelay();
+    expect(screen.getByRole('dialog').textContent).not.toContain('Dan');
+  });
+
+  it('shows a " · Dan" suffix in the date line and results modal for a Dan puzzle', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan' }), { status: 200 })),
+    );
+    const user = fakeTimersUser();
+    await renderGame(user);
+    expect(document.querySelector('.date-line span')?.textContent).toBe('Jul 7th 2026 (Easy) · Dan');
+    for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
+      await user.click(screen.getByText(name));
+      await user.click(screen.getByRole('button', { name: verdict }));
+    }
+    finishDelay();
+    expect(screen.getByRole('dialog').textContent).toContain('Jul 7th 2026 (Easy) · Dan');
+  });
+});
+
 describe('corner tags', () => {
   it('clicking the tag corner cycles yellow/red/green/none without opening the modal', async () => {
     const user = userEvent.setup();

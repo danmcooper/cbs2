@@ -100,4 +100,18 @@ describe('Archive', () => {
       '#/play/2026-07-03-dan',
     ]);
   });
+
+  it('clears the difficulty filter when the variant toggles', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    // 'Easy' only exists among the real puzzles (2026-07-01); select it, then
+    // switch to Dan, which only has 'Hard' puzzles.
+    await user.selectOptions(screen.getByLabelText(/difficulty/i), 'Easy');
+    expect(screen.getByText('First')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Dan' }));
+    expect(screen.getByLabelText(/difficulty/i)).toHaveProperty('value', '');
+    expect(screen.getByText('Second (Dan)')).toBeTruthy();
+    expect(screen.queryByText('No puzzles match those filters.')).toBeFalsy();
+  });
 });

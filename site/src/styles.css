@@ -672,9 +672,17 @@ a {
   border-radius: 0 4px 4px 0;
   border-left: none;
 }
+/* The plan's original pressed rule (background: currentColor; filter:
+   invert(1)) paints the label the same colour as its own background, then
+   inverts a uniform block — the pressed button rendered as a solid slab
+   with no readable text. Fill with the site's light text colour instead and
+   flip the label to the page background colour, matching how selection is
+   already shown elsewhere (e.g. .btn-start, .btn-innocent:hover fill with an
+   accent and swap to a light/contrasting label). */
 .variant-toggle button[aria-pressed='true'] {
-  background: currentColor;
-  filter: invert(1);
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
 }
 .archive summary {
   font-size: 1.05rem;
