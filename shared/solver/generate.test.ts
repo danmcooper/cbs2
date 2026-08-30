@@ -5,7 +5,7 @@ import { makeGrid } from './grid';
 import { parseHint } from './hint';
 import { render } from './render';
 import { isUniquelySolvable, parseClues, solveChain } from './solve';
-import { generatePuzzle, makeRng } from './generate';
+import { GenerationError, type OffBandCandidate, generatePuzzle, makeRng } from './generate';
 
 // Wide bands: this test proves the machinery works, not that it hits a target.
 const band: LabelBand = {
@@ -90,4 +90,62 @@ describe('generatePuzzle', () => {
       if (person.origHint === null) expect(person.clue).not.toBeNull();
     }
   });
+
+  it(
+    'does not change the outcome when onOffBand is supplied',
+    () => {
+      const withCallback = generatePuzzle({
+        date: '2026-01-01',
+        difficulty: 'Medium',
+        band,
+        seed: 1,
+        onOffBand: () => {},
+      });
+      expect(withCallback.puzzle).toEqual(puzzle);
+    },
+    // Same cost profile as the reproduction test above: one full generation.
+    60_000,
+  );
+});
+
+describe('onOffBand', () => {
+  // Same band/date/seed as the fixture above, but chainLength narrowed to a
+  // single unreachable value. Every attempt that clears every other check
+  // (chain solved, uniquely solvable, every card path-reachable) will
+  // therefore always miss the gate, so onOffBand is guaranteed to fire on
+  // attempt 0 without needing to search for a naturally-failing band.
+  const impossibleBand: LabelBand = { ...band, chainLength: { min: 1000, max: 1000 } };
+
+  it(
+    'fires only for attempts that pass every other check but miss the band, and each candidate meets the no-guessing bar',
+    () => {
+      const candidates: OffBandCandidate[] = [];
+      expect(() =>
+        generatePuzzle({
+          date: '2026-01-01',
+          difficulty: 'Medium',
+          band: impossibleBand,
+          seed: 1,
+          maxAttempts: 1,
+          onOffBand: (c) => candidates.push(c),
+        }),
+      ).toThrow(GenerationError);
+
+      expect(candidates.length).toBeGreaterThan(0);
+      for (const { puzzle: p } of candidates) {
+        expect(() => validatePuzzle(p)).not.toThrow();
+        const shape = { grid: makeGrid(p.width, p.height), professions: p.people.map((x) => x.profession) };
+        const clues = parseClues(p.people.map((x) => x.origHint));
+        const truth = p.people.map((x) => x.criminal);
+        expect(isUniquelySolvable(shape, clues, truth)).toBe(true);
+        expect(solveChain(shape, clues, truth, p.initialReveals).solvedAll).toBe(true);
+        p.people.forEach((person, i) => {
+          if (p.initialReveals.includes(i)) return;
+          expect(person.paths, `people[${i}]`).not.toBeNull();
+          expect((person.paths as number[][]).length).toBeGreaterThan(0);
+        });
+      }
+    },
+    60_000,
+  );
 });

@@ -45,6 +45,21 @@ export interface GenerateInput {
   seed: number;
   maxAttempts?: number;
   trialsPerStep?: number;
+  /**
+   * Called for an attempt that is fully valid — uniquely solvable, fully chained,
+   * every card path-reachable — but whose metrics miss the requested band. The
+   * caller may keep the puzzle for a different difficulty label. Returning a
+   * value does NOT stop the attempt loop: this date still needs a puzzle in its
+   * own band. Must not mutate the puzzle it is given.
+   */
+  onOffBand?: (candidate: OffBandCandidate) => void;
+}
+
+export interface OffBandCandidate {
+  /** Fully built and schema-valid, but stamped with the label that was ASKED for. */
+  puzzle: Puzzle;
+  metrics: Metrics;
+  attempt: number;
 }
 
 export interface GenerateResult {
@@ -183,13 +198,6 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
       failures.push(`attempt ${attempt}: not uniquely solvable`);
       continue;
     }
-    if (!gatesPass(input.band, metrics)) {
-      failures.push(
-        `attempt ${attempt}: out of band (chain=${metrics.chainLength} ` +
-          `clues=${metrics.clueCards} path=${metrics.meanPathSize.toFixed(2)})`,
-      );
-      continue;
-    }
 
     const flavour = shuffled(rng, FLAVOUR);
     let flavourAt = 0;
@@ -223,6 +231,16 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
     };
 
     validatePuzzle(puzzle);
+
+    if (!gatesPass(input.band, metrics)) {
+      failures.push(
+        `attempt ${attempt}: out of band (chain=${metrics.chainLength} ` +
+          `clues=${metrics.clueCards} path=${metrics.meanPathSize.toFixed(2)})`,
+      );
+      input.onOffBand?.({ puzzle, metrics, attempt });
+      continue;
+    }
+
     return { puzzle, seed: input.seed + attempt * 7919, attempt, metrics };
   }
 

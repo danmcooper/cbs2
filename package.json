@@ -9,7 +9,8 @@
     "test": "vitest run",
     "extract": "tsx scripts/extract.mts",
     "manifest": "tsx scripts/manifest.mts",
-    "calibrate": "tsx scripts/calibrate.mts"
+    "calibrate": "tsx scripts/calibrate.mts",
+    "generate": "tsx scripts/generate.mts"
   },
   "dependencies": {
     "react": "^19.2.7",
