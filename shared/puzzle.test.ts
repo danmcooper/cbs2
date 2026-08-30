@@ -95,3 +95,18 @@ describe('validatePuzzle', () => {
     expect(() => validatePuzzle(puzzle({ people: [person({ clue: 42 }), person(), person(), person()] }))).toThrow(/clue/);
   });
 });
+
+describe('validatePuzzle variant', () => {
+  it('accepts an absent variant and variant "dan"', () => {
+    const base = puzzle();
+    expect(validatePuzzle(base).variant).toBeUndefined();
+    expect(validatePuzzle({ ...base, variant: 'dan' }).variant).toBe('dan');
+  });
+
+  it('rejects any other variant', () => {
+    expect(() => validatePuzzle({ ...puzzle(), variant: 'real' })).toThrow(
+      PuzzleValidationError,
+    );
+    expect(() => validatePuzzle({ ...puzzle(), variant: 7 })).toThrow(PuzzleValidationError);
+  });
+});
