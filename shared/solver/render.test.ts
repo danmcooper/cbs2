@@ -206,6 +206,12 @@ describe('comparison clue templates', () => {
     expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent,0)')).toBe(
       'There are no innocents #BETWEEN:pair(0,3) who neighbor #NAME:9',
     );
+    // Fix round 1, Finding 1: neighbor-unit-first paired with a non-neighbor unit has at
+    // least 3 mutually incompatible real sentence shapes in the archive (see fix report) —
+    // unrenderable from the hint AST alone, so it must throw rather than approximate.
+    expect(() => r('units_share_n_traits(unit(neighbor,5),unit(row,2),innocent,1)')).toThrow(
+      UnsupportedShapeError,
+    );
   });
   it('units_share_odd_n_traits', () => {
     expect(r('units_share_odd_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent)')).toBe(
@@ -231,6 +237,13 @@ describe('comparison clue templates', () => {
     expect(
       r('unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,5),unit(row,3),criminal,2,4)'),
     ).toBe('Exactly 2 of the 4 criminals neighboring #NAME:5 are in row 3');
+    // Fix round 1, Finding 2: neighbor+neighbor pair with n!==1 uses a distinct "also
+    // neighbor" construction, derived from real archive data (puzzles/2026-07-12.json).
+    expect(
+      r(
+        'unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,14),unit(neighbor,12),criminal,2,4)',
+      ),
+    ).toBe('Exactly 2 of #NAMES:14 4 criminal neighbors also neighbor #NAME:12');
   });
 });
 

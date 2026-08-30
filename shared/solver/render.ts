@@ -112,11 +112,10 @@ function predicateTail(u: Unit, singular: boolean): string {
   return where(u);
 }
 
-function pairOfSameKind(u1: Unit, u2: Unit): UnitKind {
+function pairOfSameKind<U extends Unit>(u1: U, u2: Unit): asserts u2 is U {
   if (u1.kind !== u2.kind) {
     throw new UnsupportedShapeError(`mixed unit kinds ${u1.kind}/${u2.kind}`);
   }
-  return u1.kind;
 }
 
 export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
@@ -192,15 +191,19 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const u1 = argUnit(a, 0);
     const u2 = argUnit(a, 1);
     const t = argTrait(a, 2);
-    switch (pairOfSameKind(u1, u2)) {
+    switch (u1.kind) {
       case 'neighbor':
-        return `${name((u1 as { i: number }).i)} has more ${t} neighbors than ${name((u2 as { i: number }).i)}`;
+        pairOfSameKind(u1, u2);
+        return `${name(u1.i)} has more ${t} neighbors than ${name(u2.i)}`;
       case 'row':
-        return `There are more ${t}s in row ${(u1 as { n: number }).n} than row ${(u2 as { n: number }).n}`;
+        pairOfSameKind(u1, u2);
+        return `There are more ${t}s in row ${u1.n} than row ${u2.n}`;
       case 'col':
-        return `There are more ${t}s in column ${col((u1 as { n: number }).n)} than column ${col((u2 as { n: number }).n)}`;
+        pairOfSameKind(u1, u2);
+        return `There are more ${t}s in column ${col(u1.n)} than column ${col(u2.n)}`;
       case 'profession':
-        return `There are more ${t} ${profs((u1 as { name: string }).name)} than ${t} ${profs((u2 as { name: string }).name)}`;
+        pairOfSameKind(u1, u2);
+        return `There are more ${t} ${profs(u1.name)} than ${t} ${profs(u2.name)}`;
       default:
         throw new UnsupportedShapeError(`more_traits_in_unit_than_unit over ${u1.kind}`);
     }
@@ -210,15 +213,19 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const u1 = argUnit(a, 0);
     const u2 = argUnit(a, 1);
     const t = argTrait(a, 2);
-    switch (pairOfSameKind(u1, u2)) {
+    switch (u1.kind) {
       case 'neighbor':
-        return `${name((u1 as { i: number }).i)} and ${name((u2 as { i: number }).i)} have an equal number of ${t} neighbors`;
+        pairOfSameKind(u1, u2);
+        return `${name(u1.i)} and ${name(u2.i)} have an equal number of ${t} neighbors`;
       case 'row':
-        return `There's an equal number of ${t}s in rows ${(u1 as { n: number }).n} and ${(u2 as { n: number }).n}`;
+        pairOfSameKind(u1, u2);
+        return `There's an equal number of ${t}s in rows ${u1.n} and ${u2.n}`;
       case 'col':
-        return `There's an equal number of ${t}s in columns ${col((u1 as { n: number }).n)} and ${col((u2 as { n: number }).n)}`;
+        pairOfSameKind(u1, u2);
+        return `There's an equal number of ${t}s in columns ${col(u1.n)} and ${col(u2.n)}`;
       case 'profession':
-        return `There are as many ${t} ${profs((u1 as { name: string }).name)} as there are ${t} ${profs((u2 as { name: string }).name)}`;
+        pairOfSameKind(u1, u2);
+        return `There are as many ${t} ${profs(u1.name)} as there are ${t} ${profs(u2.name)}`;
       default:
         throw new UnsupportedShapeError(`equal_number_of_traits_in_units over ${u1.kind}`);
     }
@@ -283,6 +290,15 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
       const q = n === 1 ? `only one ${t} neighbor` : `${n} ${t} neighbors`;
       return `${name(u1.i)} and ${name(u2.i)} have ${q} in common`;
     }
+    if (u1.kind === 'neighbor' && u2.kind !== 'neighbor') {
+      // Real archive occurrences of this shape (u1 = neighbor, u2 = non-neighbor) use at
+      // least three mutually incompatible sentence structures (puzzles/2026-08-26.json,
+      // puzzles/2026-08-18.json, puzzles/2026-07-26.json) — one even needs a total-count
+      // number that isn't among this predicate's stored args. There's no way to pick the
+      // right phrasing from the hint AST alone, so fail closed per the project's binding
+      // constraint instead of emitting a plausible-but-wrong sentence.
+      throw new UnsupportedShapeError('units_share_n_traits with neighbor unit first');
+    }
     if (n === 0 && u2.kind === 'neighbor') {
       // Ground truth (units_share_n_traits, line 60) attests a distinct zero-count phrasing
       // for a neighbor target: "There are no innocents BTW who neighbor NAME" — not the
@@ -314,6 +330,13 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const t = argTrait(a, 2);
     const n = argNum(a, 3);
     const m = argNum(a, 4);
+    if (u1.kind === 'neighbor' && u2.kind === 'neighbor' && n !== 1) {
+      // Derived from real archive data (puzzles/2026-07-12.json, puzzles/2026-08-28.json,
+      // puzzles/2026-08-18.json), not the anonymized ground-truth dump alone (which can't
+      // show actual numeric values) — see fix-round-1 report for detail. All three real
+      // n!==1 occurrences are n=2 (m in {3,4,5}); unverified for n>=3.
+      return `Exactly ${n} of ${names(u1.i)} ${m} ${t} neighbors also neighbor ${name(u2.i)}`;
+    }
     const head = n === 1 ? `Only 1 of the ${m} ${t}s` : `Exactly ${n} of the ${m} ${t}s`;
     const verb = n === 1 ? 'is' : 'are';
     return `${head} ${where(u1)} ${verb} ${predicateTail(u2, n === 1)}`;
