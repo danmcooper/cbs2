@@ -10,7 +10,27 @@ export interface Metrics {
   meanPathSize: number;
   maxPathSize: number;
   predicateMix: Record<string, number>;
+  abstractShare: number;
 }
+
+/**
+ * Clue forms that pin down *which* card or unit, or *how much* two units
+ * overlap, rather than yielding a number outright. The solver enumerates all
+ * assignments so phrasing costs it nothing, but these force a human into case
+ * analysis instead of arithmetic. Their share of a puzzle's clues is the
+ * single strongest human-difficulty signal in the archive (Spearman 0.546
+ * against the source site's own labels, monotone across all five: 0.176,
+ * 0.277, 0.335, 0.350, 0.607) and it survives partialling out clue count
+ * (0.259) and chain length (0.302).
+ */
+export const ABSTRACT_PREDICATES: ReadonlySet<string> = new Set([
+  'is_one_of_n_traits_in_unit',
+  'unit_shares_n_out_of_n_traits_with_unit',
+  'only_one_unit_has_exactly_n_traits',
+  'only_unit_has_exactly_n_traits',
+  'only_one_person_in_unit_has_exactly_n_trait_neighbors',
+  'is_not_only_trait_in_unit',
+]);
 
 export interface MeasureInput {
   shape: Shape;
@@ -35,20 +55,25 @@ export function measure(input: MeasureInput): Metrics {
   }
 
   const predicateMix: Record<string, number> = {};
+  let clueCards = 0;
+  let abstractCount = 0;
   for (const hint of input.clues) {
     if (!hint) continue;
+    clueCards++;
     predicateMix[hint.pred] = (predicateMix[hint.pred] ?? 0) + 1;
+    if (ABSTRACT_PREDICATES.has(hint.pred)) abstractCount++;
   }
 
   return {
     criminals: input.truth.filter(Boolean).length,
-    clueCards: input.clues.filter((c) => c !== null).length,
+    clueCards,
     chainLength: chain.steps.length,
     meanRevealsPerStep: mean(revealCounts),
     maxRevealsPerStep: max(revealCounts),
     meanPathSize: mean(shortest),
     maxPathSize: max(shortest),
     predicateMix,
+    abstractShare: clueCards === 0 ? 0 : abstractCount / clueCards,
   };
 }
 
@@ -64,6 +89,7 @@ export interface LabelBand {
   chainLength: Band;
   meanRevealsPerStep: Band;
   meanPathSize: Band;
+  abstractShare: Band;
 }
 
 export type Bands = Record<string, LabelBand>;
@@ -76,11 +102,47 @@ const BANDED = [
   'chainLength',
   'meanRevealsPerStep',
   'meanPathSize',
+  'abstractShare',
 ] as const;
 
-/** Metrics that gate a generated puzzle after the fact. The criminal count is
- * sampled from its band before generation, so it is not re-checked here. */
-const GATED = ['clueCards', 'chainLength', 'meanRevealsPerStep', 'meanPathSize'] as const;
+/**
+ * Metrics that gate a generated puzzle after the fact.
+ *
+ * `criminals` is excluded because criminal count carries no difficulty
+ * signal (rho 0.301, and Medium/Tricky/Hard means sit within 0.23 of each
+ * other): generation samples it from the union of every label's range
+ * rather than the target label's own band, so gating on it here would
+ * reject puzzles for a distinction that isn't real. It is still recorded in
+ * `BANDED` as information.
+ *
+ * `meanRevealsPerStep` is excluded because it is redundant with
+ * `chainLength`, not because it lacks signal: rho(chainLength,
+ * meanRevealsPerStep) = -1.0000 exactly, and chainLength ×
+ * meanRevealsPerStep = 19 for every one of the 54 archived puzzles — a
+ * single distinct value, because both are just views of "cards the chain
+ * must reveal" (20 minus the one initial reveal). Gating both would gate one
+ * quantity twice and over-constrain generation for no added discrimination.
+ * It stays in `BANDED` for the same reason: still worth recording, just not
+ * worth enforcing on top of `chainLength`.
+ *
+ * `meanPathSize` is excluded not because it lacks signal but because the
+ * generator cannot currently reach it. Measured like-for-like — recomputing
+ * each archived card's stored reveal-prefix path through `minimalPaths` so
+ * the archive is measured the same way a generated puzzle is (see
+ * `scripts/calibrate.mts`) — it is the STRONGEST human-difficulty signal
+ * available: rho +0.686, monotone across four of five labels (Easy 2.52,
+ * Medium 2.78, Tricky 3.08, Hard 3.53; Brutal 3.07 on only 3 samples),
+ * beating both `abstractShare` (+0.546) and `clueCards` (-0.565). But
+ * `buildChain` + `minimalPaths` on a freshly generated chain lands
+ * `meanPathSize` around 1.3–1.9 regardless of label — well below even Easy's
+ * calibrated floor — because generated chains currently need less
+ * supporting context per deduction than any archived puzzle. Gating on it
+ * today would make every label unreachable. It stays in `BANDED` so the gap
+ * is recorded and visible; closing it (so generated puzzles genuinely need
+ * as much support per card as their label implies) is tracked as follow-up
+ * work, not papered over by gating on a target the generator cannot hit.
+ */
+const GATED = ['clueCards', 'chainLength', 'abstractShare'] as const;
 
 function bandOf(values: number[]): Band {
   return { min: Math.min(...values), max: Math.max(...values) };
@@ -112,6 +174,58 @@ export function buildBands(
 
 export function gatesPass(band: LabelBand, m: Metrics): boolean {
   return GATED.every((key) => m[key] >= band[key].min && m[key] <= band[key].max);
+}
+
+/**
+ * The calibrated label that best describes these metrics.
+ *
+ * Generation does not reject a puzzle for missing a target band — a valid,
+ * uniquely-solvable puzzle is worth keeping whatever its metrics say, and
+ * discarding one costs minutes of CPU to rebuild something no better. Instead
+ * every generated puzzle is measured and then labelled with whatever it
+ * actually is, which is what this decides.
+ *
+ * Labels are ranked on two keys, in order:
+ *
+ * 1. How far outside the band the metrics fall, summed over the gated
+ *    metrics, each normalised by that metric's full range across all labels
+ *    so no single metric dominates for having wider numbers. Zero means the
+ *    band contains the puzzle outright.
+ * 2. How far the metrics sit from the band's midpoint, normalised the same
+ *    way. The calibrated bands overlap heavily — Tricky's `clueCards` range
+ *    alone covers most of the archive — so containment is usually true of
+ *    several labels at once, and without this key the choice among them
+ *    would come down to nothing but label spelling.
+ *
+ * Ties after both keys break on label name, so the result depends only on
+ * the metrics and the band file, never on iteration order.
+ */
+export function classify(bands: Bands, m: Metrics): string {
+  const labels = Object.keys(bands).sort();
+  if (labels.length === 0) throw new BandsFormatError('no calibrated bands to classify against');
+
+  const span: Record<string, number> = {};
+  for (const key of GATED) {
+    const lo = Math.min(...labels.map((l) => bands[l][key].min));
+    const hi = Math.max(...labels.map((l) => bands[l][key].max));
+    // A metric identical across every label discriminates nothing; a span of
+    // 1 keeps it from dividing by zero and leaves its contribution finite.
+    span[key] = hi > lo ? hi - lo : 1;
+  }
+
+  const scored = labels.map((label) => {
+    let outside = 0;
+    let fromMid = 0;
+    for (const key of GATED) {
+      const b = bands[label][key];
+      outside += Math.max(0, b.min - m[key], m[key] - b.max) / span[key];
+      fromMid += Math.abs(m[key] - (b.min + b.max) / 2) / span[key];
+    }
+    return { label, outside, fromMid };
+  });
+
+  scored.sort((a, b) => a.outside - b.outside || a.fromMid - b.fromMid || (a.label < b.label ? -1 : 1));
+  return scored[0].label;
 }
 
 export class BandsFormatError extends Error {}
