@@ -1,0 +1,445 @@
+{
+  "formatVersion": 1,
+  "id": "b3a1a7a33172",
+  "date": "2026-08-28",
+  "title": "Names Called at Dawn",
+  "difficulty": "Tricky",
+  "width": 4,
+  "height": 5,
+  "initialReveals": [
+    4
+  ],
+  "source": "generated",
+  "variant": "dan",
+  "people": [
+    {
+      "name": "Janko",
+      "profession": "mechanic",
+      "gender": "male",
+      "criminal": true,
+      "clue": "Everyone looks the same in that light.",
+      "origHint": null,
+      "paths": [
+        [
+          5,
+          15
+        ]
+      ],
+      "face": "👨‍🔧"
+    },
+    {
+      "name": "Lorenzo",
+      "profession": "cook",
+      "gender": "male",
+      "criminal": true,
+      "clue": "My shift had already ended.",
+      "origHint": null,
+      "paths": [
+        [
+          8
+        ]
+      ],
+      "face": "👨‍🍳"
+    },
+    {
+      "name": "Suri",
+      "profession": "teacher",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Only 1 of the 2 criminals neighboring #NAME:8 is #BETWEEN:pair(4,8)",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,8),unit(between,pair(4,8)),criminal,1,2)",
+      "paths": [
+        [
+          8
+        ]
+      ],
+      "face": "👩‍🏫"
+    },
+    {
+      "name": "Zeno",
+      "profession": "judge",
+      "gender": "male",
+      "criminal": false,
+      "clue": "Only 1 of the 2 criminals #BETWEEN:pair(7,15) is #BETWEEN:pair(9,11)",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(7,15)),unit(between,pair(9,11)),criminal,1,2)",
+      "paths": [
+        [
+          6,
+          8,
+          15,
+          18
+        ],
+        [
+          2,
+          6,
+          15,
+          18
+        ]
+      ],
+      "face": "👨‍⚖️"
+    },
+    {
+      "name": "Yara",
+      "profession": "mechanic",
+      "gender": "female",
+      "criminal": true,
+      "clue": "#NAME:18 is one of 3 innocents #BETWEEN:pair(16,18)",
+      "origHint": "is_one_of_n_traits_in_unit(unit(between,pair(16,18)),18,innocent,3)",
+      "paths": [],
+      "face": "👩‍🔧"
+    },
+    {
+      "name": "Kira",
+      "profession": "pilot",
+      "gender": "female",
+      "criminal": true,
+      "clue": "Both criminals #BETWEEN:pair(0,8) are #BETWEEN:pair(0,12)",
+      "origHint": "both_traits_in_unit_are_in_unit(unit(between,pair(0,8)),unit(between,pair(0,12)),criminal)",
+      "paths": [
+        [
+          8
+        ]
+      ],
+      "face": "👩‍✈️"
+    },
+    {
+      "name": "Hamish",
+      "profession": "cook",
+      "gender": "male",
+      "criminal": false,
+      "clue": "Only one criminal neighboring #NAME:7 has an innocent directly to the left of them",
+      "origHint": "n_t_in_unit_have_trait_in_dir(unit(neighbor,7),criminal,innocent,-1,0,1)",
+      "paths": [
+        [
+          16
+        ],
+        [
+          8
+        ]
+      ],
+      "face": "👨‍🍳"
+    },
+    {
+      "name": "Greta",
+      "profession": "mechanic",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Only one person neighboring #NAME:19 has an innocent directly above them",
+      "origHint": "n_in_unit_have_trait_in_dir(unit(neighbor,19),innocent,0,-1,1)",
+      "paths": [
+        [
+          17
+        ]
+      ],
+      "face": "👩‍🔧"
+    },
+    {
+      "name": "Ulla",
+      "profession": "teacher",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Exactly 2 criminals #BETWEEN:pair(1,5) have an innocent directly to the right of them",
+      "origHint": "n_t_in_unit_have_trait_in_dir(unit(between,pair(1,5)),criminal,innocent,1,0,2)",
+      "paths": [
+        [
+          15
+        ]
+      ],
+      "face": "👩‍🏫"
+    },
+    {
+      "name": "Rosa",
+      "profession": "mechanic",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Somebody moved my chair, that is all I know.",
+      "origHint": null,
+      "paths": [
+        [
+          15
+        ]
+      ],
+      "face": "👩‍🔧"
+    },
+    {
+      "name": "Fabio",
+      "profession": "pilot",
+      "gender": "male",
+      "criminal": false,
+      "clue": "I never remember faces.",
+      "origHint": null,
+      "paths": [
+        [
+          15
+        ]
+      ],
+      "face": "👨‍✈️"
+    },
+    {
+      "name": "Carys",
+      "profession": "judge",
+      "gender": "female",
+      "criminal": true,
+      "clue": "You will have to ask the others.",
+      "origHint": null,
+      "paths": [
+        [
+          18
+        ]
+      ],
+      "face": "👩‍⚖️"
+    },
+    {
+      "name": "Tomas",
+      "profession": "cook",
+      "gender": "male",
+      "criminal": false,
+      "clue": "I keep out of other people’s business.",
+      "origHint": null,
+      "paths": [
+        [
+          2,
+          8
+        ]
+      ],
+      "face": "👨‍🍳"
+    },
+    {
+      "name": "Novak",
+      "profession": "judge",
+      "gender": "male",
+      "criminal": false,
+      "clue": "I only work weekends, so ask someone on shift.",
+      "origHint": null,
+      "paths": [
+        [
+          2,
+          8
+        ]
+      ],
+      "face": "👨‍⚖️"
+    },
+    {
+      "name": "Elin",
+      "profession": "pilot",
+      "gender": "female",
+      "criminal": true,
+      "clue": "I was halfway out the door.",
+      "origHint": null,
+      "paths": [
+        [
+          7,
+          15
+        ]
+      ],
+      "face": "👩‍✈️"
+    },
+    {
+      "name": "Pavel",
+      "profession": "judge",
+      "gender": "male",
+      "criminal": true,
+      "clue": "0 persons in row 3 have a criminal directly to the left of them",
+      "origHint": "n_in_unit_have_trait_in_dir(unit(row,3),criminal,-1,0,0)",
+      "paths": [
+        [
+          18
+        ]
+      ],
+      "face": "👨‍⚖️"
+    },
+    {
+      "name": "Wren",
+      "profession": "teacher",
+      "gender": "female",
+      "criminal": false,
+      "clue": "#NAME:6 is one of two or more innocents neighboring #NAME:9",
+      "origHint": "is_not_only_trait_in_unit(unit(neighbor,9),6,innocent)",
+      "paths": [
+        [
+          4
+        ]
+      ],
+      "face": "👩‍🏫"
+    },
+    {
+      "name": "Cleo",
+      "profession": "pilot",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Only 1 of the 2 innocents #BETWEEN:pair(7,19) is in row 2",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(7,19)),unit(row,2),innocent,1,2)",
+      "paths": [
+        [
+          4
+        ]
+      ],
+      "face": "👩‍✈️"
+    },
+    {
+      "name": "Iris",
+      "profession": "teacher",
+      "gender": "female",
+      "criminal": false,
+      "clue": "0 persons #BETWEEN:pair(7,11) have an innocent directly below them",
+      "origHint": "n_in_unit_have_trait_in_dir(unit(between,pair(7,11)),innocent,0,1,0)",
+      "paths": [
+        [
+          4
+        ]
+      ],
+      "face": "👩‍🏫"
+    },
+    {
+      "name": "Ines",
+      "profession": "cook",
+      "gender": "female",
+      "criminal": false,
+      "clue": "I was counting crates, not people.",
+      "origHint": null,
+      "paths": [
+        [
+          17,
+          18
+        ]
+      ],
+      "face": "👩‍🍳"
+    }
+  ],
+  "hints": [
+    {
+      "flipped": [
+        4
+      ],
+      "clues": [
+        4
+      ],
+      "reveals": [
+        16,
+        17,
+        18
+      ]
+    },
+    {
+      "flipped": [
+        4,
+        16,
+        17,
+        18
+      ],
+      "clues": [
+        4,
+        16,
+        17,
+        18
+      ],
+      "reveals": [
+        6,
+        7,
+        11,
+        15,
+        19
+      ]
+    },
+    {
+      "flipped": [
+        4,
+        6,
+        7,
+        11,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "clues": [
+        4,
+        6,
+        7,
+        15,
+        16,
+        17,
+        18
+      ],
+      "reveals": [
+        8,
+        9,
+        10,
+        14
+      ]
+    },
+    {
+      "flipped": [
+        4,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "clues": [
+        4,
+        6,
+        7,
+        8,
+        15,
+        16,
+        17,
+        18
+      ],
+      "reveals": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "flipped": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "clues": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        15,
+        16,
+        17,
+        18
+      ],
+      "reveals": [
+        0,
+        12,
+        13
+      ]
+    }
+  ]
+}

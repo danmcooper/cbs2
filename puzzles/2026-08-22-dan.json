@@ -1,0 +1,481 @@
+{
+  "formatVersion": 1,
+  "id": "e95c5238b3d1",
+  "date": "2026-08-22",
+  "title": "The Kettle Was Still Warm",
+  "difficulty": "Tricky",
+  "width": 4,
+  "height": 5,
+  "initialReveals": [
+    13
+  ],
+  "source": "generated",
+  "variant": "dan",
+  "people": [
+    {
+      "name": "Jonas",
+      "profession": "cop",
+      "gender": "male",
+      "criminal": true,
+      "clue": "I stayed where I was told to stay.",
+      "origHint": null,
+      "paths": [
+        [
+          2,
+          17
+        ]
+      ],
+      "face": "👮‍♂️"
+    },
+    {
+      "name": "Rafael",
+      "profession": "cook",
+      "gender": "male",
+      "criminal": false,
+      "clue": "My glasses were in my pocket.",
+      "origHint": null,
+      "paths": [
+        [
+          2,
+          9,
+          17
+        ],
+        [
+          0,
+          9,
+          13
+        ],
+        [
+          0,
+          2,
+          9
+        ]
+      ],
+      "face": "👨‍🍳"
+    },
+    {
+      "name": "Nils",
+      "profession": "sleuth",
+      "gender": "male",
+      "criminal": true,
+      "clue": "The only innocent #BETWEEN:pair(0,16) is in the corners",
+      "origHint": "only_trait_in_unit_is_in_unit(unit(between,pair(0,16)),unit(corner,void),innocent)",
+      "paths": [
+        [
+          13
+        ]
+      ],
+      "face": "🕵️‍♂️"
+    },
+    {
+      "name": "Odette",
+      "profession": "sleuth",
+      "gender": "female",
+      "criminal": true,
+      "clue": "Ask someone with a better view.",
+      "origHint": null,
+      "paths": [
+        [
+          9
+        ]
+      ],
+      "face": "🕵️‍♀️"
+    },
+    {
+      "name": "Viktor",
+      "profession": "mechanic",
+      "gender": "male",
+      "criminal": true,
+      "clue": "No innocent #BETWEEN:pair(11,19) is #BETWEEN:pair(9,11)",
+      "origHint": "units_share_n_traits(unit(between,pair(11,19)),unit(between,pair(9,11)),innocent,0)",
+      "paths": [
+        [
+          2
+        ]
+      ],
+      "face": "👨‍🔧"
+    },
+    {
+      "name": "Ada",
+      "profession": "mechanic",
+      "gender": "female",
+      "criminal": true,
+      "clue": "I would rather not guess.",
+      "origHint": null,
+      "paths": [
+        [
+          8,
+          9,
+          13,
+          16,
+          17
+        ],
+        [
+          0,
+          1,
+          8,
+          14,
+          16
+        ]
+      ],
+      "face": "👩‍🔧"
+    },
+    {
+      "name": "Stefan",
+      "profession": "cook",
+      "gender": "male",
+      "criminal": false,
+      "clue": "It was too loud to notice anything.",
+      "origHint": null,
+      "paths": [
+        [
+          13
+        ]
+      ],
+      "face": "👨‍🍳"
+    },
+    {
+      "name": "Boris",
+      "profession": "sleuth",
+      "gender": "male",
+      "criminal": false,
+      "clue": "I lost track of everyone after lunch.",
+      "origHint": null,
+      "paths": [
+        [
+          15,
+          18
+        ]
+      ],
+      "face": "🕵️‍♂️"
+    },
+    {
+      "name": "Dmitri",
+      "profession": "coder",
+      "gender": "male",
+      "criminal": true,
+      "clue": "The only criminal #BETWEEN:pair(14,18) is #BETWEEN:pair(16,19)",
+      "origHint": "only_trait_in_unit_is_in_unit(unit(between,pair(14,18)),unit(between,pair(16,19)),criminal)",
+      "paths": [
+        [
+          2
+        ]
+      ],
+      "face": "👨‍💻"
+    },
+    {
+      "name": "Rosa",
+      "profession": "cop",
+      "gender": "female",
+      "criminal": true,
+      "clue": "The only innocent #BETWEEN:pair(0,3) is #NAMES:5 neighbor",
+      "origHint": "only_trait_in_unit_is_in_unit(unit(between,pair(0,3)),unit(neighbor,5),innocent)",
+      "paths": [
+        [
+          18
+        ]
+      ],
+      "face": "👮‍♀️"
+    },
+    {
+      "name": "Hamish",
+      "profession": "coder",
+      "gender": "male",
+      "criminal": true,
+      "clue": "No innocent #BETWEEN:pair(7,19) is #BETWEEN:pair(16,19)",
+      "origHint": "units_share_n_traits(unit(between,pair(7,19)),unit(between,pair(16,19)),innocent,0)",
+      "paths": [
+        [
+          18
+        ]
+      ],
+      "face": "👨‍💻"
+    },
+    {
+      "name": "Desmond",
+      "profession": "sleuth",
+      "gender": "male",
+      "criminal": true,
+      "clue": "#NAME:18 and #NAME:19 have 2 innocent neighbors in common",
+      "origHint": "units_share_n_traits(unit(neighbor,18),unit(neighbor,19),innocent,2)",
+      "paths": [
+        [
+          4
+        ]
+      ],
+      "face": "🕵️‍♂️"
+    },
+    {
+      "name": "Pavel",
+      "profession": "cop",
+      "gender": "male",
+      "criminal": true,
+      "clue": "There are no innocents #BETWEEN:pair(9,10) who neighbor #NAME:11",
+      "origHint": "units_share_n_traits(unit(between,pair(9,10)),unit(neighbor,11),innocent,0)",
+      "paths": [
+        [
+          2
+        ]
+      ],
+      "face": "👮‍♂️"
+    },
+    {
+      "name": "Suri",
+      "profession": "mechanic",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Only 1 of the 1 innocents #BETWEEN:pair(2,6) is #NAMES:2 neighbor",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(2,6)),unit(neighbor,2),innocent,1,1)",
+      "paths": [],
+      "face": "👩‍🔧"
+    },
+    {
+      "name": "Lucian",
+      "profession": "cook",
+      "gender": "male",
+      "criminal": false,
+      "clue": "Only 1 of the 1 innocents #BETWEEN:pair(13,17) is #BETWEEN:pair(5,13)",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(13,17)),unit(between,pair(5,13)),innocent,1,1)",
+      "paths": [
+        [
+          8
+        ]
+      ],
+      "face": "👨‍🍳"
+    },
+    {
+      "name": "Ulla",
+      "profession": "coder",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Only 1 of the 4 innocents neighboring #NAME:11 is #BETWEEN:pair(14,18)",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,11),unit(between,pair(14,18)),innocent,1,4)",
+      "paths": [
+        [
+          11
+        ]
+      ],
+      "face": "👩‍💻"
+    },
+    {
+      "name": "Wren",
+      "profession": "mechanic",
+      "gender": "female",
+      "criminal": false,
+      "clue": "Only one person #BETWEEN:pair(4,12) has exactly 2 innocent neighbors",
+      "origHint": "only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(between,pair(4,12)),innocent,2)",
+      "paths": [
+        [
+          17
+        ]
+      ],
+      "face": "👩‍🔧"
+    },
+    {
+      "name": "Greta",
+      "profession": "cop",
+      "gender": "female",
+      "criminal": true,
+      "clue": "Exactly 1 innocent #BETWEEN:pair(12,16) is in the corners",
+      "origHint": "units_share_n_traits(unit(between,pair(12,16)),unit(corner,void),innocent,1)",
+      "paths": [
+        [
+          14
+        ]
+      ],
+      "face": "👮‍♀️"
+    },
+    {
+      "name": "Quinn",
+      "profession": "cook",
+      "gender": "female",
+      "criminal": true,
+      "clue": "Only 1 of the 2 criminals #BETWEEN:pair(9,10) is #NAMES:15 neighbor",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(9,10)),unit(neighbor,15),criminal,1,2)",
+      "paths": [
+        [
+          8
+        ]
+      ],
+      "face": "👩‍🍳"
+    },
+    {
+      "name": "Elin",
+      "profession": "coder",
+      "gender": "female",
+      "criminal": true,
+      "clue": "The window was fogged over.",
+      "origHint": null,
+      "paths": [
+        [
+          10
+        ]
+      ],
+      "face": "👩‍💻"
+    }
+  ],
+  "hints": [
+    {
+      "flipped": [
+        13
+      ],
+      "clues": [
+        13
+      ],
+      "reveals": [
+        2,
+        6
+      ]
+    },
+    {
+      "flipped": [
+        2,
+        6,
+        13
+      ],
+      "clues": [
+        2,
+        13
+      ],
+      "reveals": [
+        4,
+        8,
+        12
+      ]
+    },
+    {
+      "flipped": [
+        2,
+        4,
+        6,
+        8,
+        12,
+        13
+      ],
+      "clues": [
+        2,
+        4,
+        8,
+        12,
+        13
+      ],
+      "reveals": [
+        10,
+        11,
+        14,
+        18
+      ]
+    },
+    {
+      "flipped": [
+        2,
+        4,
+        6,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        18
+      ],
+      "clues": [
+        2,
+        4,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        18
+      ],
+      "reveals": [
+        9,
+        15,
+        17,
+        19
+      ]
+    },
+    {
+      "flipped": [
+        2,
+        4,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "clues": [
+        2,
+        4,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18
+      ],
+      "reveals": [
+        0,
+        1,
+        3,
+        7,
+        16
+      ]
+    },
+    {
+      "flipped": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "clues": [
+        2,
+        4,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "reveals": [
+        5
+      ]
+    }
+  ]
+}
