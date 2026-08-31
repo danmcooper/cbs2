@@ -136,7 +136,17 @@ const BANDED = [
  * `buildChain` + `minimalPaths` on a freshly generated chain lands
  * `meanPathSize` around 1.3–1.9 regardless of label — well below even Easy's
  * calibrated floor — because generated chains currently need less
- * supporting context per deduction than any archived puzzle. Gating on it
+ * supporting context per deduction than any archived puzzle.
+ *
+ * That gap is not an artifact of the minimiser stalling higher when seeded
+ * from the archive's larger stored paths, which was the obvious confound.
+ * Re-running the archive side with `minimalPaths(..., attempts=12)` instead of
+ * the default 3 moves the means by -0.158 (2026-07-13 Easy 2.579→2.421),
+ * -0.158 (2026-07-07 Medium 2.474→2.316) and 0.000 (2026-07-12 Brutal 3.368).
+ * A ~6% shift does not close a gap of 1.0-1.5, and the label ordering is
+ * unchanged, so the archive really does demand more support per deduction.
+ *
+ * Gating on it
  * today would make every label unreachable. It stays in `BANDED` so the gap
  * is recorded and visible; closing it (so generated puzzles genuinely need
  * as much support per card as their label implies) is tracked as follow-up
