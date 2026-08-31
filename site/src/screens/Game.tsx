@@ -566,7 +566,12 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
       {startOpen && (
         <div className="overlay">
           <div role="dialog" aria-label="start" className="modal start-modal">
-            <h2 className="start-title">Welcome to Clues by Sam!</h2>
+            {/* A generated puzzle must not open under the source site's name.
+                The date line and results modal already carry a "· Dan" suffix;
+                this is the first screen a player sees, so it says so plainly. */}
+            <h2 className="start-title">
+              {puzzle.variant === "dan" ? "A Dan puzzle" : "Welcome to Clues by Sam!"}
+            </h2>
             <p className="start-date">{formatDateOrdinal(puzzle.date)}</p>
             <p className="start-difficulty">
               Difficulty: <b>{puzzle.difficulty}</b>

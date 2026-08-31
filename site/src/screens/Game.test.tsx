@@ -266,6 +266,19 @@ describe('start popup', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('names a Dan puzzle as one rather than opening under the source site name', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan' }), { status: 200 })),
+    );
+    render(<Game slug="2026-07-07-dan" />);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.textContent).toContain('A Dan puzzle');
+    expect(dialog.textContent).not.toContain('Clues by Sam');
+    expect(dialog.textContent).toContain('Jul 7th 2026');
+    expect(dialog.textContent).toContain('Difficulty: Easy');
+  });
+
   it('does not show when localStorage already has guesses', async () => {
     localStorage.setItem(
       'cbs:progress:a6f09e2713b2',
