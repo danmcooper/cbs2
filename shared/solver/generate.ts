@@ -1,6 +1,6 @@
 import { type Person, type Puzzle, validatePuzzle } from '../puzzle';
-import { candidateHints, referencedCards } from './candidates';
-import { type LabelBand, type Metrics, gatesPass, measure } from './difficulty';
+import { candidateHints, namedCards } from './candidates';
+import { ABSTRACT_PREDICATES, type LabelBand, type Metrics, gatesPass, measure } from './difficulty';
 import type { Shape } from './enumerate';
 import { makeGrid } from './grid';
 import { type Hint, formatHint } from './hint';
@@ -46,20 +46,23 @@ export interface GenerateInput {
   maxAttempts?: number;
   trialsPerStep?: number;
   /**
-   * Called for an attempt that is fully valid — uniquely solvable, fully chained,
-   * every card path-reachable — but whose metrics miss the requested band. The
-   * caller may keep the puzzle for a different difficulty label. Returning a
-   * value does NOT stop the attempt loop: this date still needs a puzzle in its
-   * own band. Must not mutate the puzzle it is given.
+   * Names the difficulty of a finished attempt from its own metrics, and by
+   * being present switches off band rejection entirely: the first attempt
+   * that is uniquely solvable, fully chained, and path-reachable on every
+   * card is returned, carrying the label this returns rather than
+   * `difficulty`.
+   *
+   * This is how generation is driven in practice. A valid puzzle is worth
+   * keeping whatever its metrics turn out to be — throwing one away costs
+   * minutes of CPU to rebuild something no better, and the archive is full of
+   * labels we can hand out honestly. `band` still shapes the attempt (it sets
+   * the reveal ceiling and the abstraction target), so a date still aims at
+   * its real puzzle's difficulty; it just no longer rejects for missing.
+   *
+   * Without it, the old behaviour stands: attempts that miss `band` are
+   * discarded and the puzzle keeps the requested `difficulty`.
    */
-  onOffBand?: (candidate: OffBandCandidate) => void;
-}
-
-export interface OffBandCandidate {
-  /** Fully built and schema-valid, but stamped with the label that was ASKED for. */
-  puzzle: Puzzle;
-  metrics: Metrics;
-  attempt: number;
+  labelOf?: (metrics: Metrics) => string;
 }
 
 export interface GenerateResult {
@@ -110,12 +113,15 @@ function buildChain(
   initialReveals: number[],
   trialsPerStep: number,
   maxReveals: number,
+  targetAbstractShare: number,
 ): ChainBuild | null {
   const board = makeBoard(shape.grid, shape.professions, truth);
   const clues: Clues = Array.from({ length: SIZE }, () => null);
   const flippedAt: number[][] = Array.from({ length: SIZE }, () => []);
   let flipped = [...initialReveals].sort((a, b) => a - b);
   let cursor = 0;
+  let abstractChosen = 0;
+  let totalChosen = 0;
 
   while (flipped.length < SIZE) {
     const hosts = shuffled(
@@ -125,27 +131,58 @@ function buildChain(
     let progressed = false;
 
     for (const host of hosts) {
+      // Bias toward the target abstractShare: when the running share among
+      // clues chosen so far sits below the target band's midpoint, prefer a
+      // candidate from the abstract predicate family for this step; at or
+      // above it, prefer one outside the family. A candidate is only ever
+      // accepted once it has passed the exact same forcedGiven/maxReveals
+      // check as before, so this never trades away correctness — and if no
+      // candidate of the preferred kind turns up within the trial budget,
+      // the first valid candidate found (the old, unbiased behavior) is used.
+      const currentShare = totalChosen === 0 ? 0 : abstractChosen / totalChosen;
+      const preferAbstract = currentShare < targetAbstractShare;
+
       let tried = 0;
-      while (tried < trialsPerStep && cursor < pool.length) {
+      let firstValid: { hint: Hint; reveals: number[] } | null = null;
+      let preferredValid: { hint: Hint; reveals: number[] } | null = null;
+
+      while (tried < trialsPerStep && cursor < pool.length && !preferredValid) {
         const hint = pool[cursor++];
         tried++;
-        if (referencedCards(board, hint).has(host)) continue;
+        // Once a fallback is in hand, a candidate can only possibly improve on
+        // it by being of the preferred kind — so skip the expensive
+        // forcedGiven/reveal check entirely for the wrong kind. This is a pure
+        // cost optimization: it changes nothing about which candidate is
+        // eventually chosen (a wrong-kind candidate was never going to beat an
+        // existing firstValid anyway), it just avoids paying for a check whose
+        // answer cannot change the outcome.
+        if (firstValid && ABSTRACT_PREDICATES.has(hint.pred) !== preferAbstract) continue;
+        if (namedCards(board, hint).has(host)) continue;
         clues[host] = hint;
         const forced = forcedGiven(shape, clues, truth, flipped);
         const reveals: number[] = [];
         for (let i = 0; i < SIZE; i++) {
           if (!flipped.includes(i) && forced[i] !== null) reveals.push(i);
         }
-        if (reveals.length === 0 || reveals.length > maxReveals) {
-          clues[host] = null;
-          continue;
+        clues[host] = null;
+        if (reveals.length === 0 || reveals.length > maxReveals) continue;
+
+        if (!firstValid) firstValid = { hint, reveals };
+        if (ABSTRACT_PREDICATES.has(hint.pred) === preferAbstract) {
+          preferredValid = { hint, reveals };
         }
-        for (const i of reveals) flippedAt[i] = [...flipped];
-        flipped = [...flipped, ...reveals].sort((a, b) => a - b);
-        progressed = true;
-        break;
       }
-      if (progressed) break;
+
+      const chosen = preferredValid ?? firstValid;
+      if (!chosen) continue;
+
+      clues[host] = chosen.hint;
+      for (const i of chosen.reveals) flippedAt[i] = [...flipped];
+      flipped = [...flipped, ...chosen.reveals].sort((a, b) => a - b);
+      totalChosen++;
+      if (ABSTRACT_PREDICATES.has(chosen.hint.pred)) abstractChosen++;
+      progressed = true;
+      break;
     }
 
     if (!progressed) return null;
@@ -174,7 +211,18 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
     const initialReveals = [randInt(rng, 0, SIZE - 1)];
 
     const maxReveals = Math.max(2, Math.ceil(input.band.meanRevealsPerStep.max));
-    const built = buildChain(rng, shape, truth, pool, initialReveals, trialsPerStep, maxReveals);
+    const targetAbstractShare =
+      (input.band.abstractShare.min + input.band.abstractShare.max) / 2;
+    const built = buildChain(
+      rng,
+      shape,
+      truth,
+      pool,
+      initialReveals,
+      trialsPerStep,
+      maxReveals,
+      targetAbstractShare,
+    );
     if (!built) {
       failures.push(`attempt ${attempt}: chain stalled`);
       continue;
@@ -220,7 +268,7 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
       id: hexId(rng),
       date: input.date,
       title: TITLES[Math.floor(rng() * TITLES.length)],
-      difficulty: input.difficulty,
+      difficulty: input.labelOf ? input.labelOf(metrics) : input.difficulty,
       width: WIDTH,
       height: HEIGHT,
       initialReveals,
@@ -232,12 +280,11 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
 
     validatePuzzle(puzzle);
 
-    if (!gatesPass(input.band, metrics)) {
+    if (!input.labelOf && !gatesPass(input.band, metrics)) {
       failures.push(
         `attempt ${attempt}: out of band (chain=${metrics.chainLength} ` +
           `clues=${metrics.clueCards} path=${metrics.meanPathSize.toFixed(2)})`,
       );
-      input.onOffBand?.({ puzzle, metrics, attempt });
       continue;
     }
 

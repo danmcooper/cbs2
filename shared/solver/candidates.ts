@@ -289,6 +289,13 @@ export function candidateHints(b: Board): Hint[] {
   return out;
 }
 
+/**
+ * Every card a clue touches, including cards it only reaches through unit
+ * membership. This is the strict superset of `namedCards` below; generation
+ * uses `namedCards`, because "a clue may not sit on a card it names" is about
+ * the rendered text, not about membership. Kept as the explicit statement of
+ * the wider relation the narrower one is defined against.
+ */
 export function referencedCards(b: Board, h: Hint): Set<number> {
   const cards = new Set<number>();
   for (const arg of h.args) {
@@ -302,6 +309,34 @@ export function referencedCards(b: Board, h: Hint): Set<number> {
     } else if (arg.t === 'index') cards.add(arg.i);
     else if (arg.t === 'profession') {
       for (const i of unitMembers(b, { kind: 'profession', name: arg.name })) cards.add(i);
+    }
+  }
+  return cards;
+}
+
+/**
+ * Cards a clue's *rendering* actually names, as opposed to every card that
+ * happens to be a member of a unit the clue mentions. Ordinary unit
+ * membership (a row, a column, a profession, the edges, the corners) never
+ * surfaces a card index in the rendered text — only a locative phrase like
+ * "in row 3" or "on the edges". Only three shapes put a literal card in the
+ * text: a direct `index` argument (renders as `#NAME:i`), a `neighbor`
+ * unit's anchor (always named, e.g. "neighboring #NAME:5", even though the
+ * anchor is never a member of its own neighbor set), and a `between` unit's
+ * two endpoints (`#BETWEEN:pair(a,b)`). Verified against every non-null
+ * clue in the 54-puzzle archive in candidates.test.ts.
+ */
+export function namedCards(b: Board, h: Hint): Set<number> {
+  const cards = new Set<number>();
+  for (const arg of h.args) {
+    if (arg.t === 'index') {
+      cards.add(arg.i);
+    } else if (arg.t === 'unit') {
+      if (arg.unit.kind === 'neighbor') cards.add(arg.unit.i);
+      else if (arg.unit.kind === 'between') {
+        cards.add(arg.unit.a);
+        cards.add(arg.unit.b);
+      }
     }
   }
   return cards;
