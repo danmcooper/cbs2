@@ -5,7 +5,7 @@ import { type Shape } from './enumerate';
 import { makeGrid } from './grid';
 import { evaluate, makeBoard } from './predicates';
 import { SAMPLED_PREDICATES, makeSampleCtx, randomTrueClue } from './sample';
-import { type Clues, forcedGiven } from './solve';
+import { type Clues, forcedGivenBrute } from './solve';
 
 /**
  * `enumerate.ts` is the reference: it decides a card by looking at every
@@ -83,7 +83,7 @@ describe('SAT engine against the enumerator', () => {
       const size = shape.grid.size;
       for (let round = 0; round < 6; round++) {
         const flipped = [...Array(size).keys()].filter(() => rng() < 0.35);
-        const expected = forcedGiven(shape, clues, truth, flipped);
+        const expected = forcedGivenBrute(shape, clues, truth, flipped);
         const actual = forcedGivenSat(shape, clues, truth, flipped);
         expect(actual, `trial ${trial} round ${round} flipped ${flipped}`).toEqual(expected);
         checked++;
@@ -103,7 +103,7 @@ describe('SAT engine against the enumerator', () => {
       const { shape, clues, truth } = randomCase(rng, 4, 5);
       for (const flipped of [[], [0], [0, 7], [3, 11, 19]]) {
         expect(forcedGivenSat(shape, clues, truth, flipped)).toEqual(
-          forcedGiven(shape, clues, truth, flipped),
+          forcedGivenBrute(shape, clues, truth, flipped),
         );
       }
     }
@@ -113,7 +113,7 @@ describe('SAT engine against the enumerator', () => {
     const shape: Shape = { grid: makeGrid(4, 4), professions: Array(16).fill('cook') };
     const truth = Array.from({ length: 16 }, () => false);
     const clues: Clues = Array.from({ length: 16 }, () => null);
-    expect(forcedGivenSat(shape, clues, truth, [])).toEqual(forcedGiven(shape, clues, truth, []));
+    expect(forcedGivenSat(shape, clues, truth, [])).toEqual(forcedGivenBrute(shape, clues, truth, []));
   });
 
   it('has a builder for every predicate the encoder claims to support', () => {

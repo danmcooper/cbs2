@@ -8,10 +8,10 @@
  * disagrees with. So the usual cost is far below one solver call per card, and
  * none of it depends on how many assignments there are.
  */
+import { type Clues, activeHints, knownFrom } from './clues';
 import { ContradictionError, type Known, type Shape } from './enumerate';
 import { encode } from './encode';
 import { solve } from './sat';
-import { type Clues, activeHints, knownFrom } from './solve';
 
 export { SUPPORTED, UnsupportedPredicateError, supports } from './encode';
 

@@ -1,37 +1,34 @@
 import type { HintStep } from '../puzzle';
+import { forcedGivenSat, isUniquelySolvableSat } from './backbone';
+import { type Clues, activeHints, knownFrom } from './clues';
 import { type Known, type Shape, forcedFromMasks, survivors } from './enumerate';
-import { type Hint, parseHint } from './hint';
 
-export type Clues = (Hint | null)[];
-
-/** Convenience for tests and scripts: origHint strings -> Clues. */
-export function parseClues(origHints: (string | null)[]): Clues {
-  return origHints.map((s) => (s === null ? null : parseHint(s)));
-}
-
-export function knownFrom(truth: boolean[], flipped: number[]): Known {
-  const known: Known = truth.map(() => null);
-  for (const i of flipped) known[i] = truth[i];
-  return known;
-}
-
-export function activeHints(clues: Clues, flipped: number[]): Hint[] {
-  const out: Hint[] = [];
-  for (const i of flipped) {
-    const hint = clues[i];
-    if (hint) out.push(hint);
-  }
-  return out;
-}
+export { type Clues, activeHints, knownFrom, parseClues } from './clues';
 
 /**
  * Precondition: `truth` must be consistent with `clues` — the flipped truth
  * values, together with the hints on the flipped cards, must admit at least
  * one satisfying assignment. If they don't (the puzzle's own truth violates
- * its own clues), `forcedFromMasks` throws `ContradictionError`; this
- * function does not catch it.
+ * its own clues), this throws `ContradictionError`.
+ *
+ * Answered by the SAT engine. The enumerator below is the same function written
+ * the obvious way, and remains the reference the differential test checks
+ * against — but it builds all 2^free assignments, which is 2^19 on a 4x5 board
+ * and 2^30 on a 5x6 one, where the single allocation alone is over 4 GB. The
+ * backbone is what the caller actually wants, and asking for it directly costs
+ * about one solver call per *open* card rather than one array per position.
  */
 export function forcedGiven(
+  shape: Shape,
+  clues: Clues,
+  truth: boolean[],
+  flipped: number[],
+): Known {
+  return forcedGivenSat(shape, clues, truth, flipped);
+}
+
+/** `forcedGiven` by exhaustive enumeration: the reference, not the fast path. */
+export function forcedGivenBrute(
   shape: Shape,
   clues: Clues,
   truth: boolean[],
@@ -54,6 +51,16 @@ export function forcedGiven(
  * unique *given* what the game hands the player up front.
  */
 export function isUniquelySolvable(
+  shape: Shape,
+  clues: Clues,
+  truth: boolean[],
+  revealed: number[] = [],
+): boolean {
+  return isUniquelySolvableSat(shape, clues, truth, revealed);
+}
+
+/** `isUniquelySolvable` by exhaustive enumeration: the reference, not the fast path. */
+export function isUniquelySolvableBrute(
   shape: Shape,
   clues: Clues,
   truth: boolean[],
