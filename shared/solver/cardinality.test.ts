@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { atLeast, atMost, exactly, parityOdd, reifyExactly } from './cardinality';
+import {
+  atLeast,
+  atMost,
+  counter,
+  eqCount,
+  exactly,
+  geqCount,
+  gtCount,
+  parityOdd,
+  reifyExactly,
+} from './cardinality';
 import { Cnf, solve } from './sat';
 
 /**
@@ -107,6 +117,63 @@ describe('reifyExactly', () => {
     reifyExactly(cnf, lits, 5, flag);
     expect(solve(cnf, [flag])).toBeNull();
     expect(solve(cnf, [-flag])).not.toBeNull();
+  });
+});
+
+/** Every assignment of two literal sets, checked against the intended relation. */
+function comparesAs(
+  sizeA: number,
+  sizeB: number,
+  encode: (cnf: Cnf, a: number[], b: number[]) => void,
+  want: (countA: number, countB: number) => boolean,
+): void {
+  const cnf = new Cnf();
+  const litsA = Array.from({ length: sizeA }, () => cnf.newVar());
+  const litsB = Array.from({ length: sizeB }, () => cnf.newVar());
+  encode(cnf, counter(cnf, litsA), counter(cnf, litsB));
+  const all = [...litsA, ...litsB];
+  for (let combo = 0; combo < 1 << all.length; combo++) {
+    const assumptions = all.map((l, i) => ((combo >> i) & 1 ? l : -l));
+    let a = 0;
+    let b = 0;
+    for (let i = 0; i < sizeA; i++) if ((combo >> i) & 1) a++;
+    for (let i = 0; i < sizeB; i++) if ((combo >> (sizeA + i)) & 1) b++;
+    expect(solve(cnf, assumptions) !== null, `a=${a}/${sizeA} b=${b}/${sizeB}`).toBe(want(a, b));
+  }
+}
+
+describe('counter comparisons', () => {
+  it('geqCount holds exactly when the first count is at least the second', () => {
+    for (let a = 0; a <= 3; a++)
+      for (let b = 0; b <= 3; b++) comparesAs(a, b, geqCount, (x, y) => x >= y);
+  });
+
+  it('gtCount holds exactly when the first count exceeds the second', () => {
+    for (let a = 0; a <= 3; a++)
+      for (let b = 0; b <= 3; b++) comparesAs(a, b, gtCount, (x, y) => x > y);
+  });
+
+  it('eqCount holds exactly when the counts match', () => {
+    for (let a = 0; a <= 3; a++)
+      for (let b = 0; b <= 3; b++) comparesAs(a, b, eqCount, (x, y) => x === y);
+  });
+
+  it('compares counts over literals that share variables', () => {
+    // "as many criminals as innocents in this unit" counts v and -v over the
+    // same cards, so the two counters are not independent.
+    const cnf = new Cnf();
+    const vars = [cnf.newVar(), cnf.newVar(), cnf.newVar(), cnf.newVar()];
+    eqCount(
+      cnf,
+      counter(cnf, vars),
+      counter(cnf, vars.map((v) => -v)),
+    );
+    for (let combo = 0; combo < 16; combo++) {
+      const assumptions = vars.map((v, i) => ((combo >> i) & 1 ? v : -v));
+      let crim = 0;
+      for (let i = 0; i < 4; i++) if ((combo >> i) & 1) crim++;
+      expect(solve(cnf, assumptions) !== null).toBe(crim === 4 - crim);
+    }
   });
 });
 

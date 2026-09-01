@@ -120,6 +120,42 @@ export function parityOdd(cnf: Cnf, lits: number[]): void {
   cnf.addUnit(acc);
 }
 
+/**
+ * Comparisons between two unary counters. 14% of the archive's clues are one
+ * count set against another — "more criminals in row 2 than in column 3", "as
+ * many criminal doctors as criminal clerks" — and the two literal sets are
+ * often not disjoint, so these constrain the counters rather than the cards.
+ *
+ * `a` at index j-1 means "at least j", which makes each comparison a chain of
+ * implications between the two unary encodings. A threshold past the end of a
+ * counter is unreachable, so the implication collapses to forbidding the
+ * antecedent.
+ */
+export function geqCount(cnf: Cnf, a: number[], b: number[]): void {
+  for (let j = 1; j <= b.length; j++) {
+    if (j <= a.length) cnf.add([-b[j - 1], a[j - 1]]);
+    else cnf.addUnit(-b[j - 1]);
+  }
+}
+
+export function gtCount(cnf: Cnf, a: number[], b: number[]): void {
+  // b holds at least 0 unconditionally, so a must hold at least 1.
+  if (a.length === 0) {
+    cnf.add([]);
+    return;
+  }
+  cnf.addUnit(a[0]);
+  for (let j = 1; j <= b.length; j++) {
+    if (j + 1 <= a.length) cnf.add([-b[j - 1], a[j]]);
+    else cnf.addUnit(-b[j - 1]);
+  }
+}
+
+export function eqCount(cnf: Cnf, a: number[], b: number[]): void {
+  geqCount(cnf, a, b);
+  geqCount(cnf, b, a);
+}
+
 /** `flag` is true exactly when the number of true `lits` equals `k`. */
 export function reifyExactly(cnf: Cnf, lits: number[], k: number, flag: number): void {
   if (k < 0 || k > lits.length) {
