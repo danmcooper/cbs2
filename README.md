@@ -6,7 +6,9 @@ Personal archive and player for Clues by Sam daily puzzles. See
 ## Commands
 
 - `npm run dev` — dev server (open the printed URL; the app lives under the UUID base path)
-- `npm test` — full Vitest suite
+- `npm test` — full Vitest suite (puzzle generation included; it runs on a 4x4 board to stay quick)
+- `npm run test:generate` — generate one puzzle at the shipped 4x5 size and check it is sound;
+  worth a minute before `npm run generate`
 - `npm run build` — production build to `site/dist/`
 - `npm run extract` — scrape today's puzzle into `puzzles/`
 - `npm run extract -- <url-or-puzzleId>` — import a specific/archived puzzle
