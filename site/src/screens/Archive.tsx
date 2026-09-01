@@ -3,21 +3,38 @@ import type { ManifestEntry } from '../../../scripts/manifest.mts';
 import { useFetch } from '../useFetch';
 import { filterEntries, groupByMonth, groupByYear, sortDifficulties, statusFor, type PuzzleStatus } from './archiveData';
 
+const SOURCES = ['real', 'dan', 'both'] as const;
+type Source = (typeof SOURCES)[number];
+
+/** Real for a first visit; after that, whatever was picked last. */
+const SOURCE_KEY = 'cbs:pref:archiveSource';
+
+function loadSource(): Source {
+  const saved = localStorage.getItem(SOURCE_KEY);
+  return SOURCES.includes(saved as Source) ? (saved as Source) : 'real';
+}
+
 export default function Archive() {
   const { data, error, retry } = useFetch<ManifestEntry[]>('puzzles/index.json');
   const [difficulty, setDifficulty] = useState('');
   const [status, setStatus] = useState<PuzzleStatus | ''>('');
-  const [variant, setVariant] = useState<'real' | 'dan'>('real');
-  // Difficulty options are scoped to the current variant, so a selection made
-  // under one variant may not exist under the other; drop it on toggle rather
+  const [source, setSource] = useState<Source>(loadSource);
+  // `both` means no variant filter at all.
+  const variant = source === 'both' ? undefined : source;
+  // Difficulty options are scoped to the current source, so a selection made
+  // under one source may not exist under the next; drop it on change rather
   // than leave the <select> holding a value with no matching option.
-  const chooseVariant = (next: 'real' | 'dan') => {
-    setVariant(next);
+  const chooseSource = (next: Source) => {
+    setSource(next);
     setDifficulty('');
+    localStorage.setItem(SOURCE_KEY, next);
   };
 
   const difficulties = useMemo(
-    () => sortDifficulties([...new Set((data ?? []).filter((e) => e.variant === variant).map((e) => e.difficulty))]),
+    () =>
+      sortDifficulties([
+        ...new Set((data ?? []).filter((e) => !variant || e.variant === variant).map((e) => e.difficulty)),
+      ]),
     [data, variant],
   );
   const filtered = useMemo(
@@ -45,18 +62,6 @@ export default function Archive() {
       {data.length === 0 && <p>No puzzles yet — the scraper runs daily.</p>}
       {data.length > 0 && (
         <div className="archive-filters">
-          <div className="variant-toggle" role="group" aria-label="Puzzle set">
-            <button
-              type="button"
-              aria-pressed={variant === 'real'}
-              onClick={() => chooseVariant('real')}
-            >
-              Real
-            </button>
-            <button type="button" aria-pressed={variant === 'dan'} onClick={() => chooseVariant('dan')}>
-              Dan
-            </button>
-          </div>
           <label>
             Difficulty
             <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
@@ -77,6 +82,14 @@ export default function Archive() {
               <option value="done">Done</option>
             </select>
           </label>
+          <label>
+            Source
+            <select value={source} onChange={(e) => chooseSource(e.target.value as Source)}>
+              <option value="real">Real</option>
+              <option value="dan">Dan</option>
+              <option value="both">Both</option>
+            </select>
+          </label>
         </div>
       )}
       {data.length > 0 && filtered.length === 0 && <p>No puzzles match those filters.</p>}
@@ -92,6 +105,7 @@ export default function Archive() {
                     <a href={`#/play/${entry.slug}`}>
                       <span className="arch-date">{entry.date}</span>
                       <span className="arch-title">{entry.title}</span>
+                      {source === 'both' && entry.variant === 'dan' && <span className="arch-source">Dan</span>}
                       <span className="arch-difficulty">{entry.difficulty}</span>
                       <span className={`arch-status status-${statusFor(entry.id).replace(' ', '-')}`}>
                         {statusFor(entry.id)}

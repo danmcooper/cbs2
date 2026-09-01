@@ -56,9 +56,31 @@ function formatDateOrdinal(date: string): string {
   return `${d.toLocaleString("en-US", { month: "short" })} ${day}${suffix} ${d.getFullYear()}`;
 }
 
+function shareLabel(puzzle: Puzzle): string {
+  return `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})`;
+}
+
 function puzzleLabel(puzzle: Puzzle): string {
   const dan = puzzle.variant === "dan" ? " · Dan" : "";
-  return `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})${dan}`;
+  return `${shareLabel(puzzle)}${dan}`;
+}
+
+/**
+ * Where a solve links back to. A real puzzle is the daily that everyone else
+ * played, so it credits the source site. A Dan puzzle only exists here, so it
+ * links to this deployment's own copy — built from the live URL rather than a
+ * baked-in address, which keeps it right in dev, preview, and production
+ * without another thing to configure.
+ */
+function shareOf(puzzle: Puzzle): { tag: string; link: string } {
+  if (puzzle.variant !== "dan") {
+    return { tag: "#CluesBySam", link: "https://cluesbysam.com" };
+  }
+  const { origin, pathname } = window.location;
+  return {
+    tag: "#CluesBySamByDan",
+    link: `${origin}${pathname}#/play/${puzzle.date}-dan`,
+  };
 }
 
 // Results grid: green = clean solve, yellow square = had a bad answer,
@@ -107,8 +129,11 @@ function ResultsModal({
     const grid = rows
       .map((row) => row.map((c) => CELL_EMOJI[c]).join(""))
       .join("\n");
+    // The tag and link already say which variant this is, so the shared label
+    // drops the " · Dan" the on-screen heading carries.
+    const { tag, link } = shareOf(puzzle);
     await navigator.clipboard.writeText(
-      `I solved the daily #CluesBySam, ${title}, in ${formatTime(state.elapsedMs)}\n${grid}\nhttps://cluesbysam.com`,
+      `I solved the daily ${tag}, ${shareLabel(puzzle)}, in ${formatTime(state.elapsedMs)}\n${grid}\n${link}`,
     );
     setCopied(true);
   };

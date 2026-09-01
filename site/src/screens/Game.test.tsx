@@ -235,6 +235,32 @@ describe('results popup', () => {
     await user.click(screen.getByRole('button', { name: /results/i }));
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
+
+  // A Dan puzzle is not the daily anyone else solved, so the share text points
+  // at this site's own copy of it rather than at cluesbysam.com.
+  it('credits and links a Dan puzzle to this site instead of the source', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan' }), { status: 200 })),
+    );
+    const user = fakeTimersUser();
+    render(<Game slug="2026-07-07-dan" />);
+    await screen.findAllByRole('group');
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(screen.getByText('mira'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' }));
+    await user.click(screen.getByText('ozan'));
+    await user.click(screen.getByRole('button', { name: 'Innocent' }));
+    await user.click(screen.getByText('lena'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' }));
+    finishDelay();
+
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    await user.click(screen.getByRole('button', { name: /copy text/i }));
+    expect(String(writeText.mock.calls[0]?.[0])).toMatch(
+      /^I solved the daily #CluesBySamByDan, Jul 7th 2026 \(Easy\), in \d{2}:\d{2}\n🟩🟩\n🟩🟩\nhttp:\/\/localhost:3000\/#\/play\/2026-07-07-dan$/,
+    );
+  });
 });
 
 describe('revisiting a completed puzzle', () => {
