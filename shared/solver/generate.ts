@@ -1,17 +1,36 @@
 import { type Person, type Puzzle, validatePuzzle } from '../puzzle';
 import { candidateHints, namedCards } from './candidates';
+// Type-only: corpus.ts reads the filesystem, and this import is erased at build time.
+import type { ClueMix } from './corpus';
 import { ABSTRACT_PREDICATES, type LabelBand, type Metrics, gatesPass, measure } from './difficulty';
 import type { Shape } from './enumerate';
-import { makeGrid } from './grid';
+import { type Grid, edgeMembers, makeGrid } from './grid';
 import { type Hint, formatHint } from './hint';
-import { makeBoard } from './predicates';
+import { type Board, hintFeatures, makeBoard } from './predicates';
 import { render } from './render';
-import { type Clues, forcedGiven, isUniquelySolvable, minimalPaths, solveChain } from './solve';
-import { FLAVOUR, NAMES, PROFESSIONS, TITLES, faceOf } from './vocab';
+import {
+  type Clues,
+  forcedGiven,
+  hintSteps,
+  isUniquelySolvable,
+  minimalPaths,
+  solveChain,
+} from './solve';
+import { FLAVOUR, NAMES, PROFESSIONS, TITLES, type VocabPerson, faceOf } from './vocab';
 
-const WIDTH = 4;
-const HEIGHT = 5;
-const SIZE = WIDTH * HEIGHT;
+/** Every archived puzzle is 4x5, and so is every puzzle we ship. */
+const DEFAULT_WIDTH = 4;
+const DEFAULT_HEIGHT = 5;
+const DEFAULT_SIZE = DEFAULT_WIDTH * DEFAULT_HEIGHT;
+
+/** Fitting passes in `fitFeatureWeights`. The marginals are within a fraction of
+ * a percent of target well before this, and the whole fit costs milliseconds. */
+const FIT_PASSES = 32;
+
+/** How much of each pass's correction `fitFeatureWeights` applies. Square roots
+ * converge on this pool in a dozen passes; the full correction does not converge
+ * at all. */
+const FIT_DAMPING = 0.5;
 
 export class GenerationError extends Error {}
 
@@ -29,7 +48,7 @@ export function makeRng(seed: number): () => number {
 const randInt = (rng: () => number, min: number, max: number) =>
   min + Math.floor(rng() * (max - min + 1));
 
-function shuffled<T>(rng: () => number, xs: readonly T[]): T[] {
+export function shuffled<T>(rng: () => number, xs: readonly T[]): T[] {
   const out = [...xs];
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -38,11 +57,193 @@ function shuffled<T>(rng: () => number, xs: readonly T[]): T[] {
   return out;
 }
 
+/** Share of a puzzle's criminals the archive puts on the edge: 331 of 503 across
+ * the 54 puzzles, against the 70% a uniform draw over a 4x5 board would give
+ * (t = -2.30, p = 0.025). */
+const EDGE_CRIMINAL_SHARE = 331 / 503;
+
+/**
+ * Which cards are criminal, drawn leaning slightly inward.
+ *
+ * A uniform draw puts criminals on the edge at whatever rate the board is edge —
+ * 70% of a 4x5. The archive runs below that, and the difference is not nothing
+ * to play against: an interior card touches eight others where a corner touches
+ * three, so the neighbour clues that carry most of the deduction have more to
+ * say about an interior criminal. Generated puzzles came out at the uniform
+ * rate, which made their neighbour clues quietly thinner than the real ones.
+ *
+ * The weight is solved from the board rather than tuned: with `e` edge cards and
+ * `n` interior ones, giving each interior card weight `w` would make the edge
+ * share `e / (e + n*w)` if cards were drawn one at a time with replacement, so
+ * `w = e*(1 - share) / (n*share)`. Drawing without replacement — Efraimidis-
+ * Spirakis, the same scheme `orderPool` uses — pulls the result back toward
+ * uniform, because a region that has given up several cards has fewer left to
+ * give: nine criminals on a 4x5 land at 67.0% rather than the 65.8% asked for,
+ * against 70.0% uniform. That is most of the gap, and the remainder sits inside
+ * the archive's own standard error of 1.6 points, so it is not worth a scheme
+ * that trades this one's guarantees — every card reachable, exactly `count`
+ * returned — for a decimal place.
+ */
+export function pickCriminals(rng: () => number, grid: Grid, count: number): number[] {
+  const edge = new Set(edgeMembers(grid));
+  const interior = grid.size - edge.size;
+  const weight =
+    interior === 0
+      ? 1
+      : (edge.size * (1 - EDGE_CRIMINAL_SHARE)) / (interior * EDGE_CRIMINAL_SHARE);
+  return [...Array(grid.size).keys()]
+    .map((i) => ({ i, key: -Math.log(rng() || Number.MIN_VALUE) / (edge.has(i) ? 1 : weight) }))
+    .sort((a, b) => a.key - b.key)
+    .slice(0, count)
+    .map((e) => e.i);
+}
+
+function shareIn<T>(xs: readonly T[], keys: (x: T) => string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  let total = 0;
+  for (const x of xs) {
+    for (const k of keys(x)) {
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+      total++;
+    }
+  }
+  for (const [k, n] of counts) counts.set(k, n / total);
+  return counts;
+}
+
+/**
+ * Order the candidate pool so that walking it front-to-back draws clues in
+ * roughly the archive's proportions rather than the pool's own.
+ *
+ * `buildChain` scans this list and takes the first candidate that makes
+ * progress, so the ordering — not any later filter — is what decides what a
+ * puzzle is made of. Shuffling uniformly (what this used to do) reproduces the
+ * pool's combinatorial shape: 58% of unit slots came out `between` against the
+ * archive's 29%, and `number_of_traits_in_unit`, the archive's most common
+ * clue at 14% of all clues, is 1.1% of the pool and so all but never appeared.
+ *
+ * Each candidate is weighted by how far its predicate and its features (unit
+ * kinds, between-span lengths, directions — see `hintFeatures`) are over- or
+ * under-represented in the pool relative to the archive, then drawn without
+ * replacement by the Efraimidis–Spirakis trick (sort by -ln(u)/w), which is one
+ * O(n log n) sort instead of the O(n^2) of renormalising after every draw.
+ * Features are applied first and the predicate correction is measured against
+ * the already-feature-weighted mass, so the two corrections compose instead of
+ * fighting: the expected predicate mix is the archive's, and within a predicate
+ * the features lean the archive's way too.
+ *
+ * Nothing is dropped. A candidate the archive never uses would get weight 0 and
+ * sort to the back, but every predicate and feature `candidateHints` emits does
+ * appear in the archive, so in practice this only reorders.
+ */
+/**
+ * Per-hint weights whose feature marginals match `target`.
+ *
+ * Scaling each feature once by target/pool — what this used to do — does not
+ * land on the target. A hint's weight is the product of its features' factors,
+ * so a clue naming two profession groups picks the profession factor up twice,
+ * and that factor is large: profession groups are 0.4% of the pool's unit slots
+ * against the archive's 7%. The head came out at three times the archive's
+ * profession rate, which is a worse error than the under-correction it was
+ * fixing — the player notices "there are more criminal judges than criminal
+ * doctors" twice a puzzle instead of once.
+ *
+ * So iterate: measure the weighted marginals, correct each feature by how far it
+ * still is from target, repeat. This is iterative proportional fitting, and a
+ * couple of dozen passes over precomputed feature lists costs nothing next to
+ * the solving that follows.
+ *
+ * Two details keep the iteration on its feet. It is damped, because a feature
+ * that is scarce in the pool and common in the archive asks for a big correction
+ * and the hints carrying it carry other features too, so the full correction
+ * overshoots those and the next pass overshoots back: undamped, the marginals
+ * oscillate instead of settling, and the error is worse at pass 7 than at pass
+ * 1. And the weights are rescaled each pass, because their absolute size is
+ * meaningless — only ratios reach the draw — and left alone the product of
+ * corrections runs to Infinity, at which point every weight is Infinity, every
+ * sort key is 0, and the ordering is whatever order the pool was built in.
+ */
+function fitFeatureWeights(featureSets: readonly string[][], target: Record<string, number>): number[] {
+  const keys = [...new Set(featureSets.flat())];
+  let weights = featureSets.map(() => 1);
+  for (let pass = 0; pass < FIT_PASSES; pass++) {
+    const mass = new Map<string, number>();
+    let total = 0;
+    featureSets.forEach((fs, i) => {
+      for (const f of fs) {
+        mass.set(f, (mass.get(f) ?? 0) + weights[i]);
+        total += weights[i];
+      }
+    });
+    if (total === 0) break;
+    const correction = new Map<string, number>();
+    for (const k of keys) {
+      const want = target[k] ?? 0;
+      const share = (mass.get(k) ?? 0) / total;
+      // A feature the archive never uses goes to zero and stays there. One whose
+      // carriers have all been zeroed by some *other* feature cannot be lifted,
+      // so leave it be rather than dividing by zero.
+      correction.set(k, want === 0 ? 0 : share > 0 ? (want / share) ** FIT_DAMPING : 1);
+    }
+    weights = weights.map((w, i) =>
+      featureSets[i].reduce((acc, f) => acc * (correction.get(f) as number), w),
+    );
+    const max = Math.max(...weights);
+    if (max > 0) weights = weights.map((w) => w / max);
+  }
+  return weights;
+}
+
+export function orderPool(
+  rng: () => number,
+  board: Board,
+  pool: readonly Hint[],
+  mix: ClueMix,
+): Hint[] {
+  const featureSets = pool.map((hint) => hintFeatures(board, hint));
+  const byFeature = fitFeatureWeights(featureSets, mix.feature);
+
+  const predMass = new Map<string, number>();
+  let mass = 0;
+  pool.forEach((hint, i) => {
+    predMass.set(hint.pred, (predMass.get(hint.pred) ?? 0) + byFeature[i]);
+    mass += byFeature[i];
+  });
+
+  return pool
+    .map((hint, i) => {
+      const share = (predMass.get(hint.pred) as number) / mass;
+      const w = share === 0 ? 0 : byFeature[i] * ((mix.pred[hint.pred] ?? 0) / share);
+      // Math.log(0) is -Infinity, so a zero weight sorts last rather than first.
+      const u = rng() || Number.MIN_VALUE;
+      return { hint, key: w > 0 ? -Math.log(u) / w : Infinity };
+    })
+    .sort((a, b) => a.key - b.key)
+    .map((e) => e.hint);
+}
+
 export interface GenerateInput {
   date: string;
   difficulty: string;
   band: LabelBand;
   seed: number;
+  /**
+   * Archive clue proportions, from `archiveClueMix()`. Required rather than
+   * defaulted: without it the candidate pool's own combinatorial shape decides
+   * the clue mix, which is how Dan puzzles ended up 3x heavier on `between`
+   * than any real one. See `orderPool`.
+   */
+  mix: ClueMix;
+  /**
+   * Board size, defaulting to the archive's 4x5. Every puzzle we ship is 4x5;
+   * this exists because solving enumerates all 2^(width*height) assignments, so
+   * a test that generates a real puzzle on a 4x4 board costs a sixteenth of what
+   * it costs on a 4x5 one and runs in the ordinary suite instead of a separate
+   * slow one. Whatever size is asked for, the profession shapes in `mix` have to
+   * cover it — see `castOf`.
+   */
+  width?: number;
+  height?: number;
   maxAttempts?: number;
   trialsPerStep?: number;
   /**
@@ -78,18 +279,72 @@ function hexId(rng: () => number): string {
   return out;
 }
 
-interface Cast {
+export interface Cast {
   names: string[];
   genders: ('male' | 'female')[];
   professions: string[];
   faces: string[];
 }
 
-function castOf(rng: () => number): Cast {
-  const people = shuffled(rng, NAMES).slice(0, SIZE);
-  const chosen = shuffled(rng, PROFESSIONS).slice(0, 5);
+/**
+ * Every archived puzzle names its cast in alphabetical reading order, with a
+ * distinct initial on each of the twenty cards. That is a playability
+ * constraint, not decoration: clues name people ("#NAME:10 has only one
+ * criminal neighbor"), and the player has to find that person on the board.
+ * Sorted, uniquely-lettered names turn that lookup into a glance at roughly
+ * where the letter falls; an arbitrary order forces a scan of all twenty
+ * cards for every name in every clue.
+ *
+ * So pick one name per initial from `NAMES` (which stocks two candidates for
+ * most letters) rather than twenty names outright, then lay them out sorted.
+ * Sorting by initial is enough to sort the names because the initials are
+ * distinct.
+ *
+ * Professions come from a whole profession shape sampled out of the archive
+ * (`ClueMix.professionShapes`): a list of group sizes summing to `size`, e.g.
+ * [3,3,3,2,2,2,2,2,1]. This used to be five professions dealt round-robin,
+ * which gave every Dan puzzle the same rigid five-groups-of-four cast — visible
+ * at a glance, and a silent constraint on the clues, since a `#PROFS:` unit was
+ * then always exactly four people. Real casts run 7 to 11 professions in groups
+ * of mostly two and three.
+ */
+export function castOf(
+  rng: () => number,
+  professionShapes: readonly number[][],
+  size: number = DEFAULT_SIZE,
+): Cast {
+  const byInitial = new Map<string, VocabPerson[]>();
+  for (const person of NAMES) {
+    const initial = person.name[0];
+    const bucket = byInitial.get(initial);
+    if (bucket) bucket.push(person);
+    else byInitial.set(initial, [person]);
+  }
+  const letters = shuffled(rng, [...byInitial.keys()]).slice(0, size).sort();
+  const people = letters.map((letter) => {
+    const candidates = byInitial.get(letter) as VocabPerson[];
+    return candidates[randInt(rng, 0, candidates.length - 1)];
+  });
+
+  // A usable shape has to cover every card and name no more professions than the
+  // vocabulary stocks. Both hold for the real archive on a 4x5 board — its
+  // shapes all sum to twenty and its widest cast needs exactly as many
+  // professions as we have — so say so plainly rather than dealing a cast with
+  // holes in it when the shapes and the board disagree.
+  const fits = professionShapes.filter(
+    (s) => s.length <= PROFESSIONS.length && s.reduce((a, b) => a + b, 0) === size,
+  );
+  if (fits.length === 0) {
+    throw new GenerationError(
+      `no archived profession shape covers ${size} cards with ${PROFESSIONS.length} professions`,
+    );
+  }
+  const shape = fits[randInt(rng, 0, fits.length - 1)];
+  const chosen = shuffled(rng, PROFESSIONS).slice(0, shape.length);
   const slots: string[] = [];
-  for (let i = 0; i < SIZE; i++) slots.push(chosen[i % chosen.length].key);
+  shape.forEach((size, i) => {
+    for (let j = 0; j < size; j++) slots.push(chosen[i].key);
+  });
   const professions = shuffled(rng, slots);
   return {
     names: people.map((p) => p.name),
@@ -98,6 +353,20 @@ function castOf(rng: () => number): Cast {
     faces: professions.map((key, i) => faceOf(key, people[i].gender)),
   };
 }
+
+/**
+ * How many times a chain will reach for the same predicate before it starts
+ * preferring anything else. A soft cap: it ranks candidates, it does not
+ * exclude them, so a step with nothing else that works still gets its clue.
+ *
+ * Two is the archive's own mode: of the 54 real puzzles, 22 lean hardest on a
+ * predicate exactly twice, 16 three times, and the tail runs out at 7. Pool
+ * weighting alone got Dan puzzles to 8.4 distinct
+ * predicates against the archive's 9.4, because a weight is a property of the
+ * whole pool and nothing kept one chain from taking the same shape of clue over
+ * and over once it happened to be working.
+ */
+const REPEAT_CAP = 2;
 
 interface ChainBuild {
   clues: Clues;
@@ -115,15 +384,17 @@ function buildChain(
   maxReveals: number,
   targetAbstractShare: number,
 ): ChainBuild | null {
+  const size = shape.grid.size;
   const board = makeBoard(shape.grid, shape.professions, truth);
-  const clues: Clues = Array.from({ length: SIZE }, () => null);
-  const flippedAt: number[][] = Array.from({ length: SIZE }, () => []);
+  const clues: Clues = Array.from({ length: size }, () => null);
+  const flippedAt: number[][] = Array.from({ length: size }, () => []);
   let flipped = [...initialReveals].sort((a, b) => a - b);
   let cursor = 0;
   let abstractChosen = 0;
   let totalChosen = 0;
+  const predUsed = new Map<string, number>();
 
-  while (flipped.length < SIZE) {
+  while (flipped.length < size) {
     const hosts = shuffled(
       rng,
       flipped.filter((i) => clues[i] === null),
@@ -142,44 +413,48 @@ function buildChain(
       const currentShare = totalChosen === 0 ? 0 : abstractChosen / totalChosen;
       const preferAbstract = currentShare < targetAbstractShare;
 
-      let tried = 0;
-      let firstValid: { hint: Hint; reveals: number[] } | null = null;
-      let preferredValid: { hint: Hint; reveals: number[] } | null = null;
+      // Rank a candidate on the two soft preferences, worth 2 and 1 so that the
+      // abstraction bias — which decides how the puzzle plays — outranks the
+      // repeat cap, which only decides how it reads. Both are preferences, not
+      // filters: a candidate is only ever accepted after passing the same
+      // forcedGiven/maxReveals check as before, and if nothing better turns up
+      // within the trial budget a rank-0 candidate is still taken.
+      const rankOf = (hint: Hint) =>
+        (ABSTRACT_PREDICATES.has(hint.pred) === preferAbstract ? 2 : 0) +
+        ((predUsed.get(hint.pred) ?? 0) < REPEAT_CAP ? 1 : 0);
 
-      while (tried < trialsPerStep && cursor < pool.length && !preferredValid) {
+      let tried = 0;
+      let best: { hint: Hint; reveals: number[]; rank: number } | null = null;
+
+      while (tried < trialsPerStep && cursor < pool.length && best?.rank !== 3) {
         const hint = pool[cursor++];
         tried++;
-        // Once a fallback is in hand, a candidate can only possibly improve on
-        // it by being of the preferred kind — so skip the expensive
-        // forcedGiven/reveal check entirely for the wrong kind. This is a pure
-        // cost optimization: it changes nothing about which candidate is
-        // eventually chosen (a wrong-kind candidate was never going to beat an
-        // existing firstValid anyway), it just avoids paying for a check whose
-        // answer cannot change the outcome.
-        if (firstValid && ABSTRACT_PREDICATES.has(hint.pred) !== preferAbstract) continue;
+        const rank = rankOf(hint);
+        // A candidate that cannot outrank what is already in hand cannot change
+        // the outcome, so skip the expensive forcedGiven/reveal check for it.
+        // Purely a cost optimization — rank is decided by the hint alone.
+        if (best && rank <= best.rank) continue;
         if (namedCards(board, hint).has(host)) continue;
         clues[host] = hint;
         const forced = forcedGiven(shape, clues, truth, flipped);
         const reveals: number[] = [];
-        for (let i = 0; i < SIZE; i++) {
+        for (let i = 0; i < size; i++) {
           if (!flipped.includes(i) && forced[i] !== null) reveals.push(i);
         }
         clues[host] = null;
         if (reveals.length === 0 || reveals.length > maxReveals) continue;
 
-        if (!firstValid) firstValid = { hint, reveals };
-        if (ABSTRACT_PREDICATES.has(hint.pred) === preferAbstract) {
-          preferredValid = { hint, reveals };
-        }
+        best = { hint, reveals, rank };
       }
 
-      const chosen = preferredValid ?? firstValid;
+      const chosen = best;
       if (!chosen) continue;
 
       clues[host] = chosen.hint;
       for (const i of chosen.reveals) flippedAt[i] = [...flipped];
       flipped = [...flipped, ...chosen.reveals].sort((a, b) => a - b);
       totalChosen++;
+      predUsed.set(chosen.hint.pred, (predUsed.get(chosen.hint.pred) ?? 0) + 1);
       if (ABSTRACT_PREDICATES.has(chosen.hint.pred)) abstractChosen++;
       progressed = true;
       break;
@@ -194,21 +469,21 @@ function buildChain(
 export function generatePuzzle(input: GenerateInput): GenerateResult {
   const maxAttempts = input.maxAttempts ?? 25;
   const trialsPerStep = input.trialsPerStep ?? 80;
+  const grid = makeGrid(input.width ?? DEFAULT_WIDTH, input.height ?? DEFAULT_HEIGHT);
   const failures: string[] = [];
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const rng = makeRng(input.seed + attempt * 7919);
-    const grid = makeGrid(WIDTH, HEIGHT);
-    const cast = castOf(rng);
+    const cast = castOf(rng, input.mix.professionShapes, grid.size);
     const shape: Shape = { grid, professions: cast.professions };
 
     const criminals = randInt(rng, input.band.criminals.min, input.band.criminals.max);
-    const criminalSet = new Set(shuffled(rng, [...Array(SIZE).keys()]).slice(0, criminals));
-    const truth = Array.from({ length: SIZE }, (_, i) => criminalSet.has(i));
+    const criminalSet = new Set(pickCriminals(rng, grid, criminals));
+    const truth = Array.from({ length: grid.size }, (_, i) => criminalSet.has(i));
 
     const board = makeBoard(grid, cast.professions, truth);
-    const pool = shuffled(rng, candidateHints(board));
-    const initialReveals = [randInt(rng, 0, SIZE - 1)];
+    const pool = orderPool(rng, board, candidateHints(board), input.mix);
+    const initialReveals = [randInt(rng, 0, grid.size - 1)];
 
     const maxReveals = Math.max(2, Math.ceil(input.band.meanRevealsPerStep.max));
     const targetAbstractShare =
@@ -269,13 +544,15 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
       date: input.date,
       title: TITLES[Math.floor(rng() * TITLES.length)],
       difficulty: input.labelOf ? input.labelOf(metrics) : input.difficulty,
-      width: WIDTH,
-      height: HEIGHT,
+      width: grid.width,
+      height: grid.height,
       initialReveals,
       source: 'generated',
       variant: 'dan',
       people,
-      hints: chain.steps,
+      // `chain` proves the puzzle solvable; it does not describe how to hint it.
+      // See `hintSteps`.
+      hints: hintSteps(shape, built.clues, truth, paths),
     };
 
     validatePuzzle(puzzle);

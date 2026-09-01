@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { validatePuzzle } from '../shared/puzzle.ts';
 import type { Band, Bands } from '../shared/solver/difficulty.ts';
 import { classify, loadBands } from '../shared/solver/difficulty.ts';
+import { archiveClueMix } from '../shared/solver/corpus.ts';
 import { GenerationError, generatePuzzle } from '../shared/solver/generate.ts';
 import { regenerateManifest } from './manifest.mts';
 
@@ -104,7 +105,11 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
   const result: GenerateRunResult = { written: [], skipped: [], failed: [] };
   const report = (event: GenerateProgress) => opts.onProgress?.(event);
 
-  const inScope: { date: string; aimedAt: string }[] = [];
+  // A Dan puzzle is a sibling of the real one for its date, so it gets that
+  // puzzle's board rather than a hardcoded 4x5. Every real puzzle is 4x5; this
+  // is what lets the tests point generation at a smaller archive and finish in
+  // seconds, since solving is exponential in the number of cards.
+  const inScope: { date: string; aimedAt: string; width: number; height: number }[] = [];
   for (const date of dates) {
     if (!opts.force && existing.has(`${date}-dan.json`)) {
       result.skipped.push(date);
@@ -114,12 +119,15 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
     const real = validatePuzzle(
       JSON.parse(await readFile(path.join(puzzlesDir, `${date}.json`), 'utf8')),
     );
-    inScope.push({ date, aimedAt: real.difficulty });
+    inScope.push({ date, aimedAt: real.difficulty, width: real.width, height: real.height });
   }
 
   const criminalsUnion = unionCriminals(bands);
+  // Read once for the whole run: the archive it measures does not change mid-run,
+  // and it is the same mix for every date.
+  const mix = archiveClueMix(puzzlesDir);
 
-  for (const { date, aimedAt } of inScope) {
+  for (const { date, aimedAt, width, height } of inScope) {
     const band = bands[aimedAt];
     if (!band) {
       const reason = `no calibrated band for ${aimedAt}`;
@@ -135,6 +143,9 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
         difficulty: aimedAt,
         band: { ...band, criminals: criminalsUnion },
         seed: seedForDate(date),
+        mix,
+        width,
+        height,
         labelOf: (metrics) => classify(bands, metrics),
       });
       await writeFile(
