@@ -4,5 +4,5 @@ import Game from './screens/Game';
 
 export default function App() {
   const route = useRoute();
-  return route.screen === 'play' ? <Game key={route.date} date={route.date} /> : <Archive />;
+  return route.screen === 'play' ? <Game key={route.slug} slug={route.slug} /> : <Archive />;
 }

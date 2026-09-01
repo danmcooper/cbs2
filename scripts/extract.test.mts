@@ -44,7 +44,10 @@ describe('runExtract', () => {
     expect(puzzle.people).toHaveLength(4);
     const manifest = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'));
     expect(manifest).toEqual([
-      { date: '2026-07-07', id: 'a6f09e2713b2', difficulty: 'Easy', title: 'A tiny test mystery' },
+      {
+        date: '2026-07-07', slug: '2026-07-07', variant: 'real',
+        id: 'a6f09e2713b2', difficulty: 'Easy', title: 'A tiny test mystery',
+      },
     ]);
   });
 

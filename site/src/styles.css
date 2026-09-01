@@ -682,6 +682,16 @@ a {
 .arch-title {
   flex: 1;
 }
+/* Only rendered under Source: Both, where two rows per date would otherwise
+   be indistinguishable at a glance. */
+.arch-source {
+  align-self: center;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border-neutral);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
 .arch-status.status-done {
   color: var(--innocent);
 }

@@ -2,3 +2,6 @@ node_modules/
 site/dist/
 artifact/
 .DS_Store
+.superpowers/
+.worktrees/
+.claude/

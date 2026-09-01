@@ -1,10 +1,16 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { ManifestEntry } from '../../../scripts/manifest.mts';
 import { saveProgress } from '../game/storage';
 import { filterEntries, groupByMonth, groupByYear, sortDifficulties, statusFor } from './archiveData';
 
-const entry = (date: string, overrides: Partial<{ id: string; difficulty: string; title: string }> = {}) => ({
+const entry = (
+  date: string,
+  overrides: Partial<{ id: string; difficulty: string; title: string; slug: string; variant: 'real' | 'dan' }> = {},
+): ManifestEntry => ({
   date,
+  slug: overrides.slug ?? date,
+  variant: overrides.variant ?? 'real',
   id: overrides.id ?? 'a6f09e2713b2',
   difficulty: overrides.difficulty ?? 'Easy',
   title: overrides.title ?? 'T',
@@ -72,5 +78,21 @@ describe('statusFor', () => {
     expect(statusFor('a6f09e2713b2')).toBe('in progress');
     saveProgress('a6f09e2713b2', { flipped: [0, 1], mistakes: 1, elapsedMs: 5, completed: true });
     expect(statusFor('a6f09e2713b2')).toBe('done');
+  });
+});
+
+describe('filterEntries variant', () => {
+  const entries: ManifestEntry[] = [
+    { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'Real' },
+    { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'bbbbbbbbbbbb', difficulty: 'Easy', title: 'Dan' },
+  ];
+
+  it('keeps only the requested variant', () => {
+    expect(filterEntries(entries, { variant: 'real' }).map((e) => e.slug)).toEqual(['2026-07-03']);
+    expect(filterEntries(entries, { variant: 'dan' }).map((e) => e.slug)).toEqual(['2026-07-03-dan']);
+  });
+
+  it('keeps both when no variant is requested', () => {
+    expect(filterEntries(entries, {}).length).toBe(2);
   });
 });

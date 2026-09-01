@@ -31,6 +31,8 @@ export interface Puzzle {
   people: Person[];
   /** Absent in older puzzle files and when the source puzzle has no hints. */
   hints?: HintStep[];
+  /** Absent on scraped puzzles; 'dan' on puzzles this repo generated. */
+  variant?: 'dan';
 }
 
 export class PuzzleValidationError extends Error {}
@@ -48,6 +50,7 @@ export function validatePuzzle(data: unknown): Puzzle {
   if (typeof p.title !== 'string') fail('title must be a string');
   if (typeof p.difficulty !== 'string') fail('difficulty must be a string');
   if (typeof p.source !== 'string') fail('source must be a string');
+  if (p.variant !== undefined && p.variant !== 'dan') fail("variant must be absent or 'dan'");
   if (!Number.isInteger(p.width) || (p.width as number) < 1) fail('width must be a positive integer');
   if (!Number.isInteger(p.height) || (p.height as number) < 1) fail('height must be a positive integer');
   const count = (p.width as number) * (p.height as number);

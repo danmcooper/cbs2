@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderer fidelity > reproduces at least 95% of non-self-referential archive clues exactly 1`] = `
+[
+  "2026-07-13.json [1] n_professions_have_trait_in_dir(cook,innocent,0,-1,1)
+  want: 1 of the 2 #PROFS:cook has an innocent directly above them
+  got:  Exactly 1 #PROF:cook has an innocent directly above them",
+  "2026-07-13.json [6] n_in_unit_have_trait_in_dir(unit(profession,painter),innocent,-1,0,1)
+  want: Only 1 of the 3 #PROFS:painter has an innocent directly to the left of them
+  got:  Only one #PROF:painter has an innocent directly to the left of them",
+  "2026-07-14.json [3] n_professions_have_trait_in_dir(cop,innocent,1,0,1)
+  want: Only one #PROF:cop has an innocent directly to the right of them
+  got:  Exactly 1 #PROF:cop has an innocent directly to the right of them",
+  "2026-07-21.json [8] n_t_in_unit_have_trait_in_dir(unit(row,2),criminal,innocent,1,0,1)
+  want: One criminal in row 2 has an innocent directly to the right of them
+  got:  Only one criminal in row 2 has an innocent directly to the right of them",
+  "2026-07-27.json [18] n_professions_have_trait_in_dir(farmer,criminal,0,-1,1)
+  want: Only 1 of us #PROFS:farmer has a criminal directly above us
+  got:  Exactly 1 #PROF:farmer has a criminal directly above them",
+  "2026-08-02.json [6] units_share_odd_n_traits(unit(neighbor,13),unit(row,3),innocent)
+  want: An odd number of #NAMES:13 neighbors in row 3 are innocent
+  got:  An odd number of innocents in row 3 neighbor #NAME:13",
+  "2026-08-09.json [14] n_professions_have_trait_in_dir(cook,innocent,0,-1,2)
+  want: 2 of the 3 #PROFS:cook have an innocent directly above them
+  got:  2 #PROFS:cook have an innocent directly above them",
+  "2026-08-10.json [4] n_professions_have_trait_in_dir(painter,innocent,1,0,1)
+  want: 1 of the 2 #PROFS:painter has an innocent directly to the right of them
+  got:  Exactly 1 #PROF:painter has an innocent directly to the right of them",
+  "2026-08-11.json [15] n_professions_have_trait_in_dir(coder,criminal,1,0,1)
+  want: Only 1 of the 3 #PROFS:coder has a criminal directly to the right of them
+  got:  Exactly 1 #PROF:coder has a criminal directly to the right of them",
+  "2026-08-24.json [3] n_professions_have_trait_in_dir(painter,criminal,0,-1,1)
+  want: Only 1 of the 2 #PROFS:painter has a criminal directly above them
+  got:  Exactly 1 #PROF:painter has a criminal directly above them",
+  "2026-08-25.json [17] units_share_n_traits(unit(neighbor,4),unit(neighbor,9),innocent,1)
+  want: #NAME:4 and #NAME:9 have one innocent neighbor in common
+  got:  #NAME:4 and #NAME:9 have only one innocent neighbor in common",
+  "2026-08-25.json [4] n_in_unit_have_trait_in_dir(unit(corner,void),criminal,1,0,1)
+  want: Only 1 person in a corner has a criminal directly to the right of them
+  got:  Only one person in a corner has a criminal directly to the right of them",
+  "2026-08-27.json [17] unit_shares_n_out_of_n_traits_with_unit(unit(col,1),unit(between,pair(4,6)),criminal,1,3)
+  want: 1 of the 3 criminals in column #C:1 is #BETWEEN:pair(4,6)
+  got:  Only 1 of the 3 criminals in column #C:1 is #BETWEEN:pair(4,6)",
+]
+`;

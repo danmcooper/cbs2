@@ -13,326 +13,866 @@
   },
   {
     "date": "2026-08-29",
+    "slug": "2026-08-29",
+    "variant": "real",
     "id": "66b63a586a5c",
     "difficulty": "Hard",
     "title": "The criminals are hardly even criminals"
   },
   {
+    "date": "2026-08-29",
+    "slug": "2026-08-29-dan",
+    "variant": "dan",
+    "id": "91c72e82fe8e",
+    "difficulty": "Tricky",
+    "title": "The Greenhouse Roster"
+  },
+  {
     "date": "2026-08-28",
+    "slug": "2026-08-28",
+    "variant": "real",
     "id": "99b8b3bf1732",
     "difficulty": "Tricky",
     "title": "One criminal likes feeling noticed"
   },
   {
+    "date": "2026-08-28",
+    "slug": "2026-08-28-dan",
+    "variant": "dan",
+    "id": "396d02015dd1",
+    "difficulty": "Tricky",
+    "title": "Nine Alibis and a Gap"
+  },
+  {
     "date": "2026-08-27",
+    "slug": "2026-08-27",
+    "variant": "real",
     "id": "3ce3f104bb9c",
     "difficulty": "Tricky",
     "title": "One criminal makes crime rhyme"
   },
   {
+    "date": "2026-08-27",
+    "slug": "2026-08-27-dan",
+    "variant": "dan",
+    "id": "b8101b4cba76",
+    "difficulty": "Tricky",
+    "title": "Whose Coat Is on the Hook"
+  },
+  {
     "date": "2026-08-26",
+    "slug": "2026-08-26",
+    "variant": "real",
     "id": "11c0b92f0347",
     "difficulty": "Medium",
     "title": "One innocent hasn't seen many crime shows"
   },
   {
+    "date": "2026-08-26",
+    "slug": "2026-08-26-dan",
+    "variant": "dan",
+    "id": "4f87248890e0",
+    "difficulty": "Tricky",
+    "title": "The Bell Rang Anyway"
+  },
+  {
     "date": "2026-08-25",
+    "slug": "2026-08-25",
+    "variant": "real",
     "id": "9c9c76053089",
     "difficulty": "Easy",
     "title": "One criminal should not be judged by its cover"
   },
   {
+    "date": "2026-08-25",
+    "slug": "2026-08-25-dan",
+    "variant": "dan",
+    "id": "d8ee847e4de0",
+    "difficulty": "Medium",
+    "title": "The Corner Table Knows"
+  },
+  {
     "date": "2026-08-24",
+    "slug": "2026-08-24",
+    "variant": "real",
     "id": "b25fcf665961",
     "difficulty": "Easy",
     "title": "One criminal loves cliffhangers"
   },
   {
+    "date": "2026-08-24",
+    "slug": "2026-08-24-dan",
+    "variant": "dan",
+    "id": "b0f867084beb",
+    "difficulty": "Hard",
+    "title": "Twenty Faces, Five Lies"
+  },
+  {
     "date": "2026-08-23",
+    "slug": "2026-08-23",
+    "variant": "real",
     "id": "fe3077761eb6",
     "difficulty": "Brutal",
     "title": "One criminal is definitely not Italian"
   },
   {
+    "date": "2026-08-23",
+    "slug": "2026-08-23-dan",
+    "variant": "dan",
+    "id": "f34d87310484",
+    "difficulty": "Tricky",
+    "title": "The Corner Table Knows"
+  },
+  {
     "date": "2026-08-22",
+    "slug": "2026-08-22",
+    "variant": "real",
     "id": "d690278ea076",
     "difficulty": "Hard",
     "title": "Some criminals are a closed book"
   },
   {
+    "date": "2026-08-22",
+    "slug": "2026-08-22-dan",
+    "variant": "dan",
+    "id": "39d930fe1d97",
+    "difficulty": "Tricky",
+    "title": "A Quiet Morning at the Depot"
+  },
+  {
     "date": "2026-08-21",
+    "slug": "2026-08-21",
+    "variant": "real",
     "id": "e7beed227df9",
     "difficulty": "Tricky",
     "title": "One criminal is hiding behind a curtain"
   },
   {
+    "date": "2026-08-21",
+    "slug": "2026-08-21-dan",
+    "variant": "dan",
+    "id": "8291f1a15367",
+    "difficulty": "Tricky",
+    "title": "Names Called at Dawn"
+  },
+  {
     "date": "2026-08-20",
+    "slug": "2026-08-20",
+    "variant": "real",
     "id": "88ed37be5319",
     "difficulty": "Tricky",
     "title": "The criminals can make a wallet disappear"
   },
   {
+    "date": "2026-08-20",
+    "slug": "2026-08-20-dan",
+    "variant": "dan",
+    "id": "f0b1ef66a808",
+    "difficulty": "Tricky",
+    "title": "A Draft in the Archive Room"
+  },
+  {
     "date": "2026-08-19",
+    "slug": "2026-08-19",
+    "variant": "real",
     "id": "a1d888c95cc4",
     "difficulty": "Medium",
     "title": "One criminal changed the light bulb"
   },
   {
+    "date": "2026-08-19",
+    "slug": "2026-08-19-dan",
+    "variant": "dan",
+    "id": "ba7ac3ea4ce9",
+    "difficulty": "Medium",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-08-18",
+    "slug": "2026-08-18",
+    "variant": "real",
     "id": "39284910b173",
     "difficulty": "Medium",
     "title": "One innocent is the victim of the day"
   },
   {
+    "date": "2026-08-18",
+    "slug": "2026-08-18-dan",
+    "variant": "dan",
+    "id": "286302d17c39",
+    "difficulty": "Medium",
+    "title": "Everyone Says They Were Reading"
+  },
+  {
     "date": "2026-08-17",
+    "slug": "2026-08-17",
+    "variant": "real",
     "id": "2e6a1a42b9b6",
     "difficulty": "Easy",
     "title": "The innocents have Monday blues"
   },
   {
+    "date": "2026-08-17",
+    "slug": "2026-08-17-dan",
+    "variant": "dan",
+    "id": "e34365cab34f",
+    "difficulty": "Hard",
+    "title": "The Stairwell Census"
+  },
+  {
     "date": "2026-08-16",
+    "slug": "2026-08-16",
+    "variant": "real",
     "id": "07b3f17f5224",
     "difficulty": "Hard",
     "title": "One criminal learned something today"
   },
   {
+    "date": "2026-08-16",
+    "slug": "2026-08-16-dan",
+    "variant": "dan",
+    "id": "ca5d9b4107e4",
+    "difficulty": "Hard",
+    "title": "Line Up by the Fence"
+  },
+  {
     "date": "2026-08-15",
+    "slug": "2026-08-15",
+    "variant": "real",
     "id": "2306446d5892",
     "difficulty": "Hard",
     "title": "One innocent will never listen to a criminal again"
   },
   {
+    "date": "2026-08-15",
+    "slug": "2026-08-15-dan",
+    "variant": "dan",
+    "id": "6220a6f10a13",
+    "difficulty": "Tricky",
+    "title": "The Lantern Street Lineup"
+  },
+  {
     "date": "2026-08-14",
+    "slug": "2026-08-14",
+    "variant": "real",
     "id": "275e956f6ed3",
     "difficulty": "Tricky",
     "title": "One criminal might come from space"
   },
   {
+    "date": "2026-08-14",
+    "slug": "2026-08-14-dan",
+    "variant": "dan",
+    "id": "0252d13951da",
+    "difficulty": "Tricky",
+    "title": "Names Called at Dawn"
+  },
+  {
     "date": "2026-08-13",
+    "slug": "2026-08-13",
+    "variant": "real",
     "id": "8f59640de056",
     "difficulty": "Tricky",
     "title": "One innocent wonders..."
   },
   {
+    "date": "2026-08-13",
+    "slug": "2026-08-13-dan",
+    "variant": "dan",
+    "id": "9bed3b0e3db4",
+    "difficulty": "Tricky",
+    "title": "The Bell Rang Anyway"
+  },
+  {
     "date": "2026-08-12",
+    "slug": "2026-08-12",
+    "variant": "real",
     "id": "7e75bef6b6a2",
     "difficulty": "Medium",
     "title": "One criminal didn't need any hints in an escape room"
   },
   {
+    "date": "2026-08-12",
+    "slug": "2026-08-12-dan",
+    "variant": "dan",
+    "id": "900455fd325c",
+    "difficulty": "Hard",
+    "title": "The Stairwell Census"
+  },
+  {
     "date": "2026-08-11",
+    "slug": "2026-08-11",
+    "variant": "real",
     "id": "0459fd9e90ae",
     "difficulty": "Medium",
     "title": "One criminal might secretly be a wolf"
   },
   {
+    "date": "2026-08-11",
+    "slug": "2026-08-11-dan",
+    "variant": "dan",
+    "id": "1563e0d9859c",
+    "difficulty": "Tricky",
+    "title": "Nine Alibis and a Gap"
+  },
+  {
     "date": "2026-08-10",
+    "slug": "2026-08-10",
+    "variant": "real",
     "id": "7f31bc6af856",
     "difficulty": "Easy",
     "title": "Innocents are feeling festive"
   },
   {
+    "date": "2026-08-10",
+    "slug": "2026-08-10-dan",
+    "variant": "dan",
+    "id": "ba91815fe495",
+    "difficulty": "Medium",
+    "title": "Nobody Left the Courtyard"
+  },
+  {
     "date": "2026-08-09",
+    "slug": "2026-08-09",
+    "variant": "real",
     "id": "96a87d670886",
     "difficulty": "Hard",
     "title": "One criminal keeps it simple, unlike others"
   },
   {
+    "date": "2026-08-09",
+    "slug": "2026-08-09-dan",
+    "variant": "dan",
+    "id": "97d28dbbdebc",
+    "difficulty": "Hard",
+    "title": "The Corner Table Knows"
+  },
+  {
     "date": "2026-08-08",
+    "slug": "2026-08-08",
+    "variant": "real",
     "id": "288178df85a8",
     "difficulty": "Tricky",
     "title": "One criminal needs a toothpick"
   },
   {
+    "date": "2026-08-08",
+    "slug": "2026-08-08-dan",
+    "variant": "dan",
+    "id": "e40958d89b9f",
+    "difficulty": "Tricky",
+    "title": "Someone Signed the Ledger Twice"
+  },
+  {
     "date": "2026-08-07",
+    "slug": "2026-08-07",
+    "variant": "real",
     "id": "33230d40fbee",
     "difficulty": "Tricky",
     "title": "If a criminal seems cirminal, she's probably criminal"
   },
   {
+    "date": "2026-08-07",
+    "slug": "2026-08-07-dan",
+    "variant": "dan",
+    "id": "018a37b4f938",
+    "difficulty": "Tricky",
+    "title": "A Draft in the Archive Room"
+  },
+  {
     "date": "2026-08-06",
+    "slug": "2026-08-06",
+    "variant": "real",
     "id": "8a1713d9a4ee",
     "difficulty": "Tricky",
     "title": "One innocent doesn't know how to quit"
   },
   {
+    "date": "2026-08-06",
+    "slug": "2026-08-06-dan",
+    "variant": "dan",
+    "id": "3674234d0cfe",
+    "difficulty": "Tricky",
+    "title": "The Corner Table Knows"
+  },
+  {
     "date": "2026-08-05",
+    "slug": "2026-08-05",
+    "variant": "real",
     "id": "bd31411bef10",
     "difficulty": "Tricky",
     "title": "The criminals are on call 24/7"
   },
   {
+    "date": "2026-08-05",
+    "slug": "2026-08-05-dan",
+    "variant": "dan",
+    "id": "58c2ecd5f686",
+    "difficulty": "Medium",
+    "title": "Names Called at Dawn"
+  },
+  {
     "date": "2026-08-04",
+    "slug": "2026-08-04",
+    "variant": "real",
     "id": "c45df9afea51",
     "difficulty": "Medium",
     "title": "One innocent wasn't on time"
   },
   {
+    "date": "2026-08-04",
+    "slug": "2026-08-04-dan",
+    "variant": "dan",
+    "id": "cadf323283f0",
+    "difficulty": "Hard",
+    "title": "The Second Shift"
+  },
+  {
     "date": "2026-08-03",
+    "slug": "2026-08-03",
+    "variant": "real",
     "id": "c1e26fb1f97b",
     "difficulty": "Easy",
     "title": "If one criminal was innocent, everything would be different"
   },
   {
+    "date": "2026-08-03",
+    "slug": "2026-08-03-dan",
+    "variant": "dan",
+    "id": "3e7d603f0e6b",
+    "difficulty": "Medium",
+    "title": "A Quiet Morning at the Depot"
+  },
+  {
     "date": "2026-08-02",
+    "slug": "2026-08-02",
+    "variant": "real",
     "id": "dad016b0b6e6",
     "difficulty": "Hard",
     "title": "One innocent really likes cake"
   },
   {
+    "date": "2026-08-02",
+    "slug": "2026-08-02-dan",
+    "variant": "dan",
+    "id": "0848fce0571b",
+    "difficulty": "Tricky",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-08-01",
+    "slug": "2026-08-01",
+    "variant": "real",
     "id": "7c4f0e81edba",
     "difficulty": "Hard",
     "title": "One criminal feels neglected"
   },
   {
+    "date": "2026-08-01",
+    "slug": "2026-08-01-dan",
+    "variant": "dan",
+    "id": "1188e86e0f1c",
+    "difficulty": "Tricky",
+    "title": "Twenty Faces, Five Lies"
+  },
+  {
     "date": "2026-07-31",
+    "slug": "2026-07-31",
+    "variant": "real",
     "id": "8d16a1e6082b",
     "difficulty": "Tricky",
     "title": "One criminal is not green enough"
   },
   {
+    "date": "2026-07-31",
+    "slug": "2026-07-31-dan",
+    "variant": "dan",
+    "id": "ede35e262e2c",
+    "difficulty": "Tricky",
+    "title": "Chalk Marks on the Platform"
+  },
+  {
     "date": "2026-07-30",
+    "slug": "2026-07-30",
+    "variant": "real",
     "id": "b08ce9887faf",
     "difficulty": "Tricky",
     "title": "No criminel likes loosing"
   },
   {
+    "date": "2026-07-30",
+    "slug": "2026-07-30-dan",
+    "variant": "dan",
+    "id": "5f8c97f7371b",
+    "difficulty": "Tricky",
+    "title": "The Lantern Street Lineup"
+  },
+  {
     "date": "2026-07-29",
+    "slug": "2026-07-29",
+    "variant": "real",
     "id": "443f8a338a44",
     "difficulty": "Tricky",
     "title": "One criminal makes excellent scam chowder"
   },
   {
+    "date": "2026-07-29",
+    "slug": "2026-07-29-dan",
+    "variant": "dan",
+    "id": "8f06abedb874",
+    "difficulty": "Tricky",
+    "title": "Everyone Says They Were Reading"
+  },
+  {
     "date": "2026-07-28",
+    "slug": "2026-07-28",
+    "variant": "real",
     "id": "5e87f220d3d9",
     "difficulty": "Medium",
     "title": "The criminals stole something cuddly"
   },
   {
+    "date": "2026-07-28",
+    "slug": "2026-07-28-dan",
+    "variant": "dan",
+    "id": "315c421c5142",
+    "difficulty": "Hard",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-07-27",
+    "slug": "2026-07-27",
+    "variant": "real",
     "id": "588ef925f2ee",
     "difficulty": "Easy",
     "title": "The innocents are disappointed"
   },
   {
+    "date": "2026-07-27",
+    "slug": "2026-07-27-dan",
+    "variant": "dan",
+    "id": "2d2086617eff",
+    "difficulty": "Easy",
+    "title": "The Greenhouse Roster"
+  },
+  {
     "date": "2026-07-26",
+    "slug": "2026-07-26",
+    "variant": "real",
     "id": "45beb0437025",
     "difficulty": "Hard",
     "title": "Everyone is feeling apologetic"
   },
   {
+    "date": "2026-07-26",
+    "slug": "2026-07-26-dan",
+    "variant": "dan",
+    "id": "9a2639eaae48",
+    "difficulty": "Medium",
+    "title": "The Stairwell Census"
+  },
+  {
     "date": "2026-07-25",
+    "slug": "2026-07-25",
+    "variant": "real",
     "id": "44efd7435e65",
     "difficulty": "Hard",
     "title": "One criminal has it all"
   },
   {
+    "date": "2026-07-25",
+    "slug": "2026-07-25-dan",
+    "variant": "dan",
+    "id": "178720664199",
+    "difficulty": "Hard",
+    "title": "Whose Coat Is on the Hook"
+  },
+  {
     "date": "2026-07-24",
+    "slug": "2026-07-24",
+    "variant": "real",
     "id": "781ce7d5cb4f",
     "difficulty": "Tricky",
     "title": "One innocent has to learn to let go"
   },
   {
+    "date": "2026-07-24",
+    "slug": "2026-07-24-dan",
+    "variant": "dan",
+    "id": "592dbba65063",
+    "difficulty": "Tricky",
+    "title": "The Greenhouse Roster"
+  },
+  {
     "date": "2026-07-23",
+    "slug": "2026-07-23",
+    "variant": "real",
     "id": "9a3944c28717",
     "difficulty": "Tricky",
     "title": "One criminal stole something, but no one knows when"
   },
   {
+    "date": "2026-07-23",
+    "slug": "2026-07-23-dan",
+    "variant": "dan",
+    "id": "900e8d14a536",
+    "difficulty": "Tricky",
+    "title": "The Lantern Street Lineup"
+  },
+  {
     "date": "2026-07-22",
+    "slug": "2026-07-22",
+    "variant": "real",
     "id": "9ad94e6d6ab3",
     "difficulty": "Tricky",
     "title": "One criminal might escape ASAP"
   },
   {
+    "date": "2026-07-22",
+    "slug": "2026-07-22-dan",
+    "variant": "dan",
+    "id": "59f581284c68",
+    "difficulty": "Tricky",
+    "title": "One Story Does Not Fit"
+  },
+  {
     "date": "2026-07-21",
+    "slug": "2026-07-21",
+    "variant": "real",
     "id": "0a9fd4518fe8",
     "difficulty": "Easy",
     "title": "Somneone stole the cookie from the cookie jar"
   },
   {
+    "date": "2026-07-21",
+    "slug": "2026-07-21-dan",
+    "variant": "dan",
+    "id": "31fa318af5ab",
+    "difficulty": "Hard",
+    "title": "The Lantern Street Lineup"
+  },
+  {
     "date": "2026-07-20",
+    "slug": "2026-07-20",
+    "variant": "real",
     "id": "edc01d9fa557",
     "difficulty": "Easy",
     "title": "One criminal was caught just in time"
   },
   {
+    "date": "2026-07-20",
+    "slug": "2026-07-20-dan",
+    "variant": "dan",
+    "id": "b9ae994e067d",
+    "difficulty": "Easy",
+    "title": "Whose Coat Is on the Hook"
+  },
+  {
     "date": "2026-07-19",
+    "slug": "2026-07-19",
+    "variant": "real",
     "id": "7a84a36669a6",
     "difficulty": "Brutal",
     "title": "One criminal just likes big crowds"
   },
   {
+    "date": "2026-07-19",
+    "slug": "2026-07-19-dan",
+    "variant": "dan",
+    "id": "e950b04381ad",
+    "difficulty": "Tricky",
+    "title": "Someone Signed the Ledger Twice"
+  },
+  {
     "date": "2026-07-18",
+    "slug": "2026-07-18",
+    "variant": "real",
     "id": "e40685a5d75d",
     "difficulty": "Hard",
     "title": "One criminal is out of the bag"
   },
   {
+    "date": "2026-07-18",
+    "slug": "2026-07-18-dan",
+    "variant": "dan",
+    "id": "a9b515d11bf4",
+    "difficulty": "Hard",
+    "title": "Chalk Marks on the Platform"
+  },
+  {
     "date": "2026-07-17",
+    "slug": "2026-07-17",
+    "variant": "real",
     "id": "1183118f3658",
     "difficulty": "Tricky",
     "title": "The criminals are not sarcastic at all"
   },
   {
+    "date": "2026-07-17",
+    "slug": "2026-07-17-dan",
+    "variant": "dan",
+    "id": "80538a371402",
+    "difficulty": "Tricky",
+    "title": "A Draft in the Archive Room"
+  },
+  {
     "date": "2026-07-16",
+    "slug": "2026-07-16",
+    "variant": "real",
     "id": "6b16a1095431",
     "difficulty": "Tricky",
     "title": "Innocents can't help themselves"
   },
   {
+    "date": "2026-07-16",
+    "slug": "2026-07-16-dan",
+    "variant": "dan",
+    "id": "391f6c98e24d",
+    "difficulty": "Tricky",
+    "title": "Whose Coat Is on the Hook"
+  },
+  {
     "date": "2026-07-15",
+    "slug": "2026-07-15",
+    "variant": "real",
     "id": "1259d5d26236",
     "difficulty": "Tricky",
     "title": "Innocents think you should own a hammer"
   },
   {
+    "date": "2026-07-15",
+    "slug": "2026-07-15-dan",
+    "variant": "dan",
+    "id": "56e5055b12fa",
+    "difficulty": "Tricky",
+    "title": "The Second Shift"
+  },
+  {
     "date": "2026-07-14",
+    "slug": "2026-07-14",
+    "variant": "real",
     "id": "a92b6a0750d8",
     "difficulty": "Medium",
     "title": "The criminals are here to teach a lesson"
   },
   {
+    "date": "2026-07-14",
+    "slug": "2026-07-14-dan",
+    "variant": "dan",
+    "id": "3825fa510bce",
+    "difficulty": "Medium",
+    "title": "Line Up by the Fence"
+  },
+  {
     "date": "2026-07-13",
+    "slug": "2026-07-13",
+    "variant": "real",
     "id": "4491a665584b",
     "difficulty": "Easy",
     "title": "One criminal was seen swimming in money"
   },
   {
+    "date": "2026-07-13",
+    "slug": "2026-07-13-dan",
+    "variant": "dan",
+    "id": "b0d39880158d",
+    "difficulty": "Hard",
+    "title": "Whose Coat Is on the Hook"
+  },
+  {
     "date": "2026-07-12",
+    "slug": "2026-07-12",
+    "variant": "real",
     "id": "5f8f3cdc3053",
     "difficulty": "Brutal",
     "title": "One criminal found the ultimate question"
   },
   {
+    "date": "2026-07-12",
+    "slug": "2026-07-12-dan",
+    "variant": "dan",
+    "id": "946dd4fd7eed",
+    "difficulty": "Tricky",
+    "title": "Chalk Marks on the Platform"
+  },
+  {
     "date": "2026-07-11",
+    "slug": "2026-07-11",
+    "variant": "real",
     "id": "d293827ab8eb",
     "difficulty": "Hard",
     "title": "One criminal will be missed"
   },
   {
+    "date": "2026-07-11",
+    "slug": "2026-07-11-dan",
+    "variant": "dan",
+    "id": "fb4e5cdc5342",
+    "difficulty": "Tricky",
+    "title": "Names Called at Dawn"
+  },
+  {
     "date": "2026-07-10",
+    "slug": "2026-07-10",
+    "variant": "real",
     "id": "4e625521b10b",
     "difficulty": "Tricky",
     "title": "Innocents do more than the criminals"
   },
   {
+    "date": "2026-07-10",
+    "slug": "2026-07-10-dan",
+    "variant": "dan",
+    "id": "f2d5519cac31",
+    "difficulty": "Tricky",
+    "title": "A Quiet Morning at the Depot"
+  },
+  {
     "date": "2026-07-09",
+    "slug": "2026-07-09",
+    "variant": "real",
     "id": "f882829f6aba",
     "difficulty": "Tricky",
     "title": "All innocents are jealous"
   },
   {
+    "date": "2026-07-09",
+    "slug": "2026-07-09-dan",
+    "variant": "dan",
+    "id": "2e6e6eaa3210",
+    "difficulty": "Tricky",
+    "title": "Nobody Left the Courtyard"
+  },
+  {
     "date": "2026-07-08",
+    "slug": "2026-07-08",
+    "variant": "real",
     "id": "f23f73a4a543",
     "difficulty": "Tricky",
     "title": "One criminal is less cute than the others"
   },
   {
+    "date": "2026-07-08",
+    "slug": "2026-07-08-dan",
+    "variant": "dan",
+    "id": "25765e9152ae",
+    "difficulty": "Tricky",
+    "title": "Nine Alibis and a Gap"
+  },
+  {
     "date": "2026-07-07",
+    "slug": "2026-07-07",
+    "variant": "real",
     "id": "a6f09e2713b2",
     "difficulty": "Medium",
     "title": "The criminals have a new hobby"
+  },
+  {
+    "date": "2026-07-07",
+    "slug": "2026-07-07-dan",
+    "variant": "dan",
+    "id": "8ae1d31cbe9d",
+    "difficulty": "Hard",
+    "title": "The Lantern Street Lineup"
   }
 ]

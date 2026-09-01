@@ -21,15 +21,21 @@ describe('regenerateManifest', () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'cbs-manifest-'));
     await writeFile(path.join(dir, '2026-07-01.json'), JSON.stringify(puzzle('2026-07-01', 'aaaaaaaaaaaa')));
     await writeFile(path.join(dir, '2026-07-03.json'), JSON.stringify(puzzle('2026-07-03', 'bbbbbbbbbbbb')));
+    await writeFile(
+      path.join(dir, '2026-07-03-dan.json'),
+      JSON.stringify({ ...puzzle('2026-07-03', 'cccccccccccc'), variant: 'dan' }),
+    );
     await writeFile(path.join(dir, 'index.json'), '[]');
     await writeFile(path.join(dir, 'notes.txt'), 'ignore me');
 
     const entries = await regenerateManifest(dir);
 
-    expect(entries.map((e) => e.date)).toEqual(['2026-07-03', '2026-07-01']);
+    expect(entries.map((e) => e.slug)).toEqual(['2026-07-03', '2026-07-03-dan', '2026-07-01']);
     expect(entries[0]).toEqual({
-      date: '2026-07-03', id: 'bbbbbbbbbbbb', difficulty: 'Easy', title: 'Title 2026-07-03',
+      date: '2026-07-03', slug: '2026-07-03', variant: 'real',
+      id: 'bbbbbbbbbbbb', difficulty: 'Easy', title: 'Title 2026-07-03',
     });
+    expect(entries[1].variant).toBe('dan');
     const onDisk = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'));
     expect(onDisk).toEqual(entries);
   });
@@ -38,5 +44,11 @@ describe('regenerateManifest', () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'cbs-manifest-'));
     await writeFile(path.join(dir, '2026-07-01.json'), '{"formatVersion":1}');
     await expect(regenerateManifest(dir)).rejects.toThrow(/2026-07-01\.json/);
+  });
+
+  it('rejects a -dan file whose puzzle is not marked as a Dan variant', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'cbs-manifest-'));
+    await writeFile(path.join(dir, '2026-07-01-dan.json'), JSON.stringify(puzzle('2026-07-01', 'aaaaaaaaaaaa')));
+    await expect(regenerateManifest(dir)).rejects.toThrow(/variant/);
   });
 });

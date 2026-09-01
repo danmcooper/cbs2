@@ -9,7 +9,9 @@ describe('parseHash', () => {
     expect(parseHash('#/play/not-a-date')).toEqual({ screen: 'archive' });
   });
 
-  it('routes #/play/<date> to the game', () => {
-    expect(parseHash('#/play/2026-07-07')).toEqual({ screen: 'play', date: '2026-07-07' });
+  it('routes #/play/<slug> to the game, with or without the -dan suffix', () => {
+    expect(parseHash('#/play/2026-07-07')).toEqual({ screen: 'play', slug: '2026-07-07' });
+    expect(parseHash('#/play/2026-07-07-dan')).toEqual({ screen: 'play', slug: '2026-07-07-dan' });
+    expect(parseHash('#/play/2026-07-07-sam')).toEqual({ screen: 'archive' });
   });
 });

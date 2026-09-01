@@ -56,6 +56,33 @@ function formatDateOrdinal(date: string): string {
   return `${d.toLocaleString("en-US", { month: "short" })} ${day}${suffix} ${d.getFullYear()}`;
 }
 
+function shareLabel(puzzle: Puzzle): string {
+  return `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})`;
+}
+
+function puzzleLabel(puzzle: Puzzle): string {
+  const dan = puzzle.variant === "dan" ? " · Dan" : "";
+  return `${shareLabel(puzzle)}${dan}`;
+}
+
+/**
+ * Where a solve links back to. A real puzzle is the daily that everyone else
+ * played, so it credits the source site. A Dan puzzle only exists here, so it
+ * links to this deployment's own copy — built from the live URL rather than a
+ * baked-in address, which keeps it right in dev, preview, and production
+ * without another thing to configure.
+ */
+function shareOf(puzzle: Puzzle): { tag: string; link: string } {
+  if (puzzle.variant !== "dan") {
+    return { tag: "#CluesBySam", link: "https://cluesbysam.com" };
+  }
+  const { origin, pathname } = window.location;
+  return {
+    tag: "#CluesBySamByDan",
+    link: `${origin}${pathname}#/play/${puzzle.date}-dan`,
+  };
+}
+
 // Results grid: green = clean solve, yellow square = had a bad answer,
 // yellow circle = flipped with a hint, orange circle = with the hint's
 // reveal level. Hints outrank bad answers, like on the real site.
@@ -91,7 +118,7 @@ function ResultsModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const title = `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})`;
+  const title = puzzleLabel(puzzle);
   const solvedIn = `Solved in ${formatTime(state.elapsedMs)}`;
   const colors = cellColors(puzzle, state);
   const rows = [...Array(puzzle.height)].map((_, r) =>
@@ -102,8 +129,11 @@ function ResultsModal({
     const grid = rows
       .map((row) => row.map((c) => CELL_EMOJI[c]).join(""))
       .join("\n");
+    // The tag and link already say which variant this is, so the shared label
+    // drops the " · Dan" the on-screen heading carries.
+    const { tag, link } = shareOf(puzzle);
     await navigator.clipboard.writeText(
-      `I solved the daily #CluesBySam, ${title}, in ${formatTime(state.elapsedMs)}\n${grid}\nhttps://cluesbysam.com`,
+      `I solved the daily ${tag}, ${shareLabel(puzzle)}, in ${formatTime(state.elapsedMs)}\n${grid}\n${link}`,
     );
     setCopied(true);
   };
@@ -498,9 +528,7 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
             </button>
           </div>
           <p className="date-line">
-            <span>
-              {formatDateOrdinal(puzzle.date)} ({puzzle.difficulty})
-            </span>
+            <span>{puzzleLabel(puzzle)}</span>
             <span className="timer" onClick={cycleTimerMode}>
               {timerMode === "elapsed"
                 ? `Elapsed: ${formatElapsed(sinceStart)}`
@@ -563,7 +591,12 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
       {startOpen && (
         <div className="overlay">
           <div role="dialog" aria-label="start" className="modal start-modal">
-            <h2 className="start-title">Welcome to Clues by Sam!</h2>
+            {/* A generated puzzle must not open under the source site's name.
+                The date line and results modal already carry a "· Dan" suffix;
+                this is the first screen a player sees, so it says so plainly. */}
+            <h2 className="start-title">
+              {puzzle.variant === "dan" ? "A Dan puzzle" : "Welcome to Clues by Sam!"}
+            </h2>
             <p className="start-date">{formatDateOrdinal(puzzle.date)}</p>
             <p className="start-difficulty">
               Difficulty: <b>{puzzle.difficulty}</b>
@@ -601,8 +634,8 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
   );
 }
 
-export default function Game({ date }: { date: string }) {
-  const { data, error, retry } = useFetch<unknown>(`puzzles/${date}.json`);
+export default function Game({ slug }: { slug: string }) {
+  const { data, error, retry } = useFetch<unknown>(`puzzles/${slug}.json`);
   if (error) {
     return (
       <main>
@@ -611,7 +644,7 @@ export default function Game({ date }: { date: string }) {
       </main>
     );
   }
-  if (!data) return <p>Loading {date}</p>;
+  if (!data) return <p>Loading {slug}</p>;
   let puzzle: Puzzle;
   try {
     puzzle = validatePuzzle(data);

@@ -1,0 +1,137 @@
+{
+  "Medium": {
+    "samples": 9,
+    "criminals": {
+      "min": 6,
+      "max": 15
+    },
+    "clueCards": {
+      "min": 12,
+      "max": 15
+    },
+    "chainLength": {
+      "min": 8,
+      "max": 15
+    },
+    "meanRevealsPerStep": {
+      "min": 1.2666666666666666,
+      "max": 2.375
+    },
+    "meanPathSize": {
+      "min": 2.4210526315789473,
+      "max": 3.3684210526315788
+    },
+    "abstractShare": {
+      "min": 0.13333333333333333,
+      "max": 0.5833333333333334
+    }
+  },
+  "Tricky": {
+    "samples": 22,
+    "criminals": {
+      "min": 4,
+      "max": 16
+    },
+    "clueCards": {
+      "min": 7,
+      "max": 15
+    },
+    "chainLength": {
+      "min": 6,
+      "max": 15
+    },
+    "meanRevealsPerStep": {
+      "min": 1.2666666666666666,
+      "max": 3.1666666666666665
+    },
+    "meanPathSize": {
+      "min": 2.526315789473684,
+      "max": 3.5789473684210527
+    },
+    "abstractShare": {
+      "min": 0.14285714285714285,
+      "max": 0.6666666666666666
+    }
+  },
+  "Hard": {
+    "samples": 11,
+    "criminals": {
+      "min": 4,
+      "max": 16
+    },
+    "clueCards": {
+      "min": 9,
+      "max": 14
+    },
+    "chainLength": {
+      "min": 7,
+      "max": 14
+    },
+    "meanRevealsPerStep": {
+      "min": 1.3571428571428572,
+      "max": 2.7142857142857144
+    },
+    "meanPathSize": {
+      "min": 3.1578947368421053,
+      "max": 4.052631578947368
+    },
+    "abstractShare": {
+      "min": 0.18181818181818182,
+      "max": 0.5454545454545454
+    }
+  },
+  "Brutal": {
+    "samples": 3,
+    "criminals": {
+      "min": 11,
+      "max": 16
+    },
+    "clueCards": {
+      "min": 9,
+      "max": 11
+    },
+    "chainLength": {
+      "min": 8,
+      "max": 10
+    },
+    "meanRevealsPerStep": {
+      "min": 1.9,
+      "max": 2.375
+    },
+    "meanPathSize": {
+      "min": 2.8421052631578947,
+      "max": 3.3684210526315788
+    },
+    "abstractShare": {
+      "min": 0.45454545454545453,
+      "max": 0.7
+    }
+  },
+  "Easy": {
+    "samples": 9,
+    "criminals": {
+      "min": 4,
+      "max": 10
+    },
+    "clueCards": {
+      "min": 13,
+      "max": 16
+    },
+    "chainLength": {
+      "min": 10,
+      "max": 16
+    },
+    "meanRevealsPerStep": {
+      "min": 1.1875,
+      "max": 1.9
+    },
+    "meanPathSize": {
+      "min": 2.210526315789474,
+      "max": 3.1052631578947367
+    },
+    "abstractShare": {
+      "min": 0.13333333333333333,
+      "max": 0.23076923076923078
+    }
+  }
+}

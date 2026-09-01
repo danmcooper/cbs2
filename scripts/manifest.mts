@@ -5,24 +5,41 @@ import { validatePuzzle } from '../shared/puzzle.ts';
 
 export interface ManifestEntry {
   date: string;
+  /** Filename without `.json` — how the site addresses this puzzle. */
+  slug: string;
+  variant: 'real' | 'dan';
   id: string;
   difficulty: string;
   title: string;
 }
 
+const PUZZLE_FILE = /^(\d{4}-\d{2}-\d{2})(-dan)?\.json$/;
+
 export async function regenerateManifest(puzzlesDir: string): Promise<ManifestEntry[]> {
-  const files = (await readdir(puzzlesDir)).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
+  const files = (await readdir(puzzlesDir)).filter((f) => PUZZLE_FILE.test(f)).sort();
   const entries: ManifestEntry[] = [];
   for (const file of files) {
+    const variant = PUZZLE_FILE.exec(file)![2] ? 'dan' : 'real';
     let puzzle;
     try {
       puzzle = validatePuzzle(JSON.parse(await readFile(path.join(puzzlesDir, file), 'utf8')));
     } catch (e) {
       throw new Error(`${file}: ${String(e)}`);
     }
-    entries.push({ date: puzzle.date, id: puzzle.id, difficulty: puzzle.difficulty, title: puzzle.title });
+    if ((puzzle.variant === 'dan') !== (variant === 'dan')) {
+      throw new Error(`${file}: filename and puzzle variant disagree`);
+    }
+    entries.push({
+      date: puzzle.date,
+      slug: file.slice(0, -'.json'.length),
+      variant,
+      id: puzzle.id,
+      difficulty: puzzle.difficulty,
+      title: puzzle.title,
+    });
   }
-  entries.sort((a, b) => b.date.localeCompare(a.date));
+  // Newest first; within a date, the real puzzle before the Dan one.
+  entries.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
   await writeFile(path.join(puzzlesDir, 'index.json'), JSON.stringify(entries, null, 2) + '\n');
   return entries;
 }

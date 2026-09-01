@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Archive from './Archive';
 
 const manifest = [
-  { date: '2026-07-03', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
-  { date: '2026-07-01', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
+  { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
+  { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'dddddddddddd', difficulty: 'Hard', title: 'Second (Dan)' },
+  { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
 ];
 
 beforeEach(() => {
@@ -44,9 +45,9 @@ describe('Archive', () => {
         async () =>
           new Response(
             JSON.stringify([
-              { date: '2026-07-03', id: 'c', difficulty: 'Brutal', title: 'Third' },
-              { date: '2026-07-02', id: 'b', difficulty: 'Tricky', title: 'Second' },
-              { date: '2026-07-01', id: 'a', difficulty: 'Easy', title: 'First' },
+              { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'c', difficulty: 'Brutal', title: 'Third' },
+              { date: '2026-07-02', slug: '2026-07-02', variant: 'real', id: 'b', difficulty: 'Tricky', title: 'Second' },
+              { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'a', difficulty: 'Easy', title: 'First' },
             ]),
             { status: 200 },
           ),
@@ -84,5 +85,110 @@ describe('Archive', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('gone', { status: 500 })));
     render(<Archive />);
     expect(await screen.findByRole('button', { name: /retry/i })).toBeTruthy();
+  });
+
+  it('offers Real, Dan, and Both as the source options, defaulting to Real', async () => {
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    const source = screen.getByLabelText(/source/i);
+    expect(within(source).getAllByRole('option').map((o) => o.textContent)).toEqual(['Real', 'Dan', 'Both']);
+    expect(source).toHaveProperty('value', 'real');
+  });
+
+  it('places the source dropdown after the other filters', async () => {
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    expect([...document.querySelectorAll('.archive-filters select')]).toEqual([
+      screen.getByLabelText(/difficulty/i),
+      screen.getByLabelText(/status/i),
+      screen.getByLabelText(/source/i),
+    ]);
+  });
+
+  it('remembers the chosen source for the next visit', async () => {
+    const user = userEvent.setup();
+    const first = render(<Archive />);
+    await screen.findByText('July 2026');
+    await user.selectOptions(screen.getByLabelText(/source/i), 'both');
+    first.unmount();
+
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    expect(screen.getByLabelText(/source/i)).toHaveProperty('value', 'both');
+  });
+
+  it('falls back to Real when the saved source is missing or unrecognised', async () => {
+    localStorage.setItem('cbs:pref:archiveSource', 'nonsense');
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    expect(screen.getByLabelText(/source/i)).toHaveProperty('value', 'real');
+  });
+
+  it('shows real puzzles by default and swaps to Dan puzzles from the source dropdown', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03',
+      '#/play/2026-07-01',
+    ]);
+
+    await user.selectOptions(screen.getByLabelText(/source/i), 'dan');
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['#/play/2026-07-03-dan']);
+  });
+
+  it('shows both variants interleaved by date when the source is Both', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    await user.selectOptions(screen.getByLabelText(/source/i), 'both');
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03',
+      '#/play/2026-07-03-dan',
+      '#/play/2026-07-01',
+    ]);
+  });
+
+  it('offers the difficulties of both variants when the source is Both', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    await user.selectOptions(screen.getByLabelText(/source/i), 'dan');
+    expect(within(screen.getByLabelText(/difficulty/i)).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'All',
+      'Hard',
+    ]);
+    await user.selectOptions(screen.getByLabelText(/source/i), 'both');
+    expect(within(screen.getByLabelText(/difficulty/i)).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'All',
+      'Easy',
+      'Hard',
+    ]);
+  });
+
+  it('clears the difficulty filter when the source changes', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    // 'Easy' only exists among the real puzzles (2026-07-01); select it, then
+    // switch to Dan, which only has 'Hard' puzzles.
+    await user.selectOptions(screen.getByLabelText(/difficulty/i), 'Easy');
+    expect(screen.getByText('First')).toBeTruthy();
+    await user.selectOptions(screen.getByLabelText(/source/i), 'dan');
+    expect(screen.getByLabelText(/difficulty/i)).toHaveProperty('value', '');
+    expect(screen.getByText('Second (Dan)')).toBeTruthy();
+    expect(screen.queryByText('No puzzles match those filters.')).toBeFalsy();
+  });
+
+  it('marks which rows are Dan puzzles only when both sources are shown', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    await user.selectOptions(screen.getByLabelText(/source/i), 'dan');
+    expect(screen.queryByText('Dan', { selector: '.arch-source' })).toBeFalsy();
+    await user.selectOptions(screen.getByLabelText(/source/i), 'both');
+    const tags = screen.getAllByText('Dan', { selector: '.arch-source' });
+    expect(tags.length).toBe(1);
+    expect(tags[0].closest('a')?.getAttribute('href')).toBe('#/play/2026-07-03-dan');
   });
 });
