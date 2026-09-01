@@ -1,15 +1,51 @@
 [
   {
+    "date": "2026-09-01",
+    "slug": "2026-09-01",
+    "variant": "real",
+    "id": "e2c9cd8b3515",
+    "difficulty": "Medium",
+    "title": "One criminal could name a wrench after you"
+  },
+  {
+    "date": "2026-09-01",
+    "slug": "2026-09-01-dan",
+    "variant": "dan",
+    "id": "3bf95984a369",
+    "difficulty": "Medium",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-08-31",
+    "slug": "2026-08-31",
+    "variant": "real",
     "id": "eb324d2b87c5",
     "difficulty": "Easy",
     "title": "Criminals and innocents have opposing world views"
   },
   {
+    "date": "2026-08-31",
+    "slug": "2026-08-31-dan",
+    "variant": "dan",
+    "id": "682da1c5d152",
+    "difficulty": "Easy",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-08-30",
+    "slug": "2026-08-30",
+    "variant": "real",
     "id": "a6b6c6e38d40",
     "difficulty": "Hard",
     "title": "The criminals think different"
+  },
+  {
+    "date": "2026-08-30",
+    "slug": "2026-08-30-dan",
+    "variant": "dan",
+    "id": "be54028345b2",
+    "difficulty": "Medium",
+    "title": "Sunday Inventory"
   },
   {
     "date": "2026-08-29",
