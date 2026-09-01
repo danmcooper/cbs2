@@ -250,6 +250,52 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     }
   },
 
+  more_traits_in_unit_than_traits_in_unit: (a) => {
+    const u1 = argUnit(a, 0);
+    const t1 = argTrait(a, 1);
+    const u2 = argUnit(a, 2);
+    const t2 = argTrait(a, 3);
+    switch (u1.kind) {
+      case 'neighbor':
+        pairOfSameKind(u1, u2);
+        return `${name(u1.i)} has more ${t1} neighbors than ${name(u2.i)} has ${t2} ones`;
+      case 'row':
+        pairOfSameKind(u1, u2);
+        return `There are more ${t1}s in row${NBSP}${u1.n} than ${t2}s in row${NBSP}${u2.n}`;
+      case 'col':
+        pairOfSameKind(u1, u2);
+        return `There are more ${t1}s in column${NBSP}${col(u1.n)} than ${t2}s in column${NBSP}${col(u2.n)}`;
+      case 'profession':
+        pairOfSameKind(u1, u2);
+        return `There are more ${t1} ${profs(u1.name)} than ${t2} ${profs(u2.name)}`;
+      default:
+        throw new UnsupportedShapeError(`more_traits_in_unit_than_traits_in_unit over ${u1.kind}`);
+    }
+  },
+
+  equal_traits_in_unit_and_traits_in_unit: (a) => {
+    const u1 = argUnit(a, 0);
+    const t1 = argTrait(a, 1);
+    const u2 = argUnit(a, 2);
+    const t2 = argTrait(a, 3);
+    switch (u1.kind) {
+      case 'neighbor':
+        pairOfSameKind(u1, u2);
+        return `${name(u1.i)} has as many ${t1} neighbors as ${name(u2.i)} has ${t2} ones`;
+      case 'row':
+        pairOfSameKind(u1, u2);
+        return `There are as many ${t1}s in row${NBSP}${u1.n} as ${t2}s in row${NBSP}${u2.n}`;
+      case 'col':
+        pairOfSameKind(u1, u2);
+        return `There are as many ${t1}s in column${NBSP}${col(u1.n)} as ${t2}s in column${NBSP}${col(u2.n)}`;
+      case 'profession':
+        pairOfSameKind(u1, u2);
+        return `There are as many ${t1} ${profs(u1.name)} as there are ${t2} ${profs(u2.name)}`;
+      default:
+        throw new UnsupportedShapeError(`equal_traits_in_unit_and_traits_in_unit over ${u1.kind}`);
+    }
+  },
+
   more_traits_than_traits_in_unit: (a) => {
     const u = argUnit(a, 0);
     const t1 = argTrait(a, 1);
@@ -306,7 +352,12 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const t = argTrait(a, 2);
     const n = argNum(a, 3);
     if (u1.kind === 'neighbor' && u2.kind === 'neighbor') {
-      const q = n === 1 ? `only one ${t} neighbor` : `${n} ${t} neighbors`;
+      // The archive's ten instances of this shape all count 1 or more, so the
+      // zero wording is ours: spell it "no", as every other zero-count branch of
+      // this predicate does. "have 0 criminal neighbors in common" is not a
+      // sentence the source would write.
+      const q =
+        n === 0 ? `no ${t} neighbors` : n === 1 ? `only one ${t} neighbor` : `${n} ${t} neighbors`;
       return `${name(u1.i)} and ${name(u2.i)} have ${q} in common`;
     }
     if (u1.kind === 'neighbor' && u2.kind !== 'neighbor') {

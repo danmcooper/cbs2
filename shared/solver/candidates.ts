@@ -80,7 +80,15 @@ const dirIsStructurallyEmpty = (b: Board, members: number[], dx: number, dy: num
  * adjacency) — vacuously true when there are 0 or 1 members. In that case ANY subset is
  * automatically fully connected, so `all_traits_are_neighbors_in_unit` (isConnected over
  * the trait-bearing subset) is true regardless of which cards actually carry the trait —
- * again structurally, for every conceivable assignment. Two shapes in the candidate pool
+ * again structurally, for every conceivable assignment.
+ *
+ * `both_traits_are_neighbors_in_unit` is not a tautology on such a unit (it also demands
+ * exactly two of the trait, which can fail), but it is worse than useless as a clue: it
+ * degenerates into `number_of_traits_in_unit(unit, trait, 2)` wearing a connectedness
+ * clause that costs the solver nothing. "Both innocents between #12 and #13 are
+ * connected" — there are only two cards there and they are side by side. The archive's 54
+ * instances are all full rows, full columns, or spans of three or more. Two shapes in the
+ * candidate pool
  * hit this: a corner cell's 3-member neighbor unit (the two edge-adjacent cells and the
  * diagonal cell are always mutually adjacent to each other, for any grid >= 2x2), and a
  * `between` segment of exactly two immediately-adjacent cells (its only two members are
@@ -158,11 +166,11 @@ export function candidateHints(b: Board): Hint[] {
         push('has_most_traits', [u(unit), t(trait)]);
         push('only_unit_has_exactly_n_traits', [u(unit), t(trait), n(c)]);
       }
-      push('both_traits_are_neighbors_in_unit', [u(unit), t(trait)]);
       // Skip when the unit's full membership is a complete adjacency graph — see
       // isCompleteAdjacencyGraph above. Computed inside the trait loop but doesn't
       // depend on trait; cheap enough (unit sizes are small) not to hoist.
       if (!isCompleteAdjacencyGraph(b, members)) {
+        push('both_traits_are_neighbors_in_unit', [u(unit), t(trait)]);
         push('all_traits_are_neighbors_in_unit', [u(unit), t(trait)]);
       }
 
@@ -186,7 +194,21 @@ export function candidateHints(b: Board): Hint[] {
       }
 
       for (const i of members) {
-        push('is_one_of_n_traits_in_unit', [u(unit), idx(i), t(trait), n(c)]);
+        // Two floors, both of which the archive's 42 instances respect (counts run
+        // 2..12, never 1, never the whole unit).
+        //
+        // c === 1 renders as "#NAME:1 is one of 1 criminals between #0 and #3" — the
+        // same slip as "only 1 of the 1", and the case the source words as "is the
+        // only criminal there".
+        //
+        // c === members.length says every member has the trait, and since unit
+        // membership is visible on the board — you can see that a corner card has
+        // three neighbors — naming one of them adds nothing at all: "Cleo is one of
+        // Desmond's 3 innocent neighbors" is "all of Desmond's neighbors are
+        // innocent" dressed up as a distinction Cleo does not have.
+        if (c >= 2 && c < members.length) {
+          push('is_one_of_n_traits_in_unit', [u(unit), idx(i), t(trait), n(c)]);
+        }
         push('is_not_only_trait_in_unit', [u(unit), idx(i), t(trait)]);
       }
 
@@ -196,14 +218,22 @@ export function candidateHints(b: Board): Hint[] {
         // structurally 0 for every conceivable assignment. sources below is always a
         // subset of members, so this same structural check covers both predicates.
         if (dirIsStructurallyEmpty(b, members, dx, dy)) continue;
-        push('n_in_unit_have_trait_in_dir', [
-          u(unit), t(trait), n(dx), n(dy), n(dirCount(members, trait, dx, dy)),
-        ]);
+        // A zero count is contingent, not a tautology — the structural check above
+        // already dropped the always-zero shapes — but "0 persons in a corner have an
+        // innocent directly above them" is not a sentence the source writes. Its 41
+        // real instances across the three directional families all count 1 or more.
+        const inDir = dirCount(members, trait, dx, dy);
+        if (inDir > 0) {
+          push('n_in_unit_have_trait_in_dir', [u(unit), t(trait), n(dx), n(dy), n(inDir)]);
+        }
         for (const other of TRAITS) {
           const sources = members.filter((i) => hasTrait(b, i, other));
-          push('n_t_in_unit_have_trait_in_dir', [
-            u(unit), t(other), t(trait), n(dx), n(dy), n(dirCount(sources, trait, dx, dy)),
-          ]);
+          const inDirFrom = dirCount(sources, trait, dx, dy);
+          if (inDirFrom > 0) {
+            push('n_t_in_unit_have_trait_in_dir', [
+              u(unit), t(other), t(trait), n(dx), n(dy), n(inDirFrom),
+            ]);
+          }
         }
       }
     }
@@ -244,6 +274,13 @@ export function candidateHints(b: Board): Hint[] {
         if (u1.kind === u2.kind) {
           push('more_traits_in_unit_than_unit', [u(u1), u(u2), t(trait)]);
           push('equal_number_of_traits_in_units', [u(u1), u(u2), t(trait)]);
+          // The cross-trait pair: "as many innocent cooks as criminal cops". Only
+          // the opposite trait, since matching traits would just be the two
+          // predicates above with a longer sentence. Same kind for the same reason
+          // they are: the renderer has words for row/row, not for row/profession.
+          const other = trait === 'criminal' ? 'innocent' : 'criminal';
+          push('more_traits_in_unit_than_traits_in_unit', [u(u1), t(trait), u(u2), t(other)]);
+          push('equal_traits_in_unit_and_traits_in_unit', [u(u1), t(trait), u(u2), t(other)]);
         }
         if (!cross) continue;
         const ov = overlap(u1, u2, trait);
@@ -259,9 +296,13 @@ export function candidateHints(b: Board): Hint[] {
         // real, falsifiable count), but the source never phrases it that way and "shares 0
         // out of m" reads as if the 0 were meaningful when it's often structurally
         // guaranteed — so drop shared=0 here regardless of intersection.
-        if (ov > 0) {
+        // Also drop shared === total: "Only 1 of the 1 criminals ... is ..." reads as a
+        // slip, and semantically it is just both_traits_in_unit_are_in_unit (pushed below)
+        // in worse words. The archive agrees — all 78 real instances have shared < total.
+        const total = count(u1, trait);
+        if (ov > 0 && ov < total) {
           push('unit_shares_n_out_of_n_traits_with_unit', [
-            u(u1), u(u2), t(trait), n(ov), n(count(u1, trait)),
+            u(u1), u(u2), t(trait), n(ov), n(total),
           ]);
         }
         push('both_traits_in_unit_are_in_unit', [u(u1), u(u2), t(trait)]);
@@ -279,9 +320,11 @@ export function candidateHints(b: Board): Hint[] {
         // the board (independent of the criminal assignment), so if every card of this
         // profession structurally lacks a cell in this direction, the count is always 0.
         if (dirIsStructurallyEmpty(b, members, dx, dy)) continue;
-        push('n_professions_have_trait_in_dir', [
-          pr(name), t(trait), n(dx), n(dy), n(dirCount(members, trait, dx, dy)),
-        ]);
+        // Same zero-count floor as the two families above.
+        const inDir = dirCount(members, trait, dx, dy);
+        if (inDir > 0) {
+          push('n_professions_have_trait_in_dir', [pr(name), t(trait), n(dx), n(dy), n(inDir)]);
+        }
       }
     }
   }

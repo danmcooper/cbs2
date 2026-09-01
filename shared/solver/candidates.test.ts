@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadArchive } from './corpus';
-import { makeGrid } from './grid';
+import { makeGrid, neighbors } from './grid';
 import { type Hint, formatHint, parseHint } from './hint';
-import { type Board, makeBoard, evaluate } from './predicates';
+import { type Board, makeBoard, evaluate, unitMembers } from './predicates';
 import { canRender } from './render';
 import { candidateHints, candidateUnits, namedCards, referencedCards } from './candidates';
 
@@ -39,9 +39,125 @@ describe('candidateHints', () => {
       expect(canRender(h), formatHint(h)).toBe(true);
     }
   });
+  it('offers cross-trait comparisons between two units, but only where they say something new', () => {
+    const cross = hints.filter(
+      (h) =>
+        h.pred === 'more_traits_in_unit_than_traits_in_unit' ||
+        h.pred === 'equal_traits_in_unit_and_traits_in_unit',
+    );
+    expect(cross.length).toBeGreaterThan(0);
+    for (const h of cross) {
+      const [u1, t1, u2, t2] = h.args;
+      expect(u1.t, formatHint(h)).toBe('unit');
+      expect(u2.t, formatHint(h)).toBe('unit');
+      if (u1.t !== 'unit' || u2.t !== 'unit') continue;
+      // Same kind, because that is the only shape the renderer has words for, and
+      // because "as many criminals in row 2 as innocent cooks" reads as two clues
+      // glued together.
+      expect(u1.unit.kind, formatHint(h)).toBe(u2.unit.kind);
+      expect(formatHint({ ...h, args: [u1] })).not.toBe(formatHint({ ...h, args: [u2] }));
+      // Equal traits would make this the existing same-trait comparison in longer
+      // words; equal units would make it the existing same-unit one.
+      expect(t1.t === 'trait' && t2.t === 'trait' && t1.trait !== t2.trait, formatHint(h)).toBe(true);
+    }
+  });
   it('contains no duplicates', () => {
     const strings = hints.map(formatHint);
     expect(new Set(strings).size).toBe(strings.length);
+  });
+  it('never shares all of a unit\'s traits — "only 1 of the 1" is both bad phrasing and a ' +
+    'duplicate of both_traits_in_unit_are_in_unit, and the archive has no such instance', () => {
+    let seen = 0;
+    for (const h of hints) {
+      if (h.pred !== 'unit_shares_n_out_of_n_traits_with_unit') continue;
+      seen++;
+      const [shared, total] = h.args.slice(3);
+      expect(shared.t).toBe('num');
+      expect(total.t).toBe('num');
+      if (shared.t === 'num' && total.t === 'num') {
+        expect(shared.n, formatHint(h)).toBeLessThan(total.n);
+      }
+    }
+    // Guard against a vacuous pass if the predicate stops being generated entirely.
+    expect(seen).toBeGreaterThan(0);
+  });
+  it('never asks whether traits are connected inside a unit whose members are all mutually ' +
+    'adjacent — the connectedness clause carries no information there', () => {
+    // "Both innocents between #12 and #13 are connected": those are the only two
+    // cards in the segment and they are side by side, so this says no more than
+    // "there are exactly 2 innocents there". Not a tautology — it can be false —
+    // but the connectedness half of it is free, which is why the archive's 54
+    // instances are all full rows, full columns, or 3+ card spans and never this.
+    // all_traits_are_neighbors_in_unit is already guarded; both_ was not.
+    const connectedness = ['both_traits_are_neighbors_in_unit', 'all_traits_are_neighbors_in_unit'];
+    let seen = 0;
+    for (const h of hints) {
+      if (!connectedness.includes(h.pred)) continue;
+      seen++;
+      const arg0 = h.args[0];
+      if (arg0.t !== 'unit') throw new Error('expected a unit');
+      const members = unitMembers(board, arg0.unit);
+      const clique = members.every((x) => members.every((y) => x === y || neighbors(board.grid, x).includes(y)));
+      expect(clique, formatHint(h)).toBe(false);
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+  it('never counts zero in a directional clue — the archive floors all three families at one, ' +
+    'and "0 #PROFS:guard have a criminal directly above them" is not how the source words it', () => {
+    // These read as a template that never got its "no one" branch: the source
+    // says "Only one person in a corner has an innocent above them", never
+    // "0 persons in a corner have...". Measured over the 54 real puzzles, by
+    // argument position: n_in_unit 1x9/2x5/4x2, n_t_in_unit 1x4/2x6/3x1/4x1,
+    // n_professions 1x13/2x8 — not one zero among the 41.
+    const dirFamilies = new Set([
+      'n_in_unit_have_trait_in_dir',
+      'n_t_in_unit_have_trait_in_dir',
+      'n_professions_have_trait_in_dir',
+    ]);
+    let seen = 0;
+    for (const h of hints) {
+      if (!dirFamilies.has(h.pred)) continue;
+      seen++;
+      const count = h.args[h.args.length - 1];
+      expect(count.t).toBe('num');
+      if (count.t === 'num') expect(count.n, formatHint(h)).toBeGreaterThan(0);
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+  it('never says a card is "one of 1" of a trait — the same slip as "1 of the 1", and the ' +
+    'archive floors this count at two', () => {
+    // "#NAME:1 is one of 1 criminals between #0 and #3" should be "is the only
+    // criminal between...". The archive's 63 instances start at 2 (2x15, 3x23,
+    // then a long tail); is_not_only_trait_in_unit already covers the >= 2 case
+    // in words that work, and the n = 1 case has no rendering that does.
+    let seen = 0;
+    for (const h of hints) {
+      if (h.pred !== 'is_one_of_n_traits_in_unit') continue;
+      seen++;
+      const count = h.args[3];
+      expect(count.t).toBe('num');
+      if (count.t === 'num') expect(count.n, formatHint(h)).toBeGreaterThan(1);
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+  it('never singles out one member of a unit whose members all share the trait — "Cleo is one ' +
+    'of Desmond\'s 3 innocent neighbors" says nothing when Desmond sits in a corner', () => {
+    // Who neighbors whom is visible on the board, so when the count covers the
+    // whole unit the clue reduces to "every one of them has the trait" and the
+    // named card adds nothing — while the wording implies a distinction that
+    // isn't there. None of the archive's 42 instances counts a whole unit.
+    let seen = 0;
+    for (const h of hints) {
+      if (h.pred !== 'is_one_of_n_traits_in_unit') continue;
+      const unit = h.args[0];
+      const count = h.args[3];
+      expect(unit.t).toBe('unit');
+      expect(count.t).toBe('num');
+      if (unit.t !== 'unit' || count.t !== 'num') continue;
+      seen++;
+      expect(count.n, formatHint(h)).toBeLessThan(unitMembers(board, unit.unit).length);
+    }
+    expect(seen).toBeGreaterThan(0);
   });
   it('never uses has_most_traits or only_unit_has_exactly_n_traits with a unit kind that has ' +
     'fewer than two units (between, edge, corner) — those are vacuously true regardless of the board', () => {

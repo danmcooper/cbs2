@@ -114,6 +114,20 @@ describe('comparison predicates', () => {
     expect(ok('equal_traits_and_traits_in_unit(unit(row,1),criminal,innocent)')).toBe(true);
     expect(ok('equal_traits_and_traits_in_unit(unit(row,2),criminal,innocent)')).toBe(false);
   });
+  // The two comparisons above vary one thing each: same trait across two units,
+  // or two traits inside one unit. These vary both, which the source never does
+  // and which nothing about the game forbids: "there are as many innocent cooks
+  // as criminal cops" is a perfectly ordinary deduction to hand a player.
+  it('more_traits_in_unit_than_traits_in_unit compares across both units and traits', () => {
+    // Card 5 has 3 criminal neighbors, card 0 has 2 innocent ones.
+    expect(ok('more_traits_in_unit_than_traits_in_unit(unit(neighbor,5),criminal,unit(neighbor,0),innocent)')).toBe(true);
+    expect(ok('more_traits_in_unit_than_traits_in_unit(unit(neighbor,0),innocent,unit(neighbor,5),criminal)')).toBe(false);
+  });
+  it('equal_traits_in_unit_and_traits_in_unit', () => {
+    // Card 0 has 2 innocent neighbors, card 1 has 2 criminal ones.
+    expect(ok('equal_traits_in_unit_and_traits_in_unit(unit(neighbor,0),innocent,unit(neighbor,1),criminal)')).toBe(true);
+    expect(ok('equal_traits_in_unit_and_traits_in_unit(unit(neighbor,0),criminal,unit(neighbor,1),innocent)')).toBe(false);
+  });
   it('has_most_traits is a strict maximum over the same kind', () => {
     expect(ok('has_most_traits(unit(row,1),criminal)')).toBe(true);
     expect(ok('has_most_traits(unit(row,2),criminal)')).toBe(false);

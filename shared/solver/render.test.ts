@@ -164,6 +164,34 @@ describe('comparison clue templates', () => {
       "There's an equal number of innocent and criminal #PROFS:cop",
     );
   });
+  it('more_traits_in_unit_than_traits_in_unit', () => {
+    expect(
+      r('more_traits_in_unit_than_traits_in_unit(unit(neighbor,3),criminal,unit(neighbor,9),innocent)'),
+    ).toBe('#NAME:3 has more criminal neighbors than #NAME:9 has innocent ones');
+    expect(r('more_traits_in_unit_than_traits_in_unit(unit(row,1),innocent,unit(row,4),criminal)')).toBe(
+      'There are more innocents in row 1 than criminals in row 4',
+    );
+    expect(r('more_traits_in_unit_than_traits_in_unit(unit(col,1),criminal,unit(col,3),innocent)')).toBe(
+      'There are more criminals in column #C:1 than innocents in column #C:3',
+    );
+    expect(
+      r('more_traits_in_unit_than_traits_in_unit(unit(profession,cook),innocent,unit(profession,cop),criminal)'),
+    ).toBe('There are more innocent #PROFS:cook than criminal #PROFS:cop');
+  });
+  it('equal_traits_in_unit_and_traits_in_unit', () => {
+    expect(
+      r('equal_traits_in_unit_and_traits_in_unit(unit(neighbor,3),criminal,unit(neighbor,9),innocent)'),
+    ).toBe('#NAME:3 has as many criminal neighbors as #NAME:9 has innocent ones');
+    expect(r('equal_traits_in_unit_and_traits_in_unit(unit(row,1),innocent,unit(row,4),criminal)')).toBe(
+      'There are as many innocents in row 1 as criminals in row 4',
+    );
+    expect(r('equal_traits_in_unit_and_traits_in_unit(unit(col,1),criminal,unit(col,3),innocent)')).toBe(
+      'There are as many criminals in column #C:1 as innocents in column #C:3',
+    );
+    expect(
+      r('equal_traits_in_unit_and_traits_in_unit(unit(profession,cook),innocent,unit(profession,cop),criminal)'),
+    ).toBe('There are as many innocent #PROFS:cook as there are criminal #PROFS:cop');
+  });
   it('has_most_traits', () => {
     expect(r('has_most_traits(unit(col,2),criminal)')).toBe(
       'Column #C:2 has more criminals than any other column',
@@ -196,6 +224,11 @@ describe('comparison clue templates', () => {
     );
     expect(r('units_share_n_traits(unit(neighbor,3),unit(neighbor,9),innocent,2)')).toBe(
       '#NAME:3 and #NAME:9 have 2 innocent neighbors in common',
+    );
+    // "have 0 criminal neighbors in common" is not English the source would write,
+    // and every other zero-count branch of this predicate spells the zero as a word.
+    expect(r('units_share_n_traits(unit(neighbor,3),unit(neighbor,9),criminal,0)')).toBe(
+      '#NAME:3 and #NAME:9 have no criminal neighbors in common',
     );
     expect(r('units_share_n_traits(unit(between,pair(0,3)),unit(neighbor,9),innocent,1)')).toBe(
       'Exactly 1 innocent #BETWEEN:pair(0,3) is neighboring #NAME:9',
