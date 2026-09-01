@@ -15,16 +15,28 @@ import {
   unionCriminals,
 } from './generate.mts';
 
-// A real puzzle file only needs the fields runGenerate reads plus schema validity.
+// A real puzzle file only needs the fields runGenerate reads plus schema validity
+// — but its board is not incidental. A Dan puzzle takes its size and its cast's
+// profession grouping from the real puzzle for that date, so this fixture decides
+// both. It is 4x4 rather than the shipped 4x5 because solving enumerates all
+// 2^(width*height) assignments: one row fewer is sixteen times cheaper, which is
+// what lets these tests generate real puzzles in the ordinary suite. Group sizes
+// are the archive's ragged shape — trios and pairs, one singleton — cut to
+// sixteen cards. `npm run test:generate` covers the shipped size.
+const FIXTURE_PROFESSIONS = ['coder', 'cop', 'cook']
+  .flatMap((p) => [p, p, p])
+  .concat(['guard', 'judge', 'pilot'].flatMap((p) => [p, p]))
+  .concat(['sleuth']);
+
 function realPuzzle(date: string, id: string, difficulty: string) {
-  const person = {
-    name: 'banda', profession: 'coder', gender: 'male',
+  const people = FIXTURE_PROFESSIONS.map((profession, i) => ({
+    name: `banda${i}`, profession, gender: 'male',
     criminal: false, clue: null, origHint: null, paths: [],
-  };
+  }));
   return {
     formatVersion: 1, id, date, title: `Title ${date}`, difficulty,
-    width: 1, height: 2, initialReveals: [], source: 'cluesbysam.com',
-    people: [person, person],
+    width: 4, height: 4, initialReveals: [], source: 'cluesbysam.com',
+    people,
   };
 }
 
@@ -77,7 +89,7 @@ describe('runGenerate', () => {
       const index = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'));
       expect(index.map((e: { slug: string }) => e.slug)).toEqual(['2026-07-01', '2026-07-01-dan']);
     },
-    60_000,
+    30_000,
   );
 
   it(
@@ -95,7 +107,7 @@ describe('runGenerate', () => {
       expect(third.written).toEqual([{ date: '2026-07-01', label: 'Easy', aimedAt: 'Easy' }]);
       expect(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8')).toBe(first);
     },
-    120_000,
+    30_000,
   );
 
   it(
@@ -110,7 +122,7 @@ describe('runGenerate', () => {
       expect(result.written).toEqual([{ date: '2026-07-01', label: 'Easy', aimedAt: 'Easy' }]);
       expect(result.failed).toEqual([{ date: '2026-07-02', reason: 'no calibrated band for Brutal' }]);
     },
-    60_000,
+    30_000,
   );
 });
 
@@ -167,7 +179,7 @@ describe('runGenerate labels by measurement', () => {
     ({ dir, bandsPath } = await twoLabelFixture());
     progress = [];
     result = await runGenerate({ puzzlesDir: dir, bandsPath, onProgress: (e) => progress.push(e) });
-  }, 120_000);
+  }, 30_000);
 
   it('writes one puzzle per date, discarding nothing', () => {
     expect(result.failed).toEqual([]);
@@ -263,12 +275,14 @@ describe('unionCriminals', () => {
 
 describe('runGenerate samples criminals from the union of all calibrated labels', () => {
   // "Narrow" only calibrates 11-16 criminals; "Wide" calibrates 4-10. Their
-  // union is exactly {4,16}. Empirically (see the task report), attempt 0 for
-  // 2026-07-02's derived seed lands on 7 criminals when sampled from a
-  // {4,16} range — a value only reachable if the criminals range actually
-  // handed to `generatePuzzle` was the union, since Narrow's own {11,16}
-  // range cannot produce 7. Every other gated field is wide open so this
-  // attempt is also a same-attempt success (no extra generation cost).
+  // union is exactly {4,16}, so a count below 11 is reachable only if the range
+  // handed to `generatePuzzle` was the union rather than Narrow's own.
+  //
+  // Which count a given date draws depends on its derived seed and on how many
+  // attempts that seed needs, so this asks several dates for one rather than
+  // pinning a single date to a single value — a pin that any change to how
+  // generation consumes its rng silently invalidates. Every other gated field is
+  // wide open, so each date succeeds on its first attempt.
   const narrowBand: LabelBand = {
     samples: 5,
     criminals: { min: 11, max: 16 },
@@ -291,32 +305,40 @@ describe('runGenerate samples criminals from the union of all calibrated labels'
   it(
     "generates a puzzle whose criminal count falls outside its own label's narrow range",
     async () => {
+      const dates = ['2026-07-02', '2026-07-03', '2026-07-04', '2026-07-05', '2026-07-06'];
       const dir = await mkdtemp(path.join(tmpdir(), 'cbs-generate-union-'));
       const bandsPath = path.join(dir, 'difficulty.json');
       await writeFile(bandsPath, JSON.stringify({ Narrow: narrowBand, Wide: wideBand }));
-      await writeFile(
-        path.join(dir, '2026-07-02.json'),
-        JSON.stringify(realPuzzle('2026-07-02', 'dddddddddddd', 'Narrow')),
-      );
+      for (const date of dates) {
+        await writeFile(
+          path.join(dir, `${date}.json`),
+          JSON.stringify(realPuzzle(date, `dddddddddd${date.slice(-2)}`, 'Narrow')),
+        );
+      }
 
       const result = await runGenerate({ puzzlesDir: dir, bandsPath });
-      expect(result.written.map((w) => ({ date: w.date, aimedAt: w.aimedAt }))).toEqual([
-        { date: '2026-07-02', aimedAt: 'Narrow' },
-      ]);
+      expect(result.written.map((w) => w.date).sort()).toEqual(dates);
+      expect(result.written.every((w) => w.aimedAt === 'Narrow')).toBe(true);
       expect(result.failed).toEqual([]);
 
-      const raw = JSON.parse(await readFile(path.join(dir, '2026-07-02-dan.json'), 'utf8'));
-      const puzzle = validatePuzzle(raw);
-      // Which label this earns is decided by `classify` and is not what this
-      // test is about — it only has to be a calibrated one.
-      expect(['Narrow', 'Wide']).toContain(puzzle.difficulty);
-      const criminals = puzzle.people.filter((p) => p.criminal).length;
+      const counts: number[] = [];
+      for (const date of dates) {
+        const raw = JSON.parse(await readFile(path.join(dir, `${date}-dan.json`), 'utf8'));
+        const puzzle = validatePuzzle(raw);
+        // Which label each earns is decided by `classify` and is not what this
+        // test is about — it only has to be a calibrated one.
+        expect(['Narrow', 'Wide']).toContain(puzzle.difficulty);
+        counts.push(puzzle.people.filter((p) => p.criminal).length);
+      }
 
-      // Only reachable if generatePuzzle sampled from the union {4,16}
-      // rather than Narrow's own {11,16}.
-      expect(criminals).toBeGreaterThanOrEqual(4);
-      expect(criminals).toBeLessThan(11);
+      // Every count inside the union, and at least one below Narrow's own floor —
+      // only reachable if generatePuzzle sampled from {4,16} rather than {11,16}.
+      // Five draws from {4,16} all landing at 11 or above runs at (6/13)^5, about
+      // one in 450.
+      for (const c of counts) expect(c).toBeGreaterThanOrEqual(4);
+      for (const c of counts) expect(c).toBeLessThanOrEqual(16);
+      expect(counts.some((c) => c < 11), `counts ${counts.join(',')}`).toBe(true);
     },
-    60_000,
+    120_000,
   );
 });

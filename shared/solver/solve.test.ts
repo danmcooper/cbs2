@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { makeGrid } from './grid';
 import { type Shape } from './enumerate';
-import { type Clues, parseClues, isUniquelySolvable, minimalPaths, solveChain } from './solve';
+import {
+  type Clues,
+  forcedGiven,
+  parseClues,
+  hintSteps,
+  isUniquelySolvable,
+  minimalPaths,
+  solveChain,
+} from './solve';
 import { parseHint } from './hint';
 
 const shape: Shape = {
@@ -61,6 +69,85 @@ describe('solveChain', () => {
     const chain = solveChain(shape, c, truth, [0]);
     expect(chain.solvedAll).toBe(true);
     expect(chain.revealedAt.every((s) => s !== null)).toBe(true);
+  });
+});
+
+// Every card on a 4x5 board gets its minimal paths worked out below, and each
+// one enumerates all 2^20 assignments repeatedly. That is seconds rather than
+// milliseconds, and under the whole suite's parallelism it overran the 5s
+// default — so this block gets a real budget instead.
+describe('hintSteps', { timeout: 60_000 }, () => {
+  // The clue on card 0 caps the board at two criminals; card 1's clue puts none
+  // of them between cards 2 and 19. Once 0 and 1 are flipped, both criminals are
+  // accounted for and every other card is forced innocent.
+  const c = clues({
+    0: 'number_of_traits(criminal,2)',
+    1: 'number_of_traits_in_unit(unit(between,pair(2,19)),criminal,0)',
+    2: 'number_of_traits_in_unit(unit(row,3),criminal,0)',
+  });
+  const paths = truth.map((_, i) => (i === 0 ? [] : minimalPaths(shape, c, truth, i, [0, 1, 2], 4)));
+
+  it('carries no clue the player could have done without', () => {
+    // What separates a step from a `solveChain` round is not how many cards it
+    // turns over — one clue legitimately cracks open several — but how much it
+    // asks the player to read. A round outlines every visible clue at once,
+    // which is the right shape for proving a puzzle solvable and the wrong
+    // shape for a hint button. So no outlined clue may be dead weight: taking
+    // any one away has to cost the step at least one of the cards it claims.
+    const steps = hintSteps(shape, c, truth, paths);
+    expect(steps.length).toBeGreaterThan(0);
+    for (const s of steps) {
+      for (const drop of s.clues) {
+        const kept = c.map((h, j) => (s.clues.includes(j) && j !== drop ? h : null));
+        const forced = forcedGiven(shape, kept, truth, s.flipped);
+        const still = forced.flatMap((v, i) => (v !== null && !s.flipped.includes(i) ? [i] : []));
+        expect(still.length).toBeLessThan(s.reveals.length);
+      }
+    }
+  });
+
+  it('outlines only the clues the deduction needs', () => {
+    // What forces card 19 is card 0's whole-board count of two criminals plus
+    // the sight of both of them already flipped. So the step needs card 1
+    // *flipped* — it is the second criminal — but its clue is a vacuous
+    // between() on a non-collinear pair (see the minimalPaths test below) and
+    // contributes nothing, and card 2's clue is irrelevant. Outlining either is
+    // the noise that makes a hint read as "re-read the board".
+    const steps = hintSteps(shape, c, truth, paths).filter((s) => s.reveals.includes(19));
+    expect(steps.length).toBeGreaterThan(0);
+    for (const s of steps) {
+      expect(s.clues).toEqual([0]);
+      expect(s.flipped).toContain(1);
+      // Every outlined clue has to be a prerequisite the player already holds,
+      // and every prerequisite has to be something other than the answer.
+      for (const i of s.clues) expect(s.flipped).toContain(i);
+      expect(s.flipped).not.toContain(19);
+    }
+  });
+
+  it('names every card its outlined clues force, not just the one it was built for', () => {
+    // A step hands the player a position and a sentence to read. If that much of
+    // the board forces three cards, dotting one of them hides two deductions the
+    // player has already earned — and the hidden one is often the one that has to
+    // come first. Reported on 2026-07-07: Piet's "as many criminal doctors as
+    // criminal clerks" forces Ferran and Rafael together, by way of Rafael, and
+    // the hint dotted Ferran alone.
+    const steps = hintSteps(shape, c, truth, paths);
+    expect(steps.length).toBeGreaterThan(0);
+    for (const s of steps) {
+      const outlined = c.map((h, j) => (s.clues.includes(j) ? h : null));
+      const forced = forcedGiven(shape, outlined, truth, s.flipped);
+      const everything = forced.flatMap((v, i) => (v !== null && !s.flipped.includes(i) ? [i] : []));
+      expect([...s.reveals].sort((a, b) => a - b)).toEqual(everything);
+    }
+  });
+
+  it('names a clue-bearing card in every outlined position', () => {
+    // `clues` indexes cards whose clue is worth reading; a prerequisite that
+    // carries no clue is a known value, not something to outline.
+    for (const s of hintSteps(shape, c, truth, paths)) {
+      for (const i of s.clues) expect(c[i]).not.toBeNull();
+    }
   });
 });
 
