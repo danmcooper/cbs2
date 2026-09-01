@@ -34,8 +34,12 @@ describe('isDeducible', () => {
     expect(isDeducible(puzzle, [3], 2)).toBe(true); // alternative path
   });
 
-  it('paths [] is never deducible; paths null always is', () => {
-    expect(isDeducible(puzzle, [0, 1, 2, 3], 0)).toBe(false);
+  // `paths: []` used to mean "never deducible" outright. It now means only
+  // that no *recorded* route reaches this card, and an empty list of routes
+  // can never match — so what keeps card 0 undeducible here is that the
+  // flipped cards genuinely fail to force it, which is the real invariant.
+  it('paths [] is not deducible while nothing forces it; paths null always is', () => {
+    expect(isDeducible(puzzle, [1, 2, 3], 0)).toBe(false);
     const loose = { ...puzzle, people: puzzle.people.map((p) => ({ ...p, paths: null })) };
     expect(isDeducible(loose, [], 3)).toBe(true);
   });
