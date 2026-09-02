@@ -102,6 +102,27 @@ describe('candidateHints', () => {
     }
     expect(seen).toBeGreaterThan(0);
   });
+  it('only asks whether traits are connected along a line, where the answer does not turn ' +
+    'on whether diagonals count', () => {
+    // Adjacency in this game includes diagonals: 29 of the archive's 29 "n innocents
+    // neighboring X" clues need the diagonal cards to be true, and only 8 are true
+    // without them. Connectedness is built on the same relation but the archive never
+    // pins it down — all 59 of its connectedness clues are over `between` segments,
+    // where no diagonal step is possible and both readings agree. On a scattered unit
+    // they stop agreeing and the clue becomes unanswerable: "Both innocents neighboring
+    // Wren are connected" left Suri and Tessa equally possible with diagonals and only
+    // Tessa without, and nothing on the board says which. See isLineUnit.
+    const connectedness = ['both_traits_are_neighbors_in_unit', 'all_traits_are_neighbors_in_unit'];
+    let seen = 0;
+    for (const h of hints) {
+      if (!connectedness.includes(h.pred)) continue;
+      seen++;
+      const arg0 = h.args[0];
+      if (arg0.t !== 'unit') throw new Error('expected a unit');
+      expect(['between', 'row', 'col'], formatHint(h)).toContain(arg0.unit.kind);
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
   it('never counts zero in a directional clue — the archive floors all three families at one, ' +
     'and "0 #PROFS:guard have a criminal directly above them" is not how the source words it', () => {
     // These read as a template that never got its "no one" branch: the source

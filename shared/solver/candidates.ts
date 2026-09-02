@@ -94,6 +94,26 @@ const dirIsStructurallyEmpty = (b: Board, members: number[], dx: number, dy: num
  * `between` segment of exactly two immediately-adjacent cells (its only two members are
  * adjacent to each other by construction).
  */
+/**
+ * Units laid out in a straight line, which are the only ones "are connected" can be asked
+ * about without the clue becoming unanswerable.
+ *
+ * Adjacency in this game includes diagonals — 29 of the archive's 29 "n innocents
+ * neighboring X" clues are only true when the diagonal cards count, and 8 of 29 are true
+ * without them, so `neighbors` being 8-way is settled. Connectedness is built on the same
+ * relation, and there it is not settled at all: all 59 of the archive's connectedness
+ * clues are over `between` segments, where a diagonal step is impossible and the two
+ * readings coincide exactly. The source game never once asks whether a scattered set is
+ * connected, so it never has to say what it would mean.
+ *
+ * We did, and it produced "Both innocents neighboring Wren are connected" on a 7x7. Read
+ * with diagonals the other innocent is Suri or Tessa and there is nothing to deduce; read
+ * without them it is Tessa and the card flips. Nothing in the puzzle tells a player which
+ * reading to use, so the clue is not solvable, only guessable. Restricting the predicate
+ * to lines is what the archive does anyway, and it puts the question beyond asking.
+ */
+const isLineUnit = (u: Unit): boolean => u.kind === 'between' || u.kind === 'row' || u.kind === 'col';
+
 const isCompleteAdjacencyGraph = (b: Board, members: number[]): boolean => {
   for (let x = 0; x < members.length; x++) {
     for (let y = x + 1; y < members.length; y++) {
@@ -166,10 +186,11 @@ export function candidateHints(b: Board): Hint[] {
         push('has_most_traits', [u(unit), t(trait)]);
         push('only_unit_has_exactly_n_traits', [u(unit), t(trait), n(c)]);
       }
-      // Skip when the unit's full membership is a complete adjacency graph — see
-      // isCompleteAdjacencyGraph above. Computed inside the trait loop but doesn't
-      // depend on trait; cheap enough (unit sizes are small) not to hoist.
-      if (!isCompleteAdjacencyGraph(b, members)) {
+      // Lines only (isLineUnit), and skip when the unit's full membership is a complete
+      // adjacency graph (isCompleteAdjacencyGraph) — see both above. Computed inside the
+      // trait loop but neither depends on trait; cheap enough (unit sizes are small) not
+      // to hoist.
+      if (isLineUnit(unit) && !isCompleteAdjacencyGraph(b, members)) {
         push('both_traits_are_neighbors_in_unit', [u(unit), t(trait)]);
         push('all_traits_are_neighbors_in_unit', [u(unit), t(trait)]);
       }
