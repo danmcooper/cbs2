@@ -1,5 +1,29 @@
 [
   {
+    "date": "2026-09-02",
+    "slug": "2026-09-02",
+    "variant": "real",
+    "id": "418cbcc31228",
+    "difficulty": "Medium",
+    "title": "One innocents didn't think it through"
+  },
+  {
+    "date": "2026-09-02",
+    "slug": "2026-09-02-dan",
+    "variant": "dan",
+    "id": "5b765b462dde",
+    "difficulty": "Medium",
+    "title": "Sunday Inventory"
+  },
+  {
+    "date": "2026-09-02",
+    "slug": "2026-09-02-dan-long",
+    "variant": "dan-long",
+    "id": "1920eccd9f29",
+    "difficulty": "Hard",
+    "title": "The Lantern Street Lineup"
+  },
+  {
     "date": "2026-09-01",
     "slug": "2026-09-01",
     "variant": "real",
@@ -14,6 +38,14 @@
     "id": "3bf95984a369",
     "difficulty": "Medium",
     "title": "The Kettle Was Still Warm"
+  },
+  {
+    "date": "2026-09-01",
+    "slug": "2026-09-01-dan-long",
+    "variant": "dan-long",
+    "id": "4cff26e5a753",
+    "difficulty": "Hard",
+    "title": "The Lantern Street Lineup"
   },
   {
     "date": "2026-08-31",
