@@ -371,6 +371,9 @@ describe('adjacency and direction clue templates', () => {
     expect(r('n_professions_have_trait_in_dir(cook,innocent,-1,0,1)')).toBe(
       'Exactly 1 #PROF:cook has an innocent directly to the left of them',
     );
+    expect(r('n_professions_have_trait_in_dir(singer,innocent,-1,0,0)')).toBe(
+      'No #PROF:singer has an innocent directly to the left of them',
+    );
   });
 });
 

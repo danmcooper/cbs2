@@ -470,7 +470,14 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     const p = argProfession(a, 0);
     const t = argTrait(a, 1);
     const n = argNum(a, 4);
-    const head = n === 1 ? `Exactly 1 ${prof(p)} has` : `${n} ${profs(p)} have`;
+    // Zero of them is a "No X has ..." in the archive (puzzles/2026-09-01.json),
+    // never a "0 Xs have ...". The other counts keep their own phrasings.
+    const head =
+      n === 0
+        ? `No ${prof(p)} has`
+        : n === 1
+          ? `Exactly 1 ${prof(p)} has`
+          : `${n} ${profs(p)} have`;
     return `${head} ${article(t)} ${dirPhrase(argNum(a, 2), argNum(a, 3))}`;
   },
 };
