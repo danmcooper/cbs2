@@ -32,6 +32,14 @@
     "title": "The Kettle Was Still Warm"
   },
   {
+    "date": "2026-08-31",
+    "slug": "2026-08-31-dan-long",
+    "variant": "dan-long",
+    "id": "4d66215d28a8",
+    "difficulty": "Tricky",
+    "title": "Everyone Says They Were Reading"
+  },
+  {
     "date": "2026-08-30",
     "slug": "2026-08-30",
     "variant": "real",
@@ -48,6 +56,14 @@
     "title": "Sunday Inventory"
   },
   {
+    "date": "2026-08-30",
+    "slug": "2026-08-30-dan-long",
+    "variant": "dan-long",
+    "id": "4525cb24b9c6",
+    "difficulty": "Hard",
+    "title": "Line Up by the Fence"
+  },
+  {
     "date": "2026-08-29",
     "slug": "2026-08-29",
     "variant": "real",
@@ -60,6 +76,14 @@
     "slug": "2026-08-29-dan",
     "variant": "dan",
     "id": "91c72e82fe8e",
+    "difficulty": "Tricky",
+    "title": "The Greenhouse Roster"
+  },
+  {
+    "date": "2026-08-29",
+    "slug": "2026-08-29-dan-long",
+    "variant": "dan-long",
+    "id": "117db0c31705",
     "difficulty": "Tricky",
     "title": "The Greenhouse Roster"
   },
@@ -80,6 +104,14 @@
     "title": "Nine Alibis and a Gap"
   },
   {
+    "date": "2026-08-28",
+    "slug": "2026-08-28-dan-long",
+    "variant": "dan-long",
+    "id": "51396567b84f",
+    "difficulty": "Tricky",
+    "title": "A Draft in the Archive Room"
+  },
+  {
     "date": "2026-08-27",
     "slug": "2026-08-27",
     "variant": "real",
@@ -94,6 +126,14 @@
     "id": "b8101b4cba76",
     "difficulty": "Tricky",
     "title": "Whose Coat Is on the Hook"
+  },
+  {
+    "date": "2026-08-27",
+    "slug": "2026-08-27-dan-long",
+    "variant": "dan-long",
+    "id": "7cbb59400538",
+    "difficulty": "Tricky",
+    "title": "The Stairwell Census"
   },
   {
     "date": "2026-08-26",
@@ -112,6 +152,14 @@
     "title": "The Bell Rang Anyway"
   },
   {
+    "date": "2026-08-26",
+    "slug": "2026-08-26-dan-long",
+    "variant": "dan-long",
+    "id": "a2f825acf1ae",
+    "difficulty": "Hard",
+    "title": "Whose Coat Is on the Hook"
+  },
+  {
     "date": "2026-08-25",
     "slug": "2026-08-25",
     "variant": "real",
@@ -126,6 +174,14 @@
     "id": "d8ee847e4de0",
     "difficulty": "Medium",
     "title": "The Corner Table Knows"
+  },
+  {
+    "date": "2026-08-25",
+    "slug": "2026-08-25-dan-long",
+    "variant": "dan-long",
+    "id": "fdc5d3430d54",
+    "difficulty": "Medium",
+    "title": "The Lantern Street Lineup"
   },
   {
     "date": "2026-08-24",
@@ -144,6 +200,14 @@
     "title": "Twenty Faces, Five Lies"
   },
   {
+    "date": "2026-08-24",
+    "slug": "2026-08-24-dan-long",
+    "variant": "dan-long",
+    "id": "3c1b62064ab6",
+    "difficulty": "Easy",
+    "title": "Sunday Inventory"
+  },
+  {
     "date": "2026-08-23",
     "slug": "2026-08-23",
     "variant": "real",
@@ -158,6 +222,14 @@
     "id": "f34d87310484",
     "difficulty": "Tricky",
     "title": "The Corner Table Knows"
+  },
+  {
+    "date": "2026-08-23",
+    "slug": "2026-08-23-dan-long",
+    "variant": "dan-long",
+    "id": "8c491cc347b5",
+    "difficulty": "Brutal",
+    "title": "Twenty Faces, Five Lies"
   },
   {
     "date": "2026-08-22",
@@ -176,6 +248,14 @@
     "title": "A Quiet Morning at the Depot"
   },
   {
+    "date": "2026-08-22",
+    "slug": "2026-08-22-dan-long",
+    "variant": "dan-long",
+    "id": "bdd5fbd59918",
+    "difficulty": "Hard",
+    "title": "Line Up by the Fence"
+  },
+  {
     "date": "2026-08-21",
     "slug": "2026-08-21",
     "variant": "real",
@@ -190,6 +270,14 @@
     "id": "8291f1a15367",
     "difficulty": "Tricky",
     "title": "Names Called at Dawn"
+  },
+  {
+    "date": "2026-08-21",
+    "slug": "2026-08-21-dan-long",
+    "variant": "dan-long",
+    "id": "1eb89f6304e5",
+    "difficulty": "Tricky",
+    "title": "The Kettle Was Still Warm"
   },
   {
     "date": "2026-08-20",
@@ -208,6 +296,14 @@
     "title": "A Draft in the Archive Room"
   },
   {
+    "date": "2026-08-20",
+    "slug": "2026-08-20-dan-long",
+    "variant": "dan-long",
+    "id": "7563229e89c7",
+    "difficulty": "Tricky",
+    "title": "Line Up by the Fence"
+  },
+  {
     "date": "2026-08-19",
     "slug": "2026-08-19",
     "variant": "real",
@@ -224,6 +320,14 @@
     "title": "The Kettle Was Still Warm"
   },
   {
+    "date": "2026-08-19",
+    "slug": "2026-08-19-dan-long",
+    "variant": "dan-long",
+    "id": "b4cf2e2c28f6",
+    "difficulty": "Hard",
+    "title": "Chalk Marks on the Platform"
+  },
+  {
     "date": "2026-08-18",
     "slug": "2026-08-18",
     "variant": "real",
@@ -237,6 +341,14 @@
     "variant": "dan",
     "id": "286302d17c39",
     "difficulty": "Medium",
+    "title": "Everyone Says They Were Reading"
+  },
+  {
+    "date": "2026-08-18",
+    "slug": "2026-08-18-dan-long",
+    "variant": "dan-long",
+    "id": "ad4b42690967",
+    "difficulty": "Hard",
     "title": "Everyone Says They Were Reading"
   },
   {
@@ -256,6 +368,14 @@
     "title": "The Stairwell Census"
   },
   {
+    "date": "2026-08-17",
+    "slug": "2026-08-17-dan-long",
+    "variant": "dan-long",
+    "id": "090e36fc200a",
+    "difficulty": "Easy",
+    "title": "Line Up by the Fence"
+  },
+  {
     "date": "2026-08-16",
     "slug": "2026-08-16",
     "variant": "real",
@@ -270,6 +390,14 @@
     "id": "ca5d9b4107e4",
     "difficulty": "Hard",
     "title": "Line Up by the Fence"
+  },
+  {
+    "date": "2026-08-16",
+    "slug": "2026-08-16-dan-long",
+    "variant": "dan-long",
+    "id": "5e3c152fcaee",
+    "difficulty": "Tricky",
+    "title": "The Greenhouse Roster"
   },
   {
     "date": "2026-08-15",
@@ -288,6 +416,14 @@
     "title": "The Lantern Street Lineup"
   },
   {
+    "date": "2026-08-15",
+    "slug": "2026-08-15-dan-long",
+    "variant": "dan-long",
+    "id": "f04e6b94f342",
+    "difficulty": "Hard",
+    "title": "The Corner Table Knows"
+  },
+  {
     "date": "2026-08-14",
     "slug": "2026-08-14",
     "variant": "real",
@@ -302,6 +438,14 @@
     "id": "0252d13951da",
     "difficulty": "Tricky",
     "title": "Names Called at Dawn"
+  },
+  {
+    "date": "2026-08-14",
+    "slug": "2026-08-14-dan-long",
+    "variant": "dan-long",
+    "id": "cab672556fe4",
+    "difficulty": "Tricky",
+    "title": "Twenty Faces, Five Lies"
   },
   {
     "date": "2026-08-13",
@@ -320,6 +464,14 @@
     "title": "The Bell Rang Anyway"
   },
   {
+    "date": "2026-08-13",
+    "slug": "2026-08-13-dan-long",
+    "variant": "dan-long",
+    "id": "3daaa315a9c6",
+    "difficulty": "Tricky",
+    "title": "Four Rows, One Confession"
+  },
+  {
     "date": "2026-08-12",
     "slug": "2026-08-12",
     "variant": "real",
@@ -334,6 +486,14 @@
     "id": "900455fd325c",
     "difficulty": "Hard",
     "title": "The Stairwell Census"
+  },
+  {
+    "date": "2026-08-12",
+    "slug": "2026-08-12-dan-long",
+    "variant": "dan-long",
+    "id": "484d01c9ded5",
+    "difficulty": "Hard",
+    "title": "Everyone Says They Were Reading"
   },
   {
     "date": "2026-08-11",
@@ -352,6 +512,14 @@
     "title": "Nine Alibis and a Gap"
   },
   {
+    "date": "2026-08-11",
+    "slug": "2026-08-11-dan-long",
+    "variant": "dan-long",
+    "id": "e00ccc98dab6",
+    "difficulty": "Tricky",
+    "title": "Chalk Marks on the Platform"
+  },
+  {
     "date": "2026-08-10",
     "slug": "2026-08-10",
     "variant": "real",
@@ -366,6 +534,14 @@
     "id": "ba91815fe495",
     "difficulty": "Medium",
     "title": "Nobody Left the Courtyard"
+  },
+  {
+    "date": "2026-08-10",
+    "slug": "2026-08-10-dan-long",
+    "variant": "dan-long",
+    "id": "454d720929c9",
+    "difficulty": "Easy",
+    "title": "Line Up by the Fence"
   },
   {
     "date": "2026-08-09",
@@ -384,6 +560,14 @@
     "title": "The Corner Table Knows"
   },
   {
+    "date": "2026-08-09",
+    "slug": "2026-08-09-dan-long",
+    "variant": "dan-long",
+    "id": "4ffbf1150547",
+    "difficulty": "Hard",
+    "title": "Nine Alibis and a Gap"
+  },
+  {
     "date": "2026-08-08",
     "slug": "2026-08-08",
     "variant": "real",
@@ -398,6 +582,14 @@
     "id": "e40958d89b9f",
     "difficulty": "Tricky",
     "title": "Someone Signed the Ledger Twice"
+  },
+  {
+    "date": "2026-08-08",
+    "slug": "2026-08-08-dan-long",
+    "variant": "dan-long",
+    "id": "f90de622edd4",
+    "difficulty": "Tricky",
+    "title": "One Story Does Not Fit"
   },
   {
     "date": "2026-08-07",
@@ -416,6 +608,14 @@
     "title": "A Draft in the Archive Room"
   },
   {
+    "date": "2026-08-07",
+    "slug": "2026-08-07-dan-long",
+    "variant": "dan-long",
+    "id": "ff98e52d73b1",
+    "difficulty": "Tricky",
+    "title": "The Stairwell Census"
+  },
+  {
     "date": "2026-08-06",
     "slug": "2026-08-06",
     "variant": "real",
@@ -430,6 +630,14 @@
     "id": "3674234d0cfe",
     "difficulty": "Tricky",
     "title": "The Corner Table Knows"
+  },
+  {
+    "date": "2026-08-06",
+    "slug": "2026-08-06-dan-long",
+    "variant": "dan-long",
+    "id": "93e347bca808",
+    "difficulty": "Tricky",
+    "title": "The Stairwell Census"
   },
   {
     "date": "2026-08-05",
@@ -448,6 +656,14 @@
     "title": "Names Called at Dawn"
   },
   {
+    "date": "2026-08-05",
+    "slug": "2026-08-05-dan-long",
+    "variant": "dan-long",
+    "id": "9ddced244dc3",
+    "difficulty": "Tricky",
+    "title": "Twenty Faces, Five Lies"
+  },
+  {
     "date": "2026-08-04",
     "slug": "2026-08-04",
     "variant": "real",
@@ -462,6 +678,14 @@
     "id": "cadf323283f0",
     "difficulty": "Hard",
     "title": "The Second Shift"
+  },
+  {
+    "date": "2026-08-04",
+    "slug": "2026-08-04-dan-long",
+    "variant": "dan-long",
+    "id": "191d24c68d18",
+    "difficulty": "Tricky",
+    "title": "A Draft in the Archive Room"
   },
   {
     "date": "2026-08-03",
@@ -480,6 +704,14 @@
     "title": "A Quiet Morning at the Depot"
   },
   {
+    "date": "2026-08-03",
+    "slug": "2026-08-03-dan-long",
+    "variant": "dan-long",
+    "id": "5da9050d4279",
+    "difficulty": "Medium",
+    "title": "Nine Alibis and a Gap"
+  },
+  {
     "date": "2026-08-02",
     "slug": "2026-08-02",
     "variant": "real",
@@ -494,6 +726,14 @@
     "id": "0848fce0571b",
     "difficulty": "Tricky",
     "title": "The Kettle Was Still Warm"
+  },
+  {
+    "date": "2026-08-02",
+    "slug": "2026-08-02-dan-long",
+    "variant": "dan-long",
+    "id": "021589e82911",
+    "difficulty": "Hard",
+    "title": "Nine Alibis and a Gap"
   },
   {
     "date": "2026-08-01",
@@ -512,6 +752,14 @@
     "title": "Twenty Faces, Five Lies"
   },
   {
+    "date": "2026-08-01",
+    "slug": "2026-08-01-dan-long",
+    "variant": "dan-long",
+    "id": "e78ecefc8a74",
+    "difficulty": "Tricky",
+    "title": "The Stairwell Census"
+  },
+  {
     "date": "2026-07-31",
     "slug": "2026-07-31",
     "variant": "real",
@@ -526,6 +774,14 @@
     "id": "ede35e262e2c",
     "difficulty": "Tricky",
     "title": "Chalk Marks on the Platform"
+  },
+  {
+    "date": "2026-07-31",
+    "slug": "2026-07-31-dan-long",
+    "variant": "dan-long",
+    "id": "06dc366c39b7",
+    "difficulty": "Tricky",
+    "title": "The Corner Table Knows"
   },
   {
     "date": "2026-07-30",
@@ -544,6 +800,14 @@
     "title": "The Lantern Street Lineup"
   },
   {
+    "date": "2026-07-30",
+    "slug": "2026-07-30-dan-long",
+    "variant": "dan-long",
+    "id": "d0078f989f02",
+    "difficulty": "Tricky",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-07-29",
     "slug": "2026-07-29",
     "variant": "real",
@@ -558,6 +822,14 @@
     "id": "8f06abedb874",
     "difficulty": "Tricky",
     "title": "Everyone Says They Were Reading"
+  },
+  {
+    "date": "2026-07-29",
+    "slug": "2026-07-29-dan-long",
+    "variant": "dan-long",
+    "id": "45ebb86fdcaf",
+    "difficulty": "Tricky",
+    "title": "The Greenhouse Roster"
   },
   {
     "date": "2026-07-28",
@@ -576,6 +848,14 @@
     "title": "The Kettle Was Still Warm"
   },
   {
+    "date": "2026-07-28",
+    "slug": "2026-07-28-dan-long",
+    "variant": "dan-long",
+    "id": "412b13e8a6f1",
+    "difficulty": "Medium",
+    "title": "The Stairwell Census"
+  },
+  {
     "date": "2026-07-27",
     "slug": "2026-07-27",
     "variant": "real",
@@ -590,6 +870,14 @@
     "id": "2d2086617eff",
     "difficulty": "Easy",
     "title": "The Greenhouse Roster"
+  },
+  {
+    "date": "2026-07-27",
+    "slug": "2026-07-27-dan-long",
+    "variant": "dan-long",
+    "id": "9bb5eb237768",
+    "difficulty": "Easy",
+    "title": "The Ferry Was Late"
   },
   {
     "date": "2026-07-26",
@@ -608,6 +896,14 @@
     "title": "The Stairwell Census"
   },
   {
+    "date": "2026-07-26",
+    "slug": "2026-07-26-dan-long",
+    "variant": "dan-long",
+    "id": "f470f4882da7",
+    "difficulty": "Hard",
+    "title": "The Lantern Street Lineup"
+  },
+  {
     "date": "2026-07-25",
     "slug": "2026-07-25",
     "variant": "real",
@@ -622,6 +918,14 @@
     "id": "178720664199",
     "difficulty": "Hard",
     "title": "Whose Coat Is on the Hook"
+  },
+  {
+    "date": "2026-07-25",
+    "slug": "2026-07-25-dan-long",
+    "variant": "dan-long",
+    "id": "5432eaf78218",
+    "difficulty": "Hard",
+    "title": "Everyone Says They Were Reading"
   },
   {
     "date": "2026-07-24",
@@ -640,6 +944,14 @@
     "title": "The Greenhouse Roster"
   },
   {
+    "date": "2026-07-24",
+    "slug": "2026-07-24-dan-long",
+    "variant": "dan-long",
+    "id": "b1ca45db314d",
+    "difficulty": "Tricky",
+    "title": "The Ferry Was Late"
+  },
+  {
     "date": "2026-07-23",
     "slug": "2026-07-23",
     "variant": "real",
@@ -654,6 +966,14 @@
     "id": "900e8d14a536",
     "difficulty": "Tricky",
     "title": "The Lantern Street Lineup"
+  },
+  {
+    "date": "2026-07-23",
+    "slug": "2026-07-23-dan-long",
+    "variant": "dan-long",
+    "id": "13dfbb46e022",
+    "difficulty": "Tricky",
+    "title": "The Greenhouse Roster"
   },
   {
     "date": "2026-07-22",
@@ -672,6 +992,14 @@
     "title": "One Story Does Not Fit"
   },
   {
+    "date": "2026-07-22",
+    "slug": "2026-07-22-dan-long",
+    "variant": "dan-long",
+    "id": "73157fc0b88b",
+    "difficulty": "Hard",
+    "title": "The Second Shift"
+  },
+  {
     "date": "2026-07-21",
     "slug": "2026-07-21",
     "variant": "real",
@@ -686,6 +1014,14 @@
     "id": "31fa318af5ab",
     "difficulty": "Hard",
     "title": "The Lantern Street Lineup"
+  },
+  {
+    "date": "2026-07-21",
+    "slug": "2026-07-21-dan-long",
+    "variant": "dan-long",
+    "id": "070755ac50a6",
+    "difficulty": "Easy",
+    "title": "Chalk Marks on the Platform"
   },
   {
     "date": "2026-07-20",
@@ -704,6 +1040,14 @@
     "title": "Whose Coat Is on the Hook"
   },
   {
+    "date": "2026-07-20",
+    "slug": "2026-07-20-dan-long",
+    "variant": "dan-long",
+    "id": "e65ad84bb800",
+    "difficulty": "Medium",
+    "title": "Nobody Left the Courtyard"
+  },
+  {
     "date": "2026-07-19",
     "slug": "2026-07-19",
     "variant": "real",
@@ -718,6 +1062,14 @@
     "id": "e950b04381ad",
     "difficulty": "Tricky",
     "title": "Someone Signed the Ledger Twice"
+  },
+  {
+    "date": "2026-07-19",
+    "slug": "2026-07-19-dan-long",
+    "variant": "dan-long",
+    "id": "062a8890d17d",
+    "difficulty": "Tricky",
+    "title": "The Lantern Street Lineup"
   },
   {
     "date": "2026-07-18",
@@ -736,6 +1088,14 @@
     "title": "Chalk Marks on the Platform"
   },
   {
+    "date": "2026-07-18",
+    "slug": "2026-07-18-dan-long",
+    "variant": "dan-long",
+    "id": "c0ab1dbf141e",
+    "difficulty": "Hard",
+    "title": "The Second Shift"
+  },
+  {
     "date": "2026-07-17",
     "slug": "2026-07-17",
     "variant": "real",
@@ -749,6 +1109,14 @@
     "variant": "dan",
     "id": "80538a371402",
     "difficulty": "Tricky",
+    "title": "A Draft in the Archive Room"
+  },
+  {
+    "date": "2026-07-17",
+    "slug": "2026-07-17-dan-long",
+    "variant": "dan-long",
+    "id": "18bf305c68e6",
+    "difficulty": "Hard",
     "title": "A Draft in the Archive Room"
   },
   {
@@ -768,6 +1136,14 @@
     "title": "Whose Coat Is on the Hook"
   },
   {
+    "date": "2026-07-16",
+    "slug": "2026-07-16-dan-long",
+    "variant": "dan-long",
+    "id": "8b7034b01499",
+    "difficulty": "Hard",
+    "title": "Names Called at Dawn"
+  },
+  {
     "date": "2026-07-15",
     "slug": "2026-07-15",
     "variant": "real",
@@ -782,6 +1158,14 @@
     "id": "56e5055b12fa",
     "difficulty": "Tricky",
     "title": "The Second Shift"
+  },
+  {
+    "date": "2026-07-15",
+    "slug": "2026-07-15-dan-long",
+    "variant": "dan-long",
+    "id": "240a3c5777ae",
+    "difficulty": "Tricky",
+    "title": "The Ferry Was Late"
   },
   {
     "date": "2026-07-14",
@@ -800,6 +1184,14 @@
     "title": "Line Up by the Fence"
   },
   {
+    "date": "2026-07-14",
+    "slug": "2026-07-14-dan-long",
+    "variant": "dan-long",
+    "id": "f298f4d5a46b",
+    "difficulty": "Hard",
+    "title": "The Kettle Was Still Warm"
+  },
+  {
     "date": "2026-07-13",
     "slug": "2026-07-13",
     "variant": "real",
@@ -814,6 +1206,14 @@
     "id": "b0d39880158d",
     "difficulty": "Hard",
     "title": "Whose Coat Is on the Hook"
+  },
+  {
+    "date": "2026-07-13",
+    "slug": "2026-07-13-dan-long",
+    "variant": "dan-long",
+    "id": "4340868a5ff9",
+    "difficulty": "Medium",
+    "title": "Four Rows, One Confession"
   },
   {
     "date": "2026-07-12",
@@ -832,6 +1232,14 @@
     "title": "Chalk Marks on the Platform"
   },
   {
+    "date": "2026-07-12",
+    "slug": "2026-07-12-dan-long",
+    "variant": "dan-long",
+    "id": "c417dfbb2c43",
+    "difficulty": "Tricky",
+    "title": "Everyone Says They Were Reading"
+  },
+  {
     "date": "2026-07-11",
     "slug": "2026-07-11",
     "variant": "real",
@@ -846,6 +1254,14 @@
     "id": "fb4e5cdc5342",
     "difficulty": "Tricky",
     "title": "Names Called at Dawn"
+  },
+  {
+    "date": "2026-07-11",
+    "slug": "2026-07-11-dan-long",
+    "variant": "dan-long",
+    "id": "0391e852dd67",
+    "difficulty": "Tricky",
+    "title": "Someone Signed the Ledger Twice"
   },
   {
     "date": "2026-07-10",
@@ -864,6 +1280,14 @@
     "title": "A Quiet Morning at the Depot"
   },
   {
+    "date": "2026-07-10",
+    "slug": "2026-07-10-dan-long",
+    "variant": "dan-long",
+    "id": "24e1d769a79a",
+    "difficulty": "Hard",
+    "title": "Nine Alibis and a Gap"
+  },
+  {
     "date": "2026-07-09",
     "slug": "2026-07-09",
     "variant": "real",
@@ -878,6 +1302,14 @@
     "id": "2e6e6eaa3210",
     "difficulty": "Tricky",
     "title": "Nobody Left the Courtyard"
+  },
+  {
+    "date": "2026-07-09",
+    "slug": "2026-07-09-dan-long",
+    "variant": "dan-long",
+    "id": "7d8f22d3f94b",
+    "difficulty": "Hard",
+    "title": "The Ferry Was Late"
   },
   {
     "date": "2026-07-08",
@@ -896,6 +1328,14 @@
     "title": "Nine Alibis and a Gap"
   },
   {
+    "date": "2026-07-08",
+    "slug": "2026-07-08-dan-long",
+    "variant": "dan-long",
+    "id": "c26760616216",
+    "difficulty": "Medium",
+    "title": "The Second Shift"
+  },
+  {
     "date": "2026-07-07",
     "slug": "2026-07-07",
     "variant": "real",
@@ -910,5 +1350,13 @@
     "id": "8ae1d31cbe9d",
     "difficulty": "Hard",
     "title": "The Lantern Street Lineup"
+  },
+  {
+    "date": "2026-07-07",
+    "slug": "2026-07-07-dan-long",
+    "variant": "dan-long",
+    "id": "f858f5cbdd65",
+    "difficulty": "Hard",
+    "title": "The Ferry Was Late"
   }
 ]

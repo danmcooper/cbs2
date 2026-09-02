@@ -7,6 +7,7 @@ import Archive from './Archive';
 const manifest = [
   { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
   { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'dddddddddddd', difficulty: 'Hard', title: 'Second (Dan)' },
+  { date: '2026-07-03', slug: '2026-07-03-dan-long', variant: 'dan-long', id: 'eeeeeeeeeeee', difficulty: 'Tricky', title: 'Second (Dan Long)' },
   { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
 ];
 
@@ -87,12 +88,10 @@ describe('Archive', () => {
     expect(await screen.findByRole('button', { name: /retry/i })).toBeTruthy();
   });
 
-  it('offers Real, Dan, and Both as the source options, defaulting to Real', async () => {
+  it('defaults the source to Real', async () => {
     render(<Archive />);
     await screen.findByText('July 2026');
-    const source = screen.getByLabelText(/source/i);
-    expect(within(source).getAllByRole('option').map((o) => o.textContent)).toEqual(['Real', 'Dan', 'Both']);
-    expect(source).toHaveProperty('value', 'real');
+    expect(screen.getByLabelText(/source/i)).toHaveProperty('value', 'real');
   });
 
   it('places the source dropdown after the other filters', async () => {
@@ -137,7 +136,7 @@ describe('Archive', () => {
     expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['#/play/2026-07-03-dan']);
   });
 
-  it('shows both variants interleaved by date when the source is Both', async () => {
+  it('shows every variant interleaved by date when the source is Both', async () => {
     const user = userEvent.setup();
     render(<Archive />);
     await screen.findByText('July 2026');
@@ -145,11 +144,12 @@ describe('Archive', () => {
     expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
       '#/play/2026-07-03',
       '#/play/2026-07-03-dan',
+      '#/play/2026-07-03-dan-long',
       '#/play/2026-07-01',
     ]);
   });
 
-  it('offers the difficulties of both variants when the source is Both', async () => {
+  it('offers the difficulties of every variant when the source is Both', async () => {
     const user = userEvent.setup();
     render(<Archive />);
     await screen.findByText('July 2026');
@@ -162,7 +162,44 @@ describe('Archive', () => {
     expect(within(screen.getByLabelText(/difficulty/i)).getAllByRole('option').map((o) => o.textContent)).toEqual([
       'All',
       'Easy',
+      'Tricky',
       'Hard',
+    ]);
+  });
+
+  it('offers one source per generated variant, by the name that variant goes by', async () => {
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    const options = within(screen.getByLabelText(/source/i)).getAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual(['Real', 'Dan', 'Dan Long', 'Both']);
+    expect(options.map((o) => o.getAttribute('value'))).toEqual([
+      'real',
+      'dan',
+      'dan-long',
+      'both',
+    ]);
+  });
+
+  it('filters to one generated variant without picking up its siblings', async () => {
+    // `dan-long`'s slug ends in `dan`'s: a filter that matched on the slug
+    // rather than on the entry's own variant would show both here.
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    await user.selectOptions(screen.getByLabelText(/source/i), 'dan-long');
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03-dan-long',
+    ]);
+  });
+
+  it('names each generated variant in the list when the source is Both', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    await user.selectOptions(screen.getByLabelText(/source/i), 'both');
+    expect([...document.querySelectorAll('.arch-source')].map((e) => e.textContent)).toEqual([
+      'Dan',
+      'Dan Long',
     ]);
   });
 

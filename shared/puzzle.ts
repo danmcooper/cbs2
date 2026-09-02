@@ -18,6 +18,26 @@ export interface HintStep {
   reveals: number[];
 }
 
+/**
+ * The puzzles this repo generates, as opposed to the ones it scrapes. A real
+ * puzzle carries no `variant` at all; each key here is one generated sibling.
+ *
+ * `suffix` is what goes between the date and `.json` in the filename, and by
+ * extension what the site puts in a URL — so it is always `-${variant}`, and
+ * one variant's suffix must never be a prefix of another's. `label` is how the
+ * variant names itself on screen.
+ */
+export const VARIANTS = {
+  /** The original sibling: the real puzzle's own board, generated. */
+  dan: { suffix: '-dan', label: 'Dan' },
+  /** Thirty cards instead of twenty — a board the source site never uses. */
+  'dan-long': { suffix: '-dan-long', label: 'Dan Long' },
+} as const;
+
+export type Variant = keyof typeof VARIANTS;
+
+const VARIANT_NAMES = Object.keys(VARIANTS) as Variant[];
+
 export interface Puzzle {
   formatVersion: 1;
   id: string;
@@ -31,8 +51,8 @@ export interface Puzzle {
   people: Person[];
   /** Absent in older puzzle files and when the source puzzle has no hints. */
   hints?: HintStep[];
-  /** Absent on scraped puzzles; 'dan' on puzzles this repo generated. */
-  variant?: 'dan';
+  /** Absent on scraped puzzles; one of `VARIANTS` on generated ones. */
+  variant?: Variant;
 }
 
 export class PuzzleValidationError extends Error {}
@@ -50,7 +70,9 @@ export function validatePuzzle(data: unknown): Puzzle {
   if (typeof p.title !== 'string') fail('title must be a string');
   if (typeof p.difficulty !== 'string') fail('difficulty must be a string');
   if (typeof p.source !== 'string') fail('source must be a string');
-  if (p.variant !== undefined && p.variant !== 'dan') fail("variant must be absent or 'dan'");
+  if (p.variant !== undefined && !VARIANT_NAMES.includes(p.variant as Variant)) {
+    fail(`variant must be absent or one of ${VARIANT_NAMES.join(', ')}`);
+  }
   if (!Number.isInteger(p.width) || (p.width as number) < 1) fail('width must be a positive integer');
   if (!Number.isInteger(p.height) || (p.height as number) < 1) fail('height must be a positive integer');
   const count = (p.width as number) * (p.height as number);

@@ -17,6 +17,7 @@ import {
   makeRng,
   orderPool,
   pickCriminals,
+  professionShapesFor,
   shuffled,
 } from './generate';
 import { faceOf } from './vocab';
@@ -113,6 +114,87 @@ describe('castOf', () => {
     for (let i = 0; i < cast.names.length; i++) {
       expect(cast.faces[i], cast.names[i]).toBe(faceOf(cast.professions[i], cast.genders[i]));
     }
+  });
+
+  // A 5x6 board wants thirty cards, and there are only twenty-six letters. The
+  // one-initial-per-card rule cannot survive that, so it degrades rather than
+  // breaks: still sorted, still every name distinct, still as few letters shared
+  // as the alphabet allows.
+  it('fills a thirty-card board, reusing initials only where it must', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const cast = castOf(makeRng(seed), professionShapesFor(mix.professionShapes, 30), 30);
+      expect(cast.names.length, `seed ${seed}`).toBe(30);
+      expect(cast.genders.length).toBe(30);
+      expect(cast.professions.length).toBe(30);
+      expect(cast.faces.length).toBe(30);
+      expect(cast.names, `seed ${seed}`).toEqual([...cast.names].sort());
+      expect(new Set(cast.names).size, `seed ${seed}`).toBe(30);
+      // Thirty names over twenty-six letters shares four of them, and no more.
+      expect(new Set(cast.names.map((n) => n[0])).size, `seed ${seed}`).toBe(26);
+      for (let i = 0; i < 30; i++) {
+        expect(cast.faces[i], cast.names[i]).toBe(faceOf(cast.professions[i], cast.genders[i]));
+      }
+    }
+  });
+});
+
+describe('professionShapesFor', () => {
+  it('passes the archive\'s own shapes through at the size they were measured', () => {
+    const got = professionShapesFor(mix.professionShapes, 20);
+    expect(got).toEqual(mix.professionShapes);
+  });
+
+  it('builds shapes covering a board the archive has none for', () => {
+    const got = professionShapesFor(mix.professionShapes, 30);
+    expect(got.length).toBeGreaterThan(10);
+    for (const s of got) {
+      expect(s.reduce((a, b) => a + b, 0), s.join(',')).toBe(30);
+      expect(s.length).toBeLessThanOrEqual(16); // no more professions than exist
+      expect(Math.min(...s)).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps the archive\'s taste for small ragged groups', () => {
+    // Real casts run groups of mostly two and three, which is what makes a
+    // `#PROFS:` unit worth naming. Five groups of six would be a different game,
+    // and so would fifteen groups of one — a "profession group" of one person is
+    // just a card with a longer name, and a clue about it says nothing a clue
+    // naming the card would not. Covering the ten extra cards by adding singleton
+    // groups satisfies both "small" and "ragged" while doing exactly that, so
+    // the archive's own two statistics are what this holds the refit to.
+    const got = professionShapesFor(mix.professionShapes, 30);
+    const sizes = got.flat();
+    const archive = mix.professionShapes.flat();
+    const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const singletons = (xs: number[]) => xs.filter((n) => n === 1).length / xs.length;
+
+    expect(sizes.filter((n) => n <= 3).length / sizes.length).toBeGreaterThan(0.6);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(Math.max(...archive));
+    expect(mean(sizes)).toBeGreaterThan(mean(archive) - 0.3);
+    expect(singletons(sizes)).toBeLessThan(singletons(archive) + 0.05);
+  });
+
+  it('drops a shape naming more professions than the vocabulary has', () => {
+    // `castOf` deals one profession per group, so a shape with more groups than
+    // there are professions cannot be dealt. Passing it through would leave that
+    // rejection to `castOf`, which can only throw.
+    const tooMany = Array.from({ length: 20 }, () => 1);
+    const usable = [3, 3, 3, 3, 2, 2, 2, 2];
+    expect(professionShapesFor([tooMany, usable], 20)).toEqual([usable]);
+  });
+
+  it('covers a board smaller than the archive\'s too', () => {
+    // The cheap 4x4 board the rest of this file generates on needs this as much
+    // as a 5x6 does: twenty-card shapes do not deal out onto sixteen cards.
+    const got = professionShapesFor(mix.professionShapes, 16);
+    expect(got.length).toBeGreaterThan(10);
+    for (const s of got) {
+      expect(s.reduce((a, b) => a + b, 0), s.join(',')).toBe(16);
+      expect(s.length).toBeLessThanOrEqual(16);
+      expect(Math.min(...s)).toBeGreaterThan(0);
+    }
+    // Shrinking must not tidy the cast into a few big groups.
+    expect(Math.max(...got.flat())).toBeLessThanOrEqual(Math.max(...mix.professionShapes.flat()));
   });
 });
 
@@ -308,6 +390,43 @@ describe('generatePuzzle', () => {
     const truth = puzzle.people.map((p) => p.criminal);
     expect(isUniquelySolvable(shape, clues, truth)).toBe(true);
     expect(solveChain(shape, clues, truth, puzzle.initialReveals).solvedAll).toBe(true);
+  });
+
+  // The bands are calibrated on the archive's twenty-card board, so the counts
+  // in them — how many criminals, how many clue cards — mean "out of twenty".
+  // Sampling the criminal count straight out of an unscaled band gives a wider
+  // board a thinner puzzle than any real one: a 5x6 came out 30% criminal
+  // against the archive's 47%.
+  it('scales the band it was given to the board it is filling', () => {
+    // min === max, so the criminal count is decided entirely by the scaling:
+    // ten of twenty is five of ten, and eight of the sixteen cards here.
+    const tenOfTwenty: LabelBand = { ...band, criminals: { min: 10, max: 10 } };
+    const { puzzle: p } = generatePuzzle({
+      date: '2026-01-01', difficulty: 'Medium', band: tenOfTwenty, seed: 5,
+      mix: boardMix, ...BOARD,
+    });
+    expect(p.people.filter((q) => q.criminal).length).toBe(8);
+  });
+
+  // Every caller passes the archive's own mix, whose shapes all sum to twenty.
+  // A board that is not 4x5 has to fit them itself rather than making the caller
+  // trim or grow them first — otherwise `castOf` throws and no board but the
+  // archive's own can ever be generated.
+  it('fits the archive\'s profession shapes to whatever board it was given', () => {
+    const { puzzle: p } = generatePuzzle({
+      date: '2026-01-01', difficulty: 'Medium', band, seed: 3, mix, ...BOARD,
+    });
+    expect(p.people.length).toBe(BOARD.width * BOARD.height);
+    expect(p.people.every((q) => q.profession.length > 0)).toBe(true);
+  });
+
+  it('marks the puzzle as the variant it was asked for, Dan by default', () => {
+    expect(puzzle.variant).toBe('dan');
+    const { puzzle: p } = generatePuzzle({
+      date: '2026-01-01', difficulty: 'Medium', band, seed: 3, mix, ...BOARD,
+      variant: 'dan-long',
+    });
+    expect(p.variant).toBe('dan-long');
   });
 
   it('round-trips every generated clue exactly', () => {

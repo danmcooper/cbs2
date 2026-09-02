@@ -276,9 +276,11 @@ describe('namedCards', () => {
       // index appears as a #NAME:/#NAMES: argument or as either endpoint of a
       // #BETWEEN:pair(a,b) in that clue's already-rendered text. Measured once
       // directly against this archive: 660 non-null clues total, of which
-      // exactly 30 name their own host — asserting both counts below rules out
-      // a vacuous pass (e.g. from an empty archive or a namedCards that always
-      // returns nothing).
+      // exactly 30 name their own host. Those are floors rather than equalities
+      // because the archive gains a puzzle a night, and an assertion that has to
+      // be edited on every scrape stops being read; what they still rule out is
+      // the vacuous pass — an empty archive, or a namedCards that always returns
+      // nothing.
       const archive = loadArchive();
       let total = 0;
       let positive = 0;
@@ -304,8 +306,9 @@ describe('namedCards', () => {
         });
       }
 
-      expect(total).toBe(660);
-      expect(positive).toBe(30);
+      expect(archive.length).toBeGreaterThanOrEqual(54);
+      expect(total).toBeGreaterThanOrEqual(660);
+      expect(positive).toBeGreaterThanOrEqual(30);
     },
   );
 });

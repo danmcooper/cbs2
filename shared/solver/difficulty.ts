@@ -186,6 +186,66 @@ export function gatesPass(band: LabelBand, m: Metrics): boolean {
   return GATED.every((key) => m[key] >= band[key].min && m[key] <= band[key].max);
 }
 
+/** Cards on the board every calibrated band was measured from: the archive is
+ * 4x5 throughout, and the labels in it are human ones from the source site. */
+export const CALIBRATION_SIZE = 20;
+
+/**
+ * Metrics whose bands move with the board, and the ones that do not.
+ *
+ * `criminals` and `clueCards` count cards, so they are proportional to the
+ * board by construction: the archive is 46.6% criminal (503 over 54 puzzles)
+ * whatever else is true of a puzzle, and a wider board needs proportionally
+ * more clue hosts to pin it down. Generated 5x6 puzzles bear the second one
+ * out — their clueCards mean runs 1.478x the 4x5 population's against the
+ * 1.500x the board size alone predicts.
+ *
+ * `chainLength` is the one that looks like it should scale and does not: the
+ * same comparison puts it at 1.200x, well short of 1.526x. A wider board gives
+ * each clue more to say, so a step reveals more cards rather than the chain
+ * taking more steps — `chainLength x meanRevealsPerStep` is pinned to
+ * `size - initialReveals` exactly, and it is the second factor that absorbs
+ * the board. There is no clean law to scale by, so it is left alone.
+ *
+ * `abstractShare` is a ratio and `meanPathSize` is a per-card average; neither
+ * has a board size in it.
+ */
+const SCALES_WITH_BOARD: readonly (keyof LabelBand)[] = ['criminals', 'clueCards'];
+
+/**
+ * The calibrated bands as they apply to a board of `size` cards.
+ *
+ * There are no human difficulty labels for any board but 4x5, so a label on a
+ * 5x6 puzzle can only mean "as hard as a 4x5 puzzle a human called this" — and
+ * that transfer has to correct for the metrics that are bigger simply because
+ * the board is. Left uncorrected, a 5x6 puzzle's 17 clues sit above every
+ * label's ceiling at once, which does not make it hard, it makes the whole
+ * comparison degenerate: the label then turns on whichever band happens to
+ * reach highest. Brutal, whose clueCards ceiling is the lowest at 11, becomes
+ * unreachable on a big board for no reason a player would recognise.
+ *
+ * Identity at 4x5, so nothing about the shipped archive changes.
+ */
+export function bandsFor(bands: Bands, size: number): Bands {
+  if (size === CALIBRATION_SIZE) return bands;
+  const factor = size / CALIBRATION_SIZE;
+  const out: Bands = {};
+  for (const [label, band] of Object.entries(bands)) {
+    const scaled = { ...band };
+    for (const key of SCALES_WITH_BOARD) {
+      const b = band[key] as Band;
+      (scaled[key] as Band) = {
+        // A band that scales below one card would ask for a puzzle with no
+        // criminals in it; the ceiling cannot exceed the board.
+        min: Math.min(Math.max(1, Math.round(b.min * factor)), size),
+        max: Math.min(Math.round(b.max * factor), size),
+      };
+    }
+    out[label] = scaled;
+  }
+  return out;
+}
+
 /**
  * The calibrated label that best describes these metrics.
  *

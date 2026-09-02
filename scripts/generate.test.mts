@@ -4,16 +4,24 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { validatePuzzle } from '../shared/puzzle.ts';
 import type { LabelBand } from '../shared/solver/difficulty.ts';
-import { classify, loadBands, measure } from '../shared/solver/difficulty.ts';
+import { bandsFor, classify, loadBands, measure } from '../shared/solver/difficulty.ts';
 import { makeGrid } from '../shared/solver/grid.ts';
 import { isUniquelySolvable, parseClues, solveChain } from '../shared/solver/solve.ts';
 import {
+  DEFAULT_VARIANTS,
   type GenerateProgress,
   type GenerateRunResult,
+  type VariantSpec,
   runGenerate,
   seedForDate,
   unionCriminals,
 } from './generate.mts';
+
+// Every test here pins the variants it generates rather than taking the shipped
+// list, because the shipped list includes a 5x6 board and solving is exponential
+// in the number of cards — one Dan Long puzzle costs more than this whole file.
+// `DEFAULT_VARIANTS` is checked as data instead, in its own describe below.
+const DAN_ONLY: VariantSpec[] = [{ variant: 'dan', board: 'inherit', seedSalt: '' }];
 
 // A real puzzle file only needs the fields runGenerate reads plus schema validity
 // — but its board is not incidental. A Dan puzzle takes its size and its cast's
@@ -23,6 +31,8 @@ import {
 // what lets these tests generate real puzzles in the ordinary suite. Group sizes
 // are the archive's ragged shape — trios and pairs, one singleton — cut to
 // sixteen cards. `npm run test:generate` covers the shipped size.
+const FIXTURE_BOARD = { width: 4, height: 4 };
+
 const FIXTURE_PROFESSIONS = ['coder', 'cop', 'cook']
   .flatMap((p) => [p, p, p])
   .concat(['guard', 'judge', 'pilot'].flatMap((p) => [p, p]))
@@ -35,7 +45,7 @@ function realPuzzle(date: string, id: string, difficulty: string) {
   }));
   return {
     formatVersion: 1, id, date, title: `Title ${date}`, difficulty,
-    width: 4, height: 4, initialReveals: [], source: 'cluesbysam.com',
+    ...FIXTURE_BOARD, initialReveals: [], source: 'cluesbysam.com',
     people,
   };
 }
@@ -75,9 +85,11 @@ describe('runGenerate', () => {
     'writes a valid Dan sibling and lists it in the manifest',
     async () => {
       const { dir, bandsPath } = await fixture();
-      const result = await runGenerate({ puzzlesDir: dir, bandsPath });
+      const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants: DAN_ONLY });
 
-      expect(result.written).toEqual([{ date: '2026-07-01', label: 'Easy', aimedAt: 'Easy' }]);
+      expect(result.written).toEqual([
+        { date: '2026-07-01', variant: 'dan', label: 'Easy', aimedAt: 'Easy' },
+      ]);
       expect(result.failed).toEqual([]);
       const raw = JSON.parse(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8'));
       const puzzle = validatePuzzle(raw);
@@ -96,15 +108,22 @@ describe('runGenerate', () => {
     'skips dates that already have a Dan puzzle, and regenerates identically with force',
     async () => {
       const { dir, bandsPath } = await fixture();
-      await runGenerate({ puzzlesDir: dir, bandsPath });
+      await runGenerate({ puzzlesDir: dir, bandsPath, variants: DAN_ONLY });
       const first = await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8');
 
-      const second = await runGenerate({ puzzlesDir: dir, bandsPath });
+      const second = await runGenerate({ puzzlesDir: dir, bandsPath, variants: DAN_ONLY });
       expect(second.written).toEqual([]);
-      expect(second.skipped).toEqual(['2026-07-01']);
+      expect(second.skipped).toEqual([{ date: '2026-07-01', variant: 'dan' }]);
 
-      const third = await runGenerate({ puzzlesDir: dir, bandsPath, force: true });
-      expect(third.written).toEqual([{ date: '2026-07-01', label: 'Easy', aimedAt: 'Easy' }]);
+      const third = await runGenerate({
+        puzzlesDir: dir,
+        bandsPath,
+        variants: DAN_ONLY,
+        force: true,
+      });
+      expect(third.written).toEqual([
+        { date: '2026-07-01', variant: 'dan', label: 'Easy', aimedAt: 'Easy' },
+      ]);
       expect(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8')).toBe(first);
     },
     30_000,
@@ -118,12 +137,96 @@ describe('runGenerate', () => {
         path.join(dir, '2026-07-02.json'),
         JSON.stringify(realPuzzle('2026-07-02', 'cccccccccccc', 'Brutal')),
       );
-      const result = await runGenerate({ puzzlesDir: dir, bandsPath });
-      expect(result.written).toEqual([{ date: '2026-07-01', label: 'Easy', aimedAt: 'Easy' }]);
-      expect(result.failed).toEqual([{ date: '2026-07-02', reason: 'no calibrated band for Brutal' }]);
+      const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants: DAN_ONLY });
+      expect(result.written).toEqual([
+        { date: '2026-07-01', variant: 'dan', label: 'Easy', aimedAt: 'Easy' },
+      ]);
+      expect(result.failed).toEqual([
+        { date: '2026-07-02', variant: 'dan', reason: 'no calibrated band for Brutal' },
+      ]);
     },
     30_000,
   );
+
+  it(
+    'writes one sibling per variant, each on the board its variant asks for',
+    async () => {
+      const { dir, bandsPath } = await fixture();
+      const variants: VariantSpec[] = [
+        ...DAN_ONLY,
+        // Stands in for the shipped 5x6: a board the real puzzle does not have,
+        // picked small enough to solve in the time an ordinary test may take.
+        { variant: 'dan-long', board: { width: 3, height: 5 }, seedSalt: '-dan-long' },
+      ];
+
+      const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants });
+
+      expect(result.failed).toEqual([]);
+      expect(result.written.map((w) => w.variant)).toEqual(['dan', 'dan-long']);
+
+      const dan = validatePuzzle(
+        JSON.parse(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8')),
+      );
+      const long = validatePuzzle(
+        JSON.parse(await readFile(path.join(dir, '2026-07-01-dan-long.json'), 'utf8')),
+      );
+      expect(dan.variant).toBe('dan');
+      expect(long.variant).toBe('dan-long');
+      expect([dan.width, dan.height]).toEqual([FIXTURE_BOARD.width, FIXTURE_BOARD.height]);
+      expect([long.width, long.height]).toEqual([3, 5]);
+      expect(long.people).toHaveLength(15);
+
+      const index = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'));
+      expect(index.map((e: { slug: string }) => e.slug)).toEqual([
+        '2026-07-01',
+        '2026-07-01-dan',
+        '2026-07-01-dan-long',
+      ]);
+    },
+    60_000,
+  );
+
+  it(
+    'gives two variants sharing a board different puzzles',
+    async () => {
+      // Seeds come from the date, so without a per-variant salt two variants on
+      // the same board would deal the same cards and write the same puzzle
+      // twice under different names.
+      const { dir, bandsPath } = await fixture();
+      await runGenerate({
+        puzzlesDir: dir,
+        bandsPath,
+        variants: [
+          ...DAN_ONLY,
+          { variant: 'dan-long', board: { ...FIXTURE_BOARD }, seedSalt: '-dan-long' },
+        ],
+      });
+
+      const dan = await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8');
+      const long = await readFile(path.join(dir, '2026-07-01-dan-long.json'), 'utf8');
+      const people = (raw: string) =>
+        JSON.parse(raw).people.map((p: { name: string; criminal: boolean }) => p);
+      expect(people(long)).not.toEqual(people(dan));
+    },
+    60_000,
+  );
+});
+
+describe('DEFAULT_VARIANTS', () => {
+  it('generates a Dan puzzle on the real board and a Dan Long one on 5x6', () => {
+    expect(DEFAULT_VARIANTS.map((v) => v.variant)).toEqual(['dan', 'dan-long']);
+    expect(DEFAULT_VARIANTS[0].board).toBe('inherit');
+    expect(DEFAULT_VARIANTS[1].board).toEqual({ width: 5, height: 6 });
+  });
+
+  it('keeps the Dan seed key bare and every other variant distinct', () => {
+    // The 56 files in `puzzles/*-dan.json` were generated from the bare date,
+    // before there was more than one variant; salting that key now would
+    // silently regenerate every one of them into a different puzzle.
+    expect(DEFAULT_VARIANTS[0].seedSalt).toBe('');
+    const salts = DEFAULT_VARIANTS.map((v) => v.seedSalt);
+    expect(new Set(salts).size).toBe(salts.length);
+  });
 });
 
 // --- Labelling by measurement, not by the label that was aimed at ------------
@@ -178,7 +281,12 @@ describe('runGenerate labels by measurement', () => {
   beforeAll(async () => {
     ({ dir, bandsPath } = await twoLabelFixture());
     progress = [];
-    result = await runGenerate({ puzzlesDir: dir, bandsPath, onProgress: (e) => progress.push(e) });
+    result = await runGenerate({
+      puzzlesDir: dir,
+      bandsPath,
+      variants: DAN_ONLY,
+      onProgress: (e) => progress.push(e),
+    });
   }, 30_000);
 
   it('writes one puzzle per date, discarding nothing', () => {
@@ -275,8 +383,11 @@ describe('unionCriminals', () => {
 
 describe('runGenerate samples criminals from the union of all calibrated labels', () => {
   // "Narrow" only calibrates 11-16 criminals; "Wide" calibrates 4-10. Their
-  // union is exactly {4,16}, so a count below 11 is reachable only if the range
-  // handed to `generatePuzzle` was the union rather than Narrow's own.
+  // union is exactly {4,16}, so a count below Narrow's floor is reachable only
+  // if the range handed to `generatePuzzle` was the union rather than Narrow's
+  // own. Both ranges are read off the calibration board and refitted to the
+  // fixture's smaller one before they mean anything here, so the assertions
+  // below go through `bandsFor` rather than naming 4, 11 and 16 outright.
   //
   // Which count a given date draws depends on its derived seed and on how many
   // attempts that seed needs, so this asks several dates for one rather than
@@ -316,7 +427,7 @@ describe('runGenerate samples criminals from the union of all calibrated labels'
         );
       }
 
-      const result = await runGenerate({ puzzlesDir: dir, bandsPath });
+      const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants: DAN_ONLY });
       expect(result.written.map((w) => w.date).sort()).toEqual(dates);
       expect(result.written.every((w) => w.aimedAt === 'Narrow')).toBe(true);
       expect(result.failed).toEqual([]);
@@ -331,13 +442,23 @@ describe('runGenerate samples criminals from the union of all calibrated labels'
         counts.push(puzzle.people.filter((p) => p.criminal).length);
       }
 
-      // Every count inside the union, and at least one below Narrow's own floor —
-      // only reachable if generatePuzzle sampled from {4,16} rather than {11,16}.
-      // Five draws from {4,16} all landing at 11 or above runs at (6/13)^5, about
-      // one in 450.
-      for (const c of counts) expect(c).toBeGreaterThanOrEqual(4);
-      for (const c of counts) expect(c).toBeLessThanOrEqual(16);
-      expect(counts.some((c) => c < 11), `counts ${counts.join(',')}`).toBe(true);
+      // Every count inside the union, and at least one below Narrow's own floor
+      // — only reachable if generatePuzzle sampled from the union rather than
+      // Narrow's range. On this fixture's board that is a draw from {3,13} with
+      // 9 as the floor to undercut; five draws all landing at or above it runs
+      // at (5/11)^5, about one in 110.
+      const size = FIXTURE_BOARD.width * FIXTURE_BOARD.height;
+      const union = unionCriminals({ Narrow: narrowBand, Wide: wideBand });
+      const board = bandsFor(
+        { union: { ...narrowBand, criminals: union }, Narrow: narrowBand },
+        size,
+      );
+      for (const c of counts) expect(c).toBeGreaterThanOrEqual(board.union.criminals.min);
+      for (const c of counts) expect(c).toBeLessThanOrEqual(board.union.criminals.max);
+      expect(
+        counts.some((c) => c < board.Narrow.criminals.min),
+        `counts ${counts.join(',')}`,
+      ).toBe(true);
     },
     120_000,
   );
