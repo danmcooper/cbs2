@@ -492,6 +492,10 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
   return (
     <main className="game">
       <div className="board-wrap" style={fitBoard(puzzle.width)}>
+        {/* Inside the wrapper on purpose: `fitBoard` transforms it, and a
+            transform is a stacking context, so a dim outside it would paint
+            over the button row no matter what z-index the row asks for. */}
+        {paused && <div className="pause-overlay" />}
         <Grid
           puzzle={puzzle}
           state={state}
@@ -578,7 +582,6 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
           <a href="#/">← Archive</a>
         </p>
       </div>
-      {paused && <div className="pause-overlay" />}
       {state.rejectedIndex !== null && state.rejectedGuess !== null && (
         <EvidenceModal
           name={puzzle.people[state.rejectedIndex].name}

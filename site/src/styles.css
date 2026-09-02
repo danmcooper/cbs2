@@ -57,6 +57,9 @@ a {
   display: inline-block;
   text-align: center;
   margin-top: 4px;
+  /* Containing block for the pause dim, which covers this box rather than the
+     viewport so that the two scale together and stay in one stacking context. */
+  position: relative;
 }
 @media (min-width: 768px) {
   .board-wrap {
@@ -127,7 +130,11 @@ a {
   user-select: none;
 }
 .pause-overlay {
-  position: fixed;
+  /* Absolute, not fixed: a transformed ancestor becomes the containing block
+     for fixed descendants too, so `fixed` would size this to a scaled
+     `.board-wrap` on wide boards and to the viewport on narrow ones. Absolute
+     covers the wrapper either way. `.button-row` sits above it on z-index. */
+  position: absolute;
   inset: 0;
   /* Heavy dim: the board should be barely visible while paused. */
   background: rgba(26, 29, 36, 0.93);
