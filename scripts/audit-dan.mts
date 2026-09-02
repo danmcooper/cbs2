@@ -38,7 +38,7 @@ const PUZZLES = process.argv[2] ? path.resolve(process.argv[2]) : path.join(ROOT
 // Anchored and built from the variant table, so adding a variant brings it into
 // the audit rather than quietly leaving it unaudited. The alternation is safe
 // against one suffix extending another because the pattern is anchored at both
-// ends: `-dan` cannot match `-dan-long.json` and still reach `\.json$`.
+// ends: `-dan` could not match a `-dan-long.json` and still reach `\.json$`.
 const SUFFIXES = Object.values(VARIANTS).map((v) => v.suffix);
 const DAN_FILE = new RegExp(`^\\d{4}-\\d{2}-\\d{2}(${SUFFIXES.join('|')})\\.json$`);
 const REAL_FILE = /^\d{4}-\d{2}-\d{2}\.json$/;

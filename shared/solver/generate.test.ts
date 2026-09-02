@@ -20,7 +20,7 @@ import {
   professionShapesFor,
   shuffled,
 } from './generate';
-import { faceOf } from './vocab';
+import { EXTRA_PROFESSIONS, PROFESSIONS, faceOf, professionsFor } from './vocab';
 
 // Wide bands: this test proves the machinery works, not that it hits a target.
 const band: LabelBand = {
@@ -136,6 +136,47 @@ describe('castOf', () => {
       }
     }
   });
+
+  // The extra professions exist for the boards that outgrow the base sixteen,
+  // and only for those: a board the size of the archive's own, or smaller, has
+  // to deal exactly the cast it always did.
+  it('keeps the extra professions off boards no bigger than the archive\'s', () => {
+    const extras = new Set(EXTRA_PROFESSIONS.map((p) => p.key));
+    for (const size of [16, 20]) {
+      const shapes = professionShapesFor(mix.professionShapes, size);
+      for (let seed = 1; seed <= 40; seed++) {
+        const cast = castOf(makeRng(seed), shapes, size);
+        for (const key of cast.professions) {
+          expect(extras.has(key), `${size} cards, seed ${seed}, dealt ${key}`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('deals the extra professions on a board bigger than the archive\'s', () => {
+    const extras = new Set(EXTRA_PROFESSIONS.map((p) => p.key));
+    const shapes = professionShapesFor(mix.professionShapes, 30);
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const key of castOf(makeRng(seed), shapes, 30).professions) {
+        if (extras.has(key)) seen.add(key);
+      }
+    }
+    // All of them, not just whichever one the shuffle happens to favour.
+    expect(seen.size).toBe(EXTRA_PROFESSIONS.length);
+  });
+
+  it('never deals a profession that has no face', () => {
+    // `faceOf` falls back to a shrug rather than throwing, so a profession the
+    // face map has never heard of would ship as 😬 on every card.
+    const known = new Set([...PROFESSIONS, ...EXTRA_PROFESSIONS].map((p) => p.key));
+    for (const size of [16, 20, 30]) {
+      const shapes = professionShapesFor(mix.professionShapes, size);
+      const cast = castOf(makeRng(size), shapes, size);
+      for (const key of cast.professions) expect(known.has(key), key).toBe(true);
+      for (const face of cast.faces) expect(face).not.toBe('😬');
+    }
+  });
 });
 
 describe('professionShapesFor', () => {
@@ -149,7 +190,8 @@ describe('professionShapesFor', () => {
     expect(got.length).toBeGreaterThan(10);
     for (const s of got) {
       expect(s.reduce((a, b) => a + b, 0), s.join(',')).toBe(30);
-      expect(s.length).toBeLessThanOrEqual(16); // no more professions than exist
+      // No more professions than a board this size is allowed to draw on.
+      expect(s.length).toBeLessThanOrEqual(professionsFor(30).length);
       expect(Math.min(...s)).toBeGreaterThan(0);
     }
   });
@@ -195,6 +237,29 @@ describe('professionShapesFor', () => {
     }
     // Shrinking must not tidy the cast into a few big groups.
     expect(Math.max(...got.flat())).toBeLessThanOrEqual(Math.max(...mix.professionShapes.flat()));
+  });
+
+  it('does not shrink a cast down to one profession per card', () => {
+    // The smallest board a Dan puzzle can draw is 3x3, which is barely half the
+    // twenty cards every archive shape covers. Shaving the largest group over
+    // and over gets there, but it arrives at nine groups of one — and a
+    // profession group of one is just a card with a longer name, so every
+    // `#PROFS:` clue on that board would say what a clue naming the card says.
+    const archive = mix.professionShapes.flat();
+    const singletons = (xs: number[]) => xs.filter((n) => n === 1).length / xs.length;
+    for (const size of [9, 12, 15, 16, 18]) {
+      const got = professionShapesFor(mix.professionShapes, size);
+      for (const s of got) {
+        expect(s.reduce((a, b) => a + b, 0), s.join(',')).toBe(size);
+        expect(s.some((n) => n > 1), `${size} cards: ${s.join(',')} is all singletons`).toBe(true);
+      }
+      // Nine cards cannot be all pairs, so allow one odd group out per shape;
+      // that is the only slack, and the archive's own rate has to cover the rest.
+      const slack = got.length / got.flat().length;
+      expect(singletons(got.flat()), `${size} cards`).toBeLessThanOrEqual(
+        singletons(archive) + slack,
+      );
+    }
   });
 });
 
@@ -424,9 +489,9 @@ describe('generatePuzzle', () => {
     expect(puzzle.variant).toBe('dan');
     const { puzzle: p } = generatePuzzle({
       date: '2026-01-01', difficulty: 'Medium', band, seed: 3, mix, ...BOARD,
-      variant: 'dan-long',
+      variant: 'dan',
     });
-    expect(p.variant).toBe('dan-long');
+    expect(p.variant).toBe('dan');
   });
 
   it('round-trips every generated clue exactly', () => {

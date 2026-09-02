@@ -119,14 +119,16 @@ describe('validatePuzzle variant', () => {
 describe('VARIANTS', () => {
   it('gives every generated variant a distinct suffix and label', () => {
     const specs = Object.values(VARIANTS);
-    expect(specs.length).toBeGreaterThanOrEqual(2);
+    expect(specs.length).toBeGreaterThanOrEqual(1);
     expect(new Set(specs.map((s) => s.suffix)).size).toBe(specs.length);
     expect(new Set(specs.map((s) => s.label)).size).toBe(specs.length);
   });
 
   // Filenames are `${date}${suffix}.json` and the manifest tells the variants
   // apart by matching the suffix, so a suffix that is a prefix of another would
-  // make `-dan` swallow `-dan-long` depending on which pattern ran first.
+  // let one swallow the other depending on which pattern ran first — as `-dan`
+  // and the since-retired `-dan-long` could. Deriving the suffix from the
+  // variant name keeps that hazard visible in one place as variants are added.
   it('names each variant so no suffix can be read as another', () => {
     for (const [variant, spec] of Object.entries(VARIANTS)) {
       expect(spec.suffix).toBe(`-${variant}`);

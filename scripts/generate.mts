@@ -5,14 +5,17 @@ import { VARIANTS, type Variant, validatePuzzle } from '../shared/puzzle.ts';
 import type { Band, Bands } from '../shared/solver/difficulty.ts';
 import { bandsFor, classify, loadBands } from '../shared/solver/difficulty.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
-import { GenerationError, generatePuzzle } from '../shared/solver/generate.ts';
+import { GenerationError, generatePuzzle, makeRng } from '../shared/solver/generate.ts';
 import { regenerateManifest } from './manifest.mts';
 
 /** One generated sibling to build for each date. */
 export interface VariantSpec {
   variant: Variant;
-  /** The board to fill; `'inherit'` takes the real puzzle's own. */
-  board: { width: number; height: number } | 'inherit';
+  /**
+   * The board to fill. `'inherit'` takes the real puzzle's own; `'random'`
+   * draws one for the date, which is what a Dan puzzle does.
+   */
+  board: { width: number; height: number } | 'inherit' | 'random';
   /**
    * Appended to the date to make the rng seed, so two variants that happen to
    * share a board still get different puzzles. Empty for `dan`: its 56 files
@@ -20,18 +23,56 @@ export interface VariantSpec {
    * and salting the key now would regenerate every one of them differently.
    */
   seedSalt: string;
+  /**
+   * Reseeds the puzzle without touching the board.
+   *
+   * A date's seed decides both what board it draws and which puzzle gets built
+   * on it, but only the board is meant to be a property of the date. This
+   * reseeds the puzzle and leaves the board alone.
+   *
+   * Added when identical board sizes were coming in three orders of magnitude
+   * apart and a reseed was the only lever available. That turned out to be the
+   * solver rather than the seed — see the note on refutation in `sat.ts` — and
+   * with clause learning in place no date has needed it. It stays as an escape
+   * hatch, unused.
+   *
+   * Deterministic like everything else here: the same salt rebuilds the same
+   * puzzle. It is not recorded in the file, though, so a salted date is only
+   * reproducible if the salt is known. Empty unless a backfill is retrying.
+   */
+  contentSalt?: string;
+}
+
+/** The smallest and largest side a drawn board may have. */
+export const BOARD_MIN = 3;
+export const BOARD_MAX = 7;
+
+/**
+ * The board for one date: two independent draws from `BOARD_MIN..BOARD_MAX`,
+ * the smaller taken as the width. Sorting them rather than drawing width and
+ * height separately is what keeps every board portrait or square, and it
+ * biases the draw toward the middle sizes — a 3x3 or a 7x7 needs both draws to
+ * agree, where a 3x7 comes up either way round.
+ *
+ * Seeded, so a date's board is a property of the date: regenerating it, with
+ * `--force` or on another machine, rebuilds the same shape.
+ */
+export function randomBoard(seed: number): { width: number; height: number } {
+  const rng = makeRng(seed);
+  const span = BOARD_MAX - BOARD_MIN + 1;
+  const a = BOARD_MIN + Math.floor(rng() * span);
+  const b = BOARD_MIN + Math.floor(rng() * span);
+  return { width: Math.min(a, b), height: Math.max(a, b) };
 }
 
 /**
- * What a backfill builds: the original sibling on the real puzzle's own board,
- * and a Dan Long one on a 5x6 board the source site never uses. Thirty cards
- * rather than twenty is well past what enumeration could solve — it is only
- * reachable at all because the backbone comes from a SAT engine — so a Dan Long
- * puzzle takes seconds where a Dan one takes tenths.
+ * What a backfill builds: one Dan puzzle per date, on a board drawn for that
+ * date. Cards are what generation costs — solving is exponential in them — so
+ * the spread of board sizes is also a wide spread of build times, from a 3x3
+ * in a tenth of a second to a 7x7 that is minutes of work.
  */
 export const DEFAULT_VARIANTS: readonly VariantSpec[] = [
-  { variant: 'dan', board: 'inherit', seedSalt: '' },
-  { variant: 'dan-long', board: { width: 5, height: 6 }, seedSalt: '-dan-long' },
+  { variant: 'dan', board: 'random', seedSalt: '' },
 ];
 
 export interface GenerateRunOptions {
@@ -159,7 +200,14 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
       real ??= validatePuzzle(
         JSON.parse(await readFile(path.join(puzzlesDir, `${date}.json`), 'utf8')),
       );
-      const board = spec.board === 'inherit' ? { width: real.width, height: real.height } : spec.board;
+      // The board draw gets its own seed key so that it is independent of the
+      // puzzle's: changing one variant's board must not reshuffle its contents.
+      const board =
+        spec.board === 'inherit'
+          ? { width: real.width, height: real.height }
+          : spec.board === 'random'
+            ? randomBoard(seedForDate(`${date}${spec.seedSalt}-board`))
+            : spec.board;
       inScope.push({ date, spec, aimedAt: real.difficulty, ...board });
     }
   }
@@ -185,14 +233,15 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
         date,
         difficulty: aimedAt,
         band: { ...band, criminals: criminalsUnion },
-        seed: seedForDate(date + spec.seedSalt),
+        seed: seedForDate(date + spec.seedSalt + (spec.contentSalt ?? '')),
         mix,
         width,
         height,
         variant,
         // Bands are calibrated on the archive's 4x5 board, so a variant that
         // asks for a different one has to be classified against bands refitted
-        // to it. This is the identity for a Dan puzzle and not for a Dan Long.
+        // to it. A Dan puzzle draws its board, so this is the identity only on
+        // the dates whose draw happens to land on twenty cards.
         labelOf: (metrics) => classify(bandsFor(bands, width * height), metrics),
       });
       await writeFile(
@@ -225,10 +274,15 @@ if (isMain) {
   const args = process.argv.slice(2);
   const force = args.includes('--force');
   const dates = args.filter((a) => /^\d{4}-\d{2}-\d{2}$/.test(a));
-  // `--variant dan-long` narrows a backfill to one sibling. A Dan Long puzzle
-  // costs seconds where a Dan one costs tenths, so being able to run the two
-  // separately is the difference between a minute and an afternoon.
+  // Naming a variant narrows a backfill to that one sibling. `dan` is the only
+  // one today, but generation cost is exponential in the card count, so being
+  // able to run siblings separately is what keeps a backfill from being
+  // all-or-nothing once there is more than one.
   const named = args.filter((a) => a in VARIANTS) as Variant[];
+  // `--salt=x` reseeds the dates in this run without moving their boards. For
+  // when a date's own seed draws a puzzle that will not build — see
+  // `contentSalt`.
+  const salt = args.find((a) => a.startsWith('--salt='))?.slice('--salt='.length) ?? '';
   const unknown = args.filter(
     (a) => !a.startsWith('--') && !/^\d{4}-\d{2}-\d{2}$/.test(a) && !(a in VARIANTS),
   );
@@ -242,9 +296,10 @@ if (isMain) {
   runGenerate({
     force,
     dates: dates.length ? dates : undefined,
-    variants: named.length
+    variants: (named.length
       ? DEFAULT_VARIANTS.filter((v) => named.includes(v.variant))
-      : undefined,
+      : DEFAULT_VARIANTS
+    ).map((v) => ({ ...v, contentSalt: salt })),
     onProgress: (e) => {
       if (e.outcome === 'skipped') return;
       if (e.outcome === 'failed') {

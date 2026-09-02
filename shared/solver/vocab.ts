@@ -32,6 +32,12 @@ export const NAMES: VocabPerson[] = [
   { name: 'Maud', gender: 'female' }, { name: 'Novak', gender: 'male' },
   { name: 'Orla', gender: 'female' }, { name: 'Pavel', gender: 'male' },
   { name: 'Rosa', gender: 'female' }, { name: 'Stefan', gender: 'male' },
+  // A third pass through the alphabet, to cover the largest board a generated
+  // puzzle can draw: 7x7 is 49 cards, and every card needs its own name.
+  { name: 'Tessa', gender: 'female' }, { name: 'Ulrich', gender: 'male' },
+  { name: 'Vera', gender: 'female' }, { name: 'Wim', gender: 'male' },
+  { name: 'Xenia', gender: 'female' }, { name: 'Yusuf', gender: 'male' },
+  { name: 'Zola', gender: 'female' }, { name: 'Anton', gender: 'male' },
 ];
 
 /** Keys and emoji taken from the profession face map the site already ships
@@ -55,8 +61,41 @@ export const PROFESSIONS: VocabProfession[] = [
   { key: 'student', male: '👨‍🎓', female: '👩‍🎓' },
 ];
 
+/**
+ * Held back for the boards that actually need them. Sixteen professions covers
+ * every board size on its own, but from eighteen cards up the widest cast uses
+ * all of them, so a 7x7 runs three-to-a-profession and leans on the same
+ * profession clue over and over. Adding these to every board would change the
+ * feel of the archive-sized ones for no reason, so `professionsFor` only deals
+ * them in above the source site's own twenty cards.
+ *
+ * All of them are in `site/src/faces.ts` too, so a file that predates them
+ * still renders.
+ */
+export const EXTRA_PROFESSIONS: VocabProfession[] = [
+  { key: 'scientist', male: '👨‍🔬', female: '👩‍🔬' },
+  { key: 'firefighter', male: '👨‍🚒', female: '👩‍🚒' },
+  { key: 'astronaut', male: '👨‍🚀', female: '👩‍🚀' },
+  { key: 'ninja', male: '🥷', female: '🥷' },
+  { key: 'superhero', male: '🦸‍♂️', female: '🦸' },
+];
+
+/** Every profession that can appear in a file, for lookups like `faceOf`. */
+export const ALL_PROFESSIONS: VocabProfession[] = [...PROFESSIONS, ...EXTRA_PROFESSIONS];
+
+/**
+ * The board the source site ships is 4x5. At or below that, the cast is drawn
+ * from exactly the professions it always was; above it, the wider set.
+ */
+export const BASE_PROFESSION_LIMIT = 20;
+
+/** The professions a board of `size` cards may draw from. */
+export function professionsFor(size: number): VocabProfession[] {
+  return size > BASE_PROFESSION_LIMIT ? ALL_PROFESSIONS : PROFESSIONS;
+}
+
 export function faceOf(profession: string, gender: 'male' | 'female'): string {
-  const entry = PROFESSIONS.find((p) => p.key === profession);
+  const entry = ALL_PROFESSIONS.find((p) => p.key === profession);
   if (!entry) return '😬';
   return gender === 'female' ? entry.female : entry.male;
 }

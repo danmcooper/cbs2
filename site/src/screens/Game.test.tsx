@@ -201,17 +201,6 @@ describe('puzzle variant label', () => {
     expect(screen.getByRole('dialog').textContent).toContain('Jul 7th 2026 (Easy) · Dan');
   });
 
-  it('names a Dan Long puzzle by its own name, not its sibling\'s', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan-long' }), { status: 200 })),
-    );
-    const user = fakeTimersUser();
-    await renderGame(user);
-    expect(document.querySelector('.date-line span')?.textContent).toBe(
-      'Jul 7th 2026 (Easy) · Dan Long',
-    );
-  });
 });
 
 describe('corner tags', () => {
@@ -304,29 +293,6 @@ describe('results popup', () => {
     );
   });
 
-  // Every generated variant is a different puzzle at a different address, so
-  // the share link has to carry the variant's own suffix.
-  it('links a Dan Long puzzle to its own copy, not its sibling\'s', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan-long' }), { status: 200 })),
-    );
-    const user = fakeTimersUser();
-    render(<Game slug="2026-07-07-dan-long" />);
-    await screen.findAllByRole('group');
-    await user.click(screen.getByRole('button', { name: 'Start' }));
-    for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
-      await user.click(screen.getByText(name));
-      await user.click(screen.getByRole('button', { name: verdict }));
-    }
-    finishDelay();
-
-    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
-    await user.click(screen.getByRole('button', { name: /copy text/i }));
-    expect(String(writeText.mock.calls[0]?.[0])).toContain(
-      'http://localhost:3000/#/play/2026-07-07-dan-long',
-    );
-  });
 });
 
 describe('revisiting a completed puzzle', () => {
@@ -369,17 +335,6 @@ describe('start popup', () => {
     expect(dialog.textContent).not.toContain('Clues by Sam');
     expect(dialog.textContent).toContain('Jul 7th 2026');
     expect(dialog.textContent).toContain('Difficulty: Easy');
-  });
-
-  it('names a Dan Long puzzle as one', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan-long' }), { status: 200 })),
-    );
-    render(<Game slug="2026-07-07-dan-long" />);
-    const dialog = await screen.findByRole('dialog');
-    expect(dialog.textContent).toContain('A Dan Long puzzle');
-    expect(dialog.textContent).not.toContain('Clues by Sam');
   });
 
   it('does not show when localStorage already has guesses', async () => {
@@ -551,6 +506,25 @@ describe('control bar', () => {
     await user.click(unpause);
     expect(document.querySelector('.pause-overlay')).toBeNull();
     expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy();
+  });
+
+  // The dim outranks the board on z-index but is outranked by the button row,
+  // which is the only thing that makes unpausing possible. That comparison only
+  // happens if the two share a stacking context — and `.board-wrap` becomes one
+  // the moment it is transformed, which `fitBoard` does for every board wider
+  // than four columns and the stylesheet does on narrow phones. With the dim
+  // outside it, the whole subtree paints underneath, pause button included, and
+  // the puzzle can never be resumed. jsdom does no layout, so nesting is the
+  // part of that we can actually hold onto.
+  it('keeps the pause dim in the same stacking context as the buttons that outrank it', async () => {
+    const user = userEvent.setup();
+    await renderGame(user);
+    await user.click(screen.getByRole('button', { name: 'Pause' }));
+    const wrap = document.querySelector('.board-wrap');
+    const overlay = document.querySelector('.pause-overlay');
+    const buttons = document.querySelector('.button-row');
+    expect(wrap?.contains(overlay as Node)).toBe(true);
+    expect(wrap?.contains(buttons as Node)).toBe(true);
   });
 
   it('Clear Tags sits left of Reset and wipes tags and marks; disabled when there are none', async () => {

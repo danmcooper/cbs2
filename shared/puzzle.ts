@@ -28,10 +28,12 @@ export interface HintStep {
  * variant names itself on screen.
  */
 export const VARIANTS = {
-  /** The original sibling: the real puzzle's own board, generated. */
+  /**
+   * The only generated sibling. Its board is drawn per date rather than
+   * inherited from the real puzzle — see `randomBoard` in `scripts/generate.mts`
+   * — so a Dan puzzle is anywhere from 3x3 to 7x7.
+   */
   dan: { suffix: '-dan', label: 'Dan' },
-  /** Thirty cards instead of twenty — a board the source site never uses. */
-  'dan-long': { suffix: '-dan-long', label: 'Dan Long' },
 } as const;
 
 export type Variant = keyof typeof VARIANTS;

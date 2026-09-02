@@ -23,7 +23,7 @@ import {
   minimalPaths,
   solveChain,
 } from './solve';
-import { FLAVOUR, NAMES, PROFESSIONS, TITLES, type VocabPerson, faceOf } from './vocab';
+import { FLAVOUR, NAMES, TITLES, type VocabPerson, faceOf, professionsFor } from './vocab';
 
 /** Every archived puzzle is 4x5, and so is every puzzle we ship. */
 const DEFAULT_WIDTH = 4;
@@ -323,14 +323,30 @@ const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
  * count survive: a shape that named nine professions still names about nine,
  * which is what makes a `#PROFS:` unit worth reading. Taking whole groups off
  * the end instead would leave a tidier, flatter cast than the archive has.
+ *
+ * That holds only while there is fat to trim. Shaving alone took every group
+ * down to one on a deep shrink — a 3x3 board came out nine professions over
+ * nine cards, where `#PROFS:cook` names exactly one card and the unit says
+ * nothing a clue naming that card would not. So a group is never shaved below a
+ * pair: past that point whole groups come off the small end instead, and only
+ * when even that would overshoot does a single pair break down into one.
  */
 function shrunkShape(base: readonly number[], size: number): number[] {
   const out = [...base].sort((a, b) => b - a);
   let total = sum(out);
   while (total > size) {
-    if (out[0] === 1) out.pop();
-    else out[0]--;
-    total--;
+    const smallest = out[out.length - 1];
+    if (out[0] > 2) {
+      out[0]--;
+      total--;
+    } else if (out.length > 1 && total - smallest >= size) {
+      out.pop();
+      total -= smallest;
+    } else {
+      out[0]--;
+      total--;
+      if (out[0] === 0) out.shift();
+    }
     out.sort((a, b) => b - a);
   }
   return out;
@@ -353,12 +369,13 @@ function grownShape(
   size: number,
   pool: readonly number[],
   maxGroup: number,
+  professionCount: number,
 ): number[] {
   const out = [...base];
   let total = sum(out);
   while (total < size) {
     const draw = pool[randInt(rng, 0, pool.length - 1)];
-    if (out.length < PROFESSIONS.length && draw <= size - total) {
+    if (out.length < professionCount && draw <= size - total) {
       out.push(draw);
       total += draw;
       continue;
@@ -368,9 +385,9 @@ function grownShape(
       if (out[i] < maxGroup && (at === -1 || out[i] < out[at])) at = i;
     }
     if (at === -1) {
-      if (out.length >= PROFESSIONS.length) {
+      if (out.length >= professionCount) {
         throw new GenerationError(
-          `cannot cover ${size} cards with ${PROFESSIONS.length} groups of at most ${maxGroup}`,
+          `cannot cover ${size} cards with ${professionCount} groups of at most ${maxGroup}`,
         );
       }
       out.push(1);
@@ -403,7 +420,8 @@ export function professionShapesFor(
   professionShapes: readonly number[][],
   size: number,
 ): number[][] {
-  const fits = professionShapes.filter((s) => s.length <= PROFESSIONS.length && sum(s) === size);
+  const professionCount = professionsFor(size).length;
+  const fits = professionShapes.filter((s) => s.length <= professionCount && sum(s) === size);
   if (fits.length > 0) return fits.map((s) => [...s]);
 
   const usable = professionShapes.filter((s) => s.length > 0);
@@ -412,7 +430,7 @@ export function professionShapesFor(
   const maxGroup = Math.max(...pool);
   const rng = makeRng(size * 1009 + usable.length);
   return usable.map((s) =>
-    sum(s) > size ? shrunkShape(s, size) : grownShape(rng, s, size, pool, maxGroup),
+    sum(s) > size ? shrunkShape(s, size) : grownShape(rng, s, size, pool, maxGroup, professionCount),
   );
 }
 
@@ -457,16 +475,20 @@ export function castOf(
   // professions as we have — so say so plainly rather than dealing a cast with
   // holes in it when the shapes and the board disagree. For a board the archive
   // has no shape for, `professionShapesFor` builds some first.
+  // Which professions are on the table depends on the board: the extras only
+  // come out for boards bigger than the archive's own, where the base sixteen
+  // would otherwise be stretched three-to-a-profession. See `professionsFor`.
+  const vocabulary = professionsFor(size);
   const fits = professionShapes.filter(
-    (s) => s.length <= PROFESSIONS.length && sum(s) === size,
+    (s) => s.length <= vocabulary.length && sum(s) === size,
   );
   if (fits.length === 0) {
     throw new GenerationError(
-      `no archived profession shape covers ${size} cards with ${PROFESSIONS.length} professions`,
+      `no archived profession shape covers ${size} cards with ${vocabulary.length} professions`,
     );
   }
   const shape = fits[randInt(rng, 0, fits.length - 1)];
-  const chosen = shuffled(rng, PROFESSIONS).slice(0, shape.length);
+  const chosen = shuffled(rng, vocabulary).slice(0, shape.length);
   const slots: string[] = [];
   shape.forEach((size, i) => {
     for (let j = 0; j < size; j++) slots.push(chosen[i].key);

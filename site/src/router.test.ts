@@ -21,12 +21,9 @@ describe('parseHash', () => {
     expect(parseHash('#/play/2026-07-07-sam')).toEqual({ screen: 'archive' });
   });
 
-  // The suffixes nest — `-dan` is a prefix of `-dan-long` — so a pattern that
-  // takes the shorter one first has to be able to give it back.
-  it('routes a suffix that extends another', () => {
-    expect(parseHash('#/play/2026-07-07-dan-long')).toEqual({
-      screen: 'play',
-      slug: '2026-07-07-dan-long',
-    });
-  });
+  // There was a case here for a suffix that extends another, back when `-dan`
+  // and `-dan-long` both existed and the shorter one could swallow the longer.
+  // One variant cannot nest with itself, so it went with `dan-long`. The hazard
+  // is only dormant, not gone — `router.ts` still sorts the alternation longest
+  // first — and a second variant should bring the case back with it.
 });

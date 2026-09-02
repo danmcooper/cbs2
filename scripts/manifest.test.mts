@@ -72,14 +72,35 @@ describe('regenerateManifest', () => {
     ]);
   });
 
-  // `-dan-long` ends in `-dan`'s suffix... backwards, but a sloppy `endsWith`
-  // or an unanchored pattern still lets the two trade places.
-  it('does not mistake one generated variant for another', async () => {
+  it('refuses a file whose name and contents disagree about the variant', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'cbs-manifest-'));
+    // The site addresses a puzzle by its filename and reads its variant out of
+    // the file, so the two disagreeing means one of them lies to a player.
     await writeFile(
-      path.join(dir, '2026-07-01-dan-long.json'),
-      JSON.stringify({ ...puzzle('2026-07-01', 'aaaaaaaaaaaa'), variant: 'dan' }),
+      path.join(dir, '2026-07-01-dan.json'),
+      JSON.stringify(puzzle('2026-07-01', 'aaaaaaaaaaaa')),
     );
     await expect(regenerateManifest(dir)).rejects.toThrow(/variant/);
+  });
+
+  // `variantOf` matches suffixes with `endsWith`, so what stops it from reading
+  // any old filename as a variant is the date check on what remains. (Its other
+  // guard, trying the longest suffix first, is dormant while `dan` is the only
+  // variant: it matters again the moment one suffix extends another, the way
+  // `-dan-long` once extended `-dan`.)
+  it('ignores a file ending in a variant suffix that is not dated', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'cbs-manifest-'));
+    await writeFile(
+      path.join(dir, 'draft-dan.json'),
+      JSON.stringify({ ...puzzle('2026-07-01', 'aaaaaaaaaaaa'), variant: 'dan' }),
+    );
+    await writeFile(
+      path.join(dir, '2026-07-01.json'),
+      JSON.stringify(puzzle('2026-07-01', 'bbbbbbbbbbbb')),
+    );
+
+    const entries = await regenerateManifest(dir);
+
+    expect(entries.map((e) => e.slug)).toEqual(['2026-07-01']);
   });
 });

@@ -9,6 +9,7 @@ import { makeGrid } from '../shared/solver/grid.ts';
 import { isUniquelySolvable, parseClues, solveChain } from '../shared/solver/solve.ts';
 import {
   DEFAULT_VARIANTS,
+  randomBoard,
   type GenerateProgress,
   type GenerateRunResult,
   type VariantSpec,
@@ -18,8 +19,8 @@ import {
 } from './generate.mts';
 
 // Every test here pins the variants it generates rather than taking the shipped
-// list, because the shipped list includes a 5x6 board and solving is exponential
-// in the number of cards — one Dan Long puzzle costs more than this whole file.
+// list, because the shipped list draws its board and solving is exponential in
+// the number of cards — a date that draws 7x7 costs more than this whole file.
 // `DEFAULT_VARIANTS` is checked as data instead, in its own describe below.
 const DAN_ONLY: VariantSpec[] = [{ variant: 'dan', board: 'inherit', seedSalt: '' }];
 
@@ -149,83 +150,102 @@ describe('runGenerate', () => {
   );
 
   it(
-    'writes one sibling per variant, each on the board its variant asks for',
+    'writes the sibling on the board its variant asks for, not the real one',
     async () => {
       const { dir, bandsPath } = await fixture();
+      // An explicit board, small enough to solve in the time an ordinary test
+      // may take, and deliberately not the real puzzle's own.
       const variants: VariantSpec[] = [
-        ...DAN_ONLY,
-        // Stands in for the shipped 5x6: a board the real puzzle does not have,
-        // picked small enough to solve in the time an ordinary test may take.
-        { variant: 'dan-long', board: { width: 3, height: 5 }, seedSalt: '-dan-long' },
+        { variant: 'dan', board: { width: 3, height: 5 }, seedSalt: '' },
       ];
 
       const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants });
 
       expect(result.failed).toEqual([]);
-      expect(result.written.map((w) => w.variant)).toEqual(['dan', 'dan-long']);
+      expect(result.written.map((w) => w.variant)).toEqual(['dan']);
 
       const dan = validatePuzzle(
         JSON.parse(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8')),
       );
-      const long = validatePuzzle(
-        JSON.parse(await readFile(path.join(dir, '2026-07-01-dan-long.json'), 'utf8')),
-      );
       expect(dan.variant).toBe('dan');
-      expect(long.variant).toBe('dan-long');
-      expect([dan.width, dan.height]).toEqual([FIXTURE_BOARD.width, FIXTURE_BOARD.height]);
-      expect([long.width, long.height]).toEqual([3, 5]);
-      expect(long.people).toHaveLength(15);
+      expect([dan.width, dan.height]).toEqual([3, 5]);
+      expect(dan.people).toHaveLength(15);
+      expect([dan.width, dan.height]).not.toEqual([FIXTURE_BOARD.width, FIXTURE_BOARD.height]);
 
       const index = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'));
       expect(index.map((e: { slug: string }) => e.slug)).toEqual([
         '2026-07-01',
         '2026-07-01-dan',
-        '2026-07-01-dan-long',
       ]);
     },
     60_000,
   );
 
   it(
-    'gives two variants sharing a board different puzzles',
+    'draws the board from the date when the variant asks for a random one',
     async () => {
-      // Seeds come from the date, so without a per-variant salt two variants on
-      // the same board would deal the same cards and write the same puzzle
-      // twice under different names.
       const { dir, bandsPath } = await fixture();
-      await runGenerate({
-        puzzlesDir: dir,
-        bandsPath,
-        variants: [
-          ...DAN_ONLY,
-          { variant: 'dan-long', board: { ...FIXTURE_BOARD }, seedSalt: '-dan-long' },
-        ],
-      });
+      const variants: VariantSpec[] = [{ variant: 'dan', board: 'random', seedSalt: '' }];
 
-      const dan = await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8');
-      const long = await readFile(path.join(dir, '2026-07-01-dan-long.json'), 'utf8');
-      const people = (raw: string) =>
-        JSON.parse(raw).people.map((p: { name: string; criminal: boolean }) => p);
-      expect(people(long)).not.toEqual(people(dan));
+      const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants });
+
+      expect(result.failed).toEqual([]);
+      const dan = validatePuzzle(
+        JSON.parse(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8')),
+      );
+      // Whatever the draw gave, it is the draw for this date and it is a legal
+      // board — the shape itself is pinned by `randomBoard`'s own tests.
+      expect([dan.width, dan.height]).toEqual([
+        randomBoard(seedForDate('2026-07-01-board')).width,
+        randomBoard(seedForDate('2026-07-01-board')).height,
+      ]);
+      expect(dan.people).toHaveLength(dan.width * dan.height);
     },
-    60_000,
+    120_000,
   );
 });
 
 describe('DEFAULT_VARIANTS', () => {
-  it('generates a Dan puzzle on the real board and a Dan Long one on 5x6', () => {
-    expect(DEFAULT_VARIANTS.map((v) => v.variant)).toEqual(['dan', 'dan-long']);
-    expect(DEFAULT_VARIANTS[0].board).toBe('inherit');
-    expect(DEFAULT_VARIANTS[1].board).toEqual({ width: 5, height: 6 });
+  it('builds one Dan puzzle per date, on a board drawn for that date', () => {
+    expect(DEFAULT_VARIANTS.map((v) => v.variant)).toEqual(['dan']);
+    expect(DEFAULT_VARIANTS[0].board).toBe('random');
   });
 
-  it('keeps the Dan seed key bare and every other variant distinct', () => {
-    // The 56 files in `puzzles/*-dan.json` were generated from the bare date,
-    // before there was more than one variant; salting that key now would
-    // silently regenerate every one of them into a different puzzle.
+  it('keeps the Dan seed key bare and every variant distinct', () => {
     expect(DEFAULT_VARIANTS[0].seedSalt).toBe('');
     const salts = DEFAULT_VARIANTS.map((v) => v.seedSalt);
     expect(new Set(salts).size).toBe(salts.length);
+  });
+});
+
+describe('randomBoard', () => {
+  it('stays within 3..7 on both sides, and is never taller than it is wide', () => {
+    // Both sides are drawn from the same range and then sorted, so the board is
+    // always portrait or square — never wider than it is tall.
+    for (let i = 0; i < 500; i++) {
+      const { width, height } = randomBoard(i);
+      expect(width).toBeGreaterThanOrEqual(3);
+      expect(height).toBeLessThanOrEqual(7);
+      expect(width).toBeLessThanOrEqual(height);
+    }
+  });
+
+  it('reaches every size the range allows, corners included', () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 5_000; i++) {
+      const { width, height } = randomBoard(i);
+      seen.add(`${width}x${height}`);
+    }
+    // 3..7 choose 2 with repetition: fifteen distinct boards.
+    expect(seen.size).toBe(15);
+    expect(seen.has('3x3')).toBe(true);
+    expect(seen.has('7x7')).toBe(true);
+  });
+
+  it('is a function of the seed alone, so a regenerated date keeps its board', () => {
+    expect(randomBoard(seedForDate('2026-07-01'))).toEqual(
+      randomBoard(seedForDate('2026-07-01')),
+    );
   });
 });
 

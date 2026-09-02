@@ -7,8 +7,8 @@ import Archive from './Archive';
 const manifest = [
   { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
   { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'dddddddddddd', difficulty: 'Hard', title: 'Second (Dan)' },
-  { date: '2026-07-03', slug: '2026-07-03-dan-long', variant: 'dan-long', id: 'eeeeeeeeeeee', difficulty: 'Tricky', title: 'Second (Dan Long)' },
   { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
+  { date: '2026-07-01', slug: '2026-07-01-dan', variant: 'dan', id: 'eeeeeeeeeeee', difficulty: 'Tricky', title: 'First (Dan)' },
 ];
 
 beforeEach(() => {
@@ -124,6 +124,9 @@ describe('Archive', () => {
   });
 
   it('shows real puzzles by default and swaps to Dan puzzles from the source dropdown', async () => {
+    // A real puzzle's slug is a prefix of its Dan sibling's, so a filter that
+    // matched slugs rather than the entry's own variant would leak one into the
+    // other's list in both directions.
     const user = userEvent.setup();
     render(<Archive />);
     await screen.findByText('July 2026');
@@ -133,7 +136,10 @@ describe('Archive', () => {
     ]);
 
     await user.selectOptions(screen.getByLabelText(/source/i), 'dan');
-    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['#/play/2026-07-03-dan']);
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03-dan',
+      '#/play/2026-07-01-dan',
+    ]);
   });
 
   it('shows every variant interleaved by date when the source is Both', async () => {
@@ -144,8 +150,8 @@ describe('Archive', () => {
     expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
       '#/play/2026-07-03',
       '#/play/2026-07-03-dan',
-      '#/play/2026-07-03-dan-long',
       '#/play/2026-07-01',
+      '#/play/2026-07-01-dan',
     ]);
   });
 
@@ -156,6 +162,7 @@ describe('Archive', () => {
     await user.selectOptions(screen.getByLabelText(/source/i), 'dan');
     expect(within(screen.getByLabelText(/difficulty/i)).getAllByRole('option').map((o) => o.textContent)).toEqual([
       'All',
+      'Tricky',
       'Hard',
     ]);
     await user.selectOptions(screen.getByLabelText(/source/i), 'both');
@@ -171,25 +178,8 @@ describe('Archive', () => {
     render(<Archive />);
     await screen.findByText('July 2026');
     const options = within(screen.getByLabelText(/source/i)).getAllByRole('option');
-    expect(options.map((o) => o.textContent)).toEqual(['Real', 'Dan', 'Dan Long', 'Both']);
-    expect(options.map((o) => o.getAttribute('value'))).toEqual([
-      'real',
-      'dan',
-      'dan-long',
-      'both',
-    ]);
-  });
-
-  it('filters to one generated variant without picking up its siblings', async () => {
-    // `dan-long`'s slug ends in `dan`'s: a filter that matched on the slug
-    // rather than on the entry's own variant would show both here.
-    const user = userEvent.setup();
-    render(<Archive />);
-    await screen.findByText('July 2026');
-    await user.selectOptions(screen.getByLabelText(/source/i), 'dan-long');
-    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
-      '#/play/2026-07-03-dan-long',
-    ]);
+    expect(options.map((o) => o.textContent)).toEqual(['Real', 'Dan', 'Both']);
+    expect(options.map((o) => o.getAttribute('value'))).toEqual(['real', 'dan', 'both']);
   });
 
   it('names each generated variant in the list when the source is Both', async () => {
@@ -199,7 +189,7 @@ describe('Archive', () => {
     await user.selectOptions(screen.getByLabelText(/source/i), 'both');
     expect([...document.querySelectorAll('.arch-source')].map((e) => e.textContent)).toEqual([
       'Dan',
-      'Dan Long',
+      'Dan',
     ]);
   });
 
@@ -225,7 +215,9 @@ describe('Archive', () => {
     expect(screen.queryByText('Dan', { selector: '.arch-source' })).toBeFalsy();
     await user.selectOptions(screen.getByLabelText(/source/i), 'both');
     const tags = screen.getAllByText('Dan', { selector: '.arch-source' });
-    expect(tags.length).toBe(1);
-    expect(tags[0].closest('a')?.getAttribute('href')).toBe('#/play/2026-07-03-dan');
+    expect(tags.map((t) => t.closest('a')?.getAttribute('href'))).toEqual([
+      '#/play/2026-07-03-dan',
+      '#/play/2026-07-01-dan',
+    ]);
   });
 });
