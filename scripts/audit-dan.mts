@@ -18,7 +18,7 @@ import { namedCards } from '../shared/solver/candidates.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
 import { parseHint } from '../shared/solver/hint.ts';
 import type { Bands } from '../shared/solver/difficulty.ts';
-import { classify, loadBands, measure } from '../shared/solver/difficulty.ts';
+import { bandsFor, classify, loadBands, measure } from '../shared/solver/difficulty.ts';
 import type { Shape } from '../shared/solver/enumerate.ts';
 import { makeGrid, neighbors } from '../shared/solver/grid.ts';
 import { hintFeatures, makeBoard, unitMembers } from '../shared/solver/predicates.ts';
@@ -276,7 +276,9 @@ function audit(l: Loaded, banned: Set<string>, bands: Bands, shapes: Set<string>
       initialReveals: puzzle.initialReveals,
       paths: puzzle.people.map((p) => p.paths),
     });
-    const earned = classify(bands, metrics);
+    // Bands are calibrated on the archive's 4x5 board, so a puzzle on any other
+    // board has to be classified against bands refitted to it.
+    const earned = classify(bandsFor(bands, puzzle.width * puzzle.height), metrics);
     if (earned !== puzzle.difficulty) {
       bad.push(
         `labelled ${puzzle.difficulty} but its metrics classify as ${earned}: ` +

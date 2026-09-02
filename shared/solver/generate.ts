@@ -2,7 +2,14 @@ import { type Person, type Puzzle, validatePuzzle } from '../puzzle';
 import { candidateHints, namedCards } from './candidates';
 // Type-only: corpus.ts reads the filesystem, and this import is erased at build time.
 import type { ClueMix } from './corpus';
-import { ABSTRACT_PREDICATES, type LabelBand, type Metrics, gatesPass, measure } from './difficulty';
+import {
+  ABSTRACT_PREDICATES,
+  type LabelBand,
+  type Metrics,
+  bandsFor,
+  gatesPass,
+  measure,
+} from './difficulty';
 import type { Shape } from './enumerate';
 import { type Grid, edgeMembers, makeGrid } from './grid';
 import { type Hint, formatHint } from './hint';
@@ -587,9 +594,11 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
   const maxAttempts = input.maxAttempts ?? 25;
   const trialsPerStep = input.trialsPerStep ?? 80;
   const grid = makeGrid(input.width ?? DEFAULT_WIDTH, input.height ?? DEFAULT_HEIGHT);
-  // The mix is measured on 4x5 boards whatever board we are filling, so refit
-  // its profession shapes once, up front, rather than asking every caller to.
+  // The mix and the bands are both measured on the archive's 4x5 board whatever
+  // board we are filling, so refit them once, up front, rather than asking
+  // every caller to. Both are the identity at 4x5.
   const shapes = professionShapesFor(input.mix.professionShapes, grid.size);
+  const band = bandsFor({ b: input.band }, grid.size).b;
   const failures: string[] = [];
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -597,7 +606,7 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
     const cast = castOf(rng, shapes, grid.size);
     const shape: Shape = { grid, professions: cast.professions };
 
-    const criminals = randInt(rng, input.band.criminals.min, input.band.criminals.max);
+    const criminals = randInt(rng, band.criminals.min, band.criminals.max);
     const criminalSet = new Set(pickCriminals(rng, grid, criminals));
     const truth = Array.from({ length: grid.size }, (_, i) => criminalSet.has(i));
 
@@ -605,9 +614,9 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
     const pool = orderPool(rng, board, candidateHints(board), input.mix);
     const initialReveals = [randInt(rng, 0, grid.size - 1)];
 
-    const maxReveals = Math.max(2, Math.ceil(input.band.meanRevealsPerStep.max));
+    const maxReveals = Math.max(2, Math.ceil(band.meanRevealsPerStep.max));
     const targetAbstractShare =
-      (input.band.abstractShare.min + input.band.abstractShare.max) / 2;
+      (band.abstractShare.min + band.abstractShare.max) / 2;
     const built = buildChain(
       rng,
       shape,
@@ -677,7 +686,7 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
 
     validatePuzzle(puzzle);
 
-    if (!input.labelOf && !gatesPass(input.band, metrics)) {
+    if (!input.labelOf && !gatesPass(band, metrics)) {
       failures.push(
         `attempt ${attempt}: out of band (chain=${metrics.chainLength} ` +
           `clues=${metrics.clueCards} path=${metrics.meanPathSize.toFixed(2)})`,

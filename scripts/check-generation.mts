@@ -18,7 +18,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { validatePuzzle } from '../shared/puzzle.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
-import { classify, loadBands, measure } from '../shared/solver/difficulty.ts';
+import { bandsFor, classify, loadBands, measure } from '../shared/solver/difficulty.ts';
 import { generatePuzzle, professionShapesFor } from '../shared/solver/generate.ts';
 import { makeGrid } from '../shared/solver/grid.ts';
 import { parseHint } from '../shared/solver/hint.ts';
@@ -43,6 +43,9 @@ if (!band) {
 }
 
 const mix = archiveClueMix();
+// Bands are calibrated on the archive's 4x5 board; on any other board they have
+// to be refitted to it before a label off them means anything.
+const boardBands = bandsFor(bands, width * height);
 const startedAt = Date.now();
 const { puzzle, metrics } = generatePuzzle({
   date: '2026-01-01',
@@ -52,7 +55,7 @@ const { puzzle, metrics } = generatePuzzle({
   mix,
   width,
   height,
-  labelOf: (m) => classify(bands, m),
+  labelOf: (m) => classify(boardBands, m),
 });
 const seconds = (Date.now() - startedAt) / 1000;
 
@@ -117,7 +120,7 @@ check(
 
 // The stored label has to be reproducible from the puzzle's own metrics — the
 // same invariant scripts/audit-dan.mts enforces across the whole archive.
-check(puzzle.difficulty === classify(bands, metrics), `label ${puzzle.difficulty} is not what its metrics classify as`);
+check(puzzle.difficulty === classify(boardBands, metrics), `label ${puzzle.difficulty} is not what its metrics classify as`);
 const remeasured = measure({
   shape,
   clues,
@@ -125,7 +128,7 @@ const remeasured = measure({
   initialReveals: puzzle.initialReveals,
   paths: puzzle.people.map((p) => p.paths ?? []),
 });
-check(classify(bands, remeasured) === puzzle.difficulty, 'label does not survive re-measuring the written puzzle');
+check(classify(boardBands, remeasured) === puzzle.difficulty, 'label does not survive re-measuring the written puzzle');
 
 // The cast's profession grouping has to be one the generator was offered. Every
 // archived shape covers exactly twenty cards, so at 4x5 that is the archive's

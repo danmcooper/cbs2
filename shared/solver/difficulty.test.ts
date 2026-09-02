@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadArchive } from './corpus';
 import { makeGrid } from './grid';
@@ -6,7 +8,9 @@ import type { Clues } from './solve';
 import {
   type Metrics,
   ABSTRACT_PREDICATES,
+  CALIBRATION_SIZE,
   InsufficientSamplesError,
+  bandsFor,
   buildBands,
   classify,
   gatesPass,
@@ -154,6 +158,55 @@ describe('buildBands', () => {
     expect(() => buildBands([{ label: 'Brutal', metrics: metrics({}) }])).toThrow(
       InsufficientSamplesError,
     );
+  });
+});
+
+describe('bandsFor', () => {
+  const bands = loadBands(
+    JSON.parse(
+      readFileSync(path.join(process.cwd(), 'config', 'difficulty.json'), 'utf8'),
+    ),
+  );
+
+  it('leaves the board it was calibrated on alone', () => {
+    expect(bandsFor(bands, CALIBRATION_SIZE)).toEqual(bands);
+  });
+
+  it('scales the metrics that count cards, and only those', () => {
+    const got = bandsFor(bands, 30);
+    for (const label of Object.keys(bands)) {
+      const was = bands[label];
+      const now = got[label];
+      expect(now.criminals, label).toEqual({
+        min: Math.round(was.criminals.min * 1.5),
+        max: Math.round(was.criminals.max * 1.5),
+      });
+      expect(now.clueCards, label).toEqual({
+        min: Math.round(was.clueCards.min * 1.5),
+        max: Math.round(was.clueCards.max * 1.5),
+      });
+      // chainLength grows far slower than the board — a wider board reveals
+      // more per step rather than taking more steps — and abstractShare is a
+      // ratio. Scaling either would be inventing a law neither one follows.
+      expect(now.chainLength, label).toEqual(was.chainLength);
+      expect(now.abstractShare, label).toEqual(was.abstractShare);
+      expect(now.meanPathSize, label).toEqual(was.meanPathSize);
+      expect(now.samples, label).toBe(was.samples);
+    }
+  });
+
+  it('never asks a board for more criminals than it has cards', () => {
+    for (const [label, band] of Object.entries(bandsFor(bands, 30))) {
+      expect(band.criminals.max, label).toBeLessThanOrEqual(30);
+      expect(band.criminals.min, label).toBeGreaterThan(0);
+    }
+  });
+
+  it('produces bands that still load', () => {
+    // The scaled bands are fed straight back to `classify` and `gatesPass`, so
+    // they have to satisfy every invariant the calibrated file does.
+    expect(() => loadBands(bandsFor(bands, 30))).not.toThrow();
+    expect(() => loadBands(bandsFor(bands, 12))).not.toThrow();
   });
 });
 

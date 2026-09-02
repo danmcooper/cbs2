@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validatePuzzle } from '../shared/puzzle.ts';
 import type { Band, Bands } from '../shared/solver/difficulty.ts';
-import { classify, loadBands } from '../shared/solver/difficulty.ts';
+import { bandsFor, classify, loadBands } from '../shared/solver/difficulty.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
 import { GenerationError, generatePuzzle } from '../shared/solver/generate.ts';
 import { regenerateManifest } from './manifest.mts';
@@ -146,7 +146,10 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
         mix,
         width,
         height,
-        labelOf: (metrics) => classify(bands, metrics),
+        // Bands are calibrated on the archive's 4x5 board; a Dan puzzle inherits
+        // its real sibling's board, so this is the identity today and stays
+        // honest if a variant ever asks for a bigger one.
+        labelOf: (metrics) => classify(bandsFor(bands, width * height), metrics),
       });
       await writeFile(
         path.join(puzzlesDir, `${date}-dan.json`),

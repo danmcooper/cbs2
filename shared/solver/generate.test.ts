@@ -392,6 +392,22 @@ describe('generatePuzzle', () => {
     expect(solveChain(shape, clues, truth, puzzle.initialReveals).solvedAll).toBe(true);
   });
 
+  // The bands are calibrated on the archive's twenty-card board, so the counts
+  // in them — how many criminals, how many clue cards — mean "out of twenty".
+  // Sampling the criminal count straight out of an unscaled band gives a wider
+  // board a thinner puzzle than any real one: a 5x6 came out 30% criminal
+  // against the archive's 47%.
+  it('scales the band it was given to the board it is filling', () => {
+    // min === max, so the criminal count is decided entirely by the scaling:
+    // ten of twenty is five of ten, and eight of the sixteen cards here.
+    const tenOfTwenty: LabelBand = { ...band, criminals: { min: 10, max: 10 } };
+    const { puzzle: p } = generatePuzzle({
+      date: '2026-01-01', difficulty: 'Medium', band: tenOfTwenty, seed: 5,
+      mix: boardMix, ...BOARD,
+    });
+    expect(p.people.filter((q) => q.criminal).length).toBe(8);
+  });
+
   // Every caller passes the archive's own mix, whose shapes all sum to twenty.
   // A board that is not 4x5 has to fit them itself rather than making the caller
   // trim or grow them first — otherwise `castOf` throws and no board but the

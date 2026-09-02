@@ -4,7 +4,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { validatePuzzle } from '../shared/puzzle.ts';
 import type { LabelBand } from '../shared/solver/difficulty.ts';
-import { classify, loadBands, measure } from '../shared/solver/difficulty.ts';
+import { bandsFor, classify, loadBands, measure } from '../shared/solver/difficulty.ts';
 import { makeGrid } from '../shared/solver/grid.ts';
 import { isUniquelySolvable, parseClues, solveChain } from '../shared/solver/solve.ts';
 import {
@@ -23,6 +23,8 @@ import {
 // what lets these tests generate real puzzles in the ordinary suite. Group sizes
 // are the archive's ragged shape — trios and pairs, one singleton — cut to
 // sixteen cards. `npm run test:generate` covers the shipped size.
+const FIXTURE_BOARD = { width: 4, height: 4 };
+
 const FIXTURE_PROFESSIONS = ['coder', 'cop', 'cook']
   .flatMap((p) => [p, p, p])
   .concat(['guard', 'judge', 'pilot'].flatMap((p) => [p, p]))
@@ -35,7 +37,7 @@ function realPuzzle(date: string, id: string, difficulty: string) {
   }));
   return {
     formatVersion: 1, id, date, title: `Title ${date}`, difficulty,
-    width: 4, height: 4, initialReveals: [], source: 'cluesbysam.com',
+    ...FIXTURE_BOARD, initialReveals: [], source: 'cluesbysam.com',
     people,
   };
 }
@@ -275,8 +277,11 @@ describe('unionCriminals', () => {
 
 describe('runGenerate samples criminals from the union of all calibrated labels', () => {
   // "Narrow" only calibrates 11-16 criminals; "Wide" calibrates 4-10. Their
-  // union is exactly {4,16}, so a count below 11 is reachable only if the range
-  // handed to `generatePuzzle` was the union rather than Narrow's own.
+  // union is exactly {4,16}, so a count below Narrow's floor is reachable only
+  // if the range handed to `generatePuzzle` was the union rather than Narrow's
+  // own. Both ranges are read off the calibration board and refitted to the
+  // fixture's smaller one before they mean anything here, so the assertions
+  // below go through `bandsFor` rather than naming 4, 11 and 16 outright.
   //
   // Which count a given date draws depends on its derived seed and on how many
   // attempts that seed needs, so this asks several dates for one rather than
@@ -331,13 +336,23 @@ describe('runGenerate samples criminals from the union of all calibrated labels'
         counts.push(puzzle.people.filter((p) => p.criminal).length);
       }
 
-      // Every count inside the union, and at least one below Narrow's own floor —
-      // only reachable if generatePuzzle sampled from {4,16} rather than {11,16}.
-      // Five draws from {4,16} all landing at 11 or above runs at (6/13)^5, about
-      // one in 450.
-      for (const c of counts) expect(c).toBeGreaterThanOrEqual(4);
-      for (const c of counts) expect(c).toBeLessThanOrEqual(16);
-      expect(counts.some((c) => c < 11), `counts ${counts.join(',')}`).toBe(true);
+      // Every count inside the union, and at least one below Narrow's own floor
+      // — only reachable if generatePuzzle sampled from the union rather than
+      // Narrow's range. On this fixture's board that is a draw from {3,13} with
+      // 9 as the floor to undercut; five draws all landing at or above it runs
+      // at (5/11)^5, about one in 110.
+      const size = FIXTURE_BOARD.width * FIXTURE_BOARD.height;
+      const union = unionCriminals({ Narrow: narrowBand, Wide: wideBand });
+      const board = bandsFor(
+        { union: { ...narrowBand, criminals: union }, Narrow: narrowBand },
+        size,
+      );
+      for (const c of counts) expect(c).toBeGreaterThanOrEqual(board.union.criminals.min);
+      for (const c of counts) expect(c).toBeLessThanOrEqual(board.union.criminals.max);
+      expect(
+        counts.some((c) => c < board.Narrow.criminals.min),
+        `counts ${counts.join(',')}`,
+      ).toBe(true);
     },
     120_000,
   );
