@@ -235,12 +235,9 @@ export interface GenerateInput {
    */
   mix: ClueMix;
   /**
-   * Board size, defaulting to the archive's 4x5. Every puzzle we ship is 4x5;
-   * this exists because solving enumerates all 2^(width*height) assignments, so
-   * a test that generates a real puzzle on a 4x4 board costs a sixteenth of what
-   * it costs on a 4x5 one and runs in the ordinary suite instead of a separate
-   * slow one. Whatever size is asked for, the profession shapes in `mix` have to
-   * cover it — see `castOf`.
+   * Board size, defaulting to the archive's 4x5. The mix is always measured on
+   * the archive's own 4x5 boards; its profession shapes are refitted to whatever
+   * board is asked for here — see `professionShapesFor`.
    */
   width?: number;
   height?: number;
@@ -308,31 +305,151 @@ export interface Cast {
  * then always exactly four people. Real casts run 7 to 11 professions in groups
  * of mostly two and three.
  */
+const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
+
+/**
+ * Shrink one archive shape onto a smaller board, keeping its character.
+ *
+ * Cards come off the largest group each time, so the raggedness and the group
+ * count survive: a shape that named nine professions still names about nine,
+ * which is what makes a `#PROFS:` unit worth reading. Taking whole groups off
+ * the end instead would leave a tidier, flatter cast than the archive has.
+ */
+function shrunkShape(base: readonly number[], size: number): number[] {
+  const out = [...base].sort((a, b) => b - a);
+  let total = sum(out);
+  while (total > size) {
+    if (out[0] === 1) out.pop();
+    else out[0]--;
+    total--;
+    out.sort((a, b) => b - a);
+  }
+  return out;
+}
+
+/**
+ * Grow one archive shape until it covers `size`, keeping its character.
+ *
+ * New groups are drawn from `pool` — every group size the archive has ever
+ * used, with its multiplicity, so the draw is the archive's own distribution of
+ * twos and threes rather than a tidy average. When the remainder is smaller than
+ * the group drawn, or the cast has already run out of professions to name, the
+ * remainder goes onto the smallest existing group instead: that is where an
+ * extra card changes the shape least, and it keeps the largest group where the
+ * archive left it.
+ */
+function grownShape(
+  rng: () => number,
+  base: readonly number[],
+  size: number,
+  pool: readonly number[],
+  maxGroup: number,
+): number[] {
+  const out = [...base];
+  let total = sum(out);
+  while (total < size) {
+    const draw = pool[randInt(rng, 0, pool.length - 1)];
+    if (out.length < PROFESSIONS.length && draw <= size - total) {
+      out.push(draw);
+      total += draw;
+      continue;
+    }
+    let at = -1;
+    for (let i = 0; i < out.length; i++) {
+      if (out[i] < maxGroup && (at === -1 || out[i] < out[at])) at = i;
+    }
+    if (at === -1) {
+      if (out.length >= PROFESSIONS.length) {
+        throw new GenerationError(
+          `cannot cover ${size} cards with ${PROFESSIONS.length} groups of at most ${maxGroup}`,
+        );
+      }
+      out.push(1);
+      total++;
+      continue;
+    }
+    out[at]++;
+    total++;
+  }
+  return out.sort((a, b) => b - a);
+}
+
+/**
+ * Profession shapes that cover a `size`-card board.
+ *
+ * The archive only ever measured 4x5 boards, so every shape it offers sums to
+ * twenty. At that size this hands them straight back, and `castOf` deals a real
+ * puzzle's real cast. At any other size there is nothing to hand back and
+ * `castOf` would rather throw than deal a cast with holes in it, so the shapes
+ * are refitted from the archive's rather than invented: one per archive shape,
+ * each keeping its own group count and raggedness, so a 5x6 cast still runs the
+ * seven to eleven professions in groups of mostly two and three that make a
+ * `#PROFS:` clue worth reading.
+ *
+ * Deterministic, because it is a table derived from a corpus rather than part of
+ * any one puzzle's draw — two calls with the same archive and size give the same
+ * shapes, and `castOf` does the sampling.
+ */
+export function professionShapesFor(
+  professionShapes: readonly number[][],
+  size: number,
+): number[][] {
+  const fits = professionShapes.filter((s) => s.length <= PROFESSIONS.length && sum(s) === size);
+  if (fits.length > 0) return fits.map((s) => [...s]);
+
+  const usable = professionShapes.filter((s) => s.length > 0);
+  if (usable.length === 0) return [];
+  const pool = usable.flat();
+  const maxGroup = Math.max(...pool);
+  const rng = makeRng(size * 1009 + usable.length);
+  return usable.map((s) =>
+    sum(s) > size ? shrunkShape(s, size) : grownShape(rng, s, size, pool, maxGroup),
+  );
+}
+
 export function castOf(
   rng: () => number,
   professionShapes: readonly number[][],
   size: number = DEFAULT_SIZE,
 ): Cast {
-  const byInitial = new Map<string, VocabPerson[]>();
+  const buckets = new Map<string, VocabPerson[]>();
   for (const person of NAMES) {
     const initial = person.name[0];
-    const bucket = byInitial.get(initial);
+    const bucket = buckets.get(initial);
     if (bucket) bucket.push(person);
-    else byInitial.set(initial, [person]);
+    else buckets.set(initial, [person]);
   }
-  const letters = shuffled(rng, [...byInitial.keys()]).slice(0, size).sort();
-  const people = letters.map((letter) => {
-    const candidates = byInitial.get(letter) as VocabPerson[];
-    return candidates[randInt(rng, 0, candidates.length - 1)];
-  });
+  const letters = shuffled(rng, [...buckets.keys()]);
+  for (const [letter, bucket] of buckets) buckets.set(letter, shuffled(rng, bucket));
+
+  // Round-robin over the letters, so the distinct-initial rule holds for as long
+  // as the alphabet can hold it and degrades one letter at a time after that. A
+  // 4x5 board never leaves the first pass; a 5x6 one wants thirty cards from
+  // twenty-six letters, and takes its four extras from whichever letters the
+  // shuffle put first.
+  const people: VocabPerson[] = [];
+  for (let round = 0; people.length < size; round++) {
+    const available = letters.filter((l) => (buckets.get(l) as VocabPerson[]).length > round);
+    if (available.length === 0) {
+      throw new GenerationError(`only ${NAMES.length} names in the vocabulary for ${size} cards`);
+    }
+    for (const letter of available) {
+      if (people.length >= size) break;
+      people.push((buckets.get(letter) as VocabPerson[])[round]);
+    }
+  }
+  // Sorting by initial is no longer enough once a letter carries two names, so
+  // sort the names themselves; the cast is still in alphabetical reading order.
+  people.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
   // A usable shape has to cover every card and name no more professions than the
   // vocabulary stocks. Both hold for the real archive on a 4x5 board — its
   // shapes all sum to twenty and its widest cast needs exactly as many
   // professions as we have — so say so plainly rather than dealing a cast with
-  // holes in it when the shapes and the board disagree.
+  // holes in it when the shapes and the board disagree. For a board the archive
+  // has no shape for, `professionShapesFor` builds some first.
   const fits = professionShapes.filter(
-    (s) => s.length <= PROFESSIONS.length && s.reduce((a, b) => a + b, 0) === size,
+    (s) => s.length <= PROFESSIONS.length && sum(s) === size,
   );
   if (fits.length === 0) {
     throw new GenerationError(
@@ -470,11 +587,14 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
   const maxAttempts = input.maxAttempts ?? 25;
   const trialsPerStep = input.trialsPerStep ?? 80;
   const grid = makeGrid(input.width ?? DEFAULT_WIDTH, input.height ?? DEFAULT_HEIGHT);
+  // The mix is measured on 4x5 boards whatever board we are filling, so refit
+  // its profession shapes once, up front, rather than asking every caller to.
+  const shapes = professionShapesFor(input.mix.professionShapes, grid.size);
   const failures: string[] = [];
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const rng = makeRng(input.seed + attempt * 7919);
-    const cast = castOf(rng, input.mix.professionShapes, grid.size);
+    const cast = castOf(rng, shapes, grid.size);
     const shape: Shape = { grid, professions: cast.professions };
 
     const criminals = randInt(rng, input.band.criminals.min, input.band.criminals.max);

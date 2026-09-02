@@ -79,7 +79,7 @@ describe('measure abstractShare', () => {
 });
 
 describe('abstractShare separates the archive by human difficulty label', () => {
-  it('is strictly increasing Easy < Medium < Tricky < Hard < Brutal across all 54 real puzzles', () => {
+  it('is strictly increasing Easy < Medium < Tricky < Hard < Brutal across the real archive', () => {
     const archive = loadArchive();
     const byLabel = new Map<string, number[]>();
     let total = 0;
@@ -100,14 +100,18 @@ describe('abstractShare separates the archive by human difficulty label', () => 
     }
 
     // Guards against a vacuous pass: if the archive layout changes underfoot
-    // (a label goes missing, or files get added/removed) this must fail
-    // rather than silently compare fewer than five means.
-    expect(total).toBe(54);
+    // (a label goes missing, or files stop being read) this must fail rather
+    // than silently compare fewer than five means. The count is a floor, not an
+    // equality — the archive gains a puzzle a night, and what matters is that
+    // every puzzle read got a label, not that there are exactly as many as the
+    // day this was written.
+    expect(total).toBeGreaterThanOrEqual(54);
+    expect(total).toBe(archive.length);
     const order = ['Easy', 'Medium', 'Tricky', 'Hard', 'Brutal'];
     for (const label of order) {
       expect(byLabel.has(label), `missing label ${label}`).toBe(true);
     }
-    expect([...byLabel.values()].reduce((a, l) => a + l.length, 0)).toBe(54);
+    expect([...byLabel.values()].reduce((a, l) => a + l.length, 0)).toBe(total);
 
     const meanOf = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
     const means = order.map((label) => meanOf(byLabel.get(label) as number[]));

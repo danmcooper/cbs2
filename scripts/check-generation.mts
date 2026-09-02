@@ -10,21 +10,28 @@
  * Opt-in (`npm run test:generate`), and worth a minute before regenerating the
  * archive with `npm run generate`.
  *
- *   npm run test:generate            # aims at Medium, seed 1
- *   npm run test:generate Brutal 7   # aims at a given label and seed
+ *   npm run test:generate              # aims at Medium, seed 1, on the 4x5 board
+ *   npm run test:generate Brutal 7     # aims at a given label and seed
+ *   npm run test:generate Medium 1 5x6 # on a board the archive has none of
  */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { validatePuzzle } from '../shared/puzzle.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
 import { classify, loadBands, measure } from '../shared/solver/difficulty.ts';
-import { generatePuzzle } from '../shared/solver/generate.ts';
+import { generatePuzzle, professionShapesFor } from '../shared/solver/generate.ts';
 import { makeGrid } from '../shared/solver/grid.ts';
 import { parseHint } from '../shared/solver/hint.ts';
 import { forcedGiven, isUniquelySolvable, parseClues, solveChain } from '../shared/solver/solve.ts';
 
-const [label = 'Medium', seedArg] = process.argv.slice(2);
+const [label = 'Medium', seedArg, boardArg = '4x5'] = process.argv.slice(2);
 const seed = Number(seedArg ?? 1);
+const board = /^(\d+)x(\d+)$/.exec(boardArg);
+if (!board) {
+  console.error(`board must look like 4x5, got ${boardArg}`);
+  process.exit(2);
+}
+const [width, height] = [Number(board[1]), Number(board[2])];
 
 const bands = loadBands(
   JSON.parse(await readFile(path.join(process.cwd(), 'config', 'difficulty.json'), 'utf8')),
@@ -43,6 +50,8 @@ const { puzzle, metrics } = generatePuzzle({
   band,
   seed,
   mix,
+  width,
+  height,
   labelOf: (m) => classify(bands, m),
 });
 const seconds = (Date.now() - startedAt) / 1000;
@@ -58,7 +67,10 @@ try {
   failures.push(`schema: ${(e as Error).message}`);
 }
 
-check(puzzle.width === 4 && puzzle.height === 5, `board is ${puzzle.width}x${puzzle.height}, not 4x5`);
+check(
+  puzzle.width === width && puzzle.height === height,
+  `board is ${puzzle.width}x${puzzle.height}, not ${boardArg}`,
+);
 
 const shape = {
   grid: makeGrid(puzzle.width, puzzle.height),
@@ -115,13 +127,27 @@ const remeasured = measure({
 });
 check(classify(bands, remeasured) === puzzle.difficulty, 'label does not survive re-measuring the written puzzle');
 
-// The cast's profession grouping has to be one the archive actually uses, which
-// is only true at 4x5: every archived shape covers exactly twenty cards.
+// The cast's profession grouping has to be one the generator was offered. Every
+// archived shape covers exactly twenty cards, so at 4x5 that is the archive's
+// own set; on any other board it is what `professionShapesFor` refitted from it.
 const groups = new Map<string, number>();
 for (const person of puzzle.people) groups.set(person.profession, (groups.get(person.profession) ?? 0) + 1);
 const castShape = [...groups.values()].sort((a, b) => b - a).join(',');
-const archived = new Set(mix.professionShapes.map((s) => s.join(',')));
-check(archived.has(castShape), `profession shape [${castShape}] occurs in no real puzzle`);
+const offered = new Set(
+  professionShapesFor(mix.professionShapes, width * height).map((s) => s.join(',')),
+);
+check(offered.has(castShape), `profession shape [${castShape}] is not one of the offered shapes`);
+
+// Names are how a clue points at a card, so the cast has to stay findable: in
+// reading order, all distinct, and sharing an initial only where the alphabet
+// runs out — which it does above twenty-six cards.
+const names = puzzle.people.map((p) => p.name);
+check(`${names}` === `${[...names].sort()}`, 'cast is not in alphabetical order');
+check(new Set(names).size === names.length, 'two cards carry the same name');
+check(
+  new Set(names.map((n) => n[0])).size === Math.min(names.length, 26),
+  'cast shares more initials than the alphabet forces',
+);
 
 const preds = new Map<string, number>();
 for (const person of puzzle.people) {
@@ -130,7 +156,7 @@ for (const person of puzzle.people) {
 
 console.log(
   [
-    `aimed at ${label}, seed ${seed} — generated in ${seconds.toFixed(1)}s`,
+    `aimed at ${label}, seed ${seed}, ${boardArg} — generated in ${seconds.toFixed(1)}s`,
     `labelled ${puzzle.difficulty}: ${metrics.criminals} criminals, ${metrics.clueCards} clues, ` +
       `chain ${metrics.chainLength}, abstract share ${metrics.abstractShare.toFixed(2)}`,
     `cast [${castShape}], ${preds.size} distinct predicates, worst repeat ${Math.max(...preds.values())}`,

@@ -41,5 +41,14 @@ exports[`renderer fidelity > reproduces at least 95% of non-self-referential arc
   "2026-08-27.json [17] unit_shares_n_out_of_n_traits_with_unit(unit(col,1),unit(between,pair(4,6)),criminal,1,3)
   want: 1 of the 3 criminals in column #C:1 is #BETWEEN:pair(4,6)
   got:  Only 1 of the 3 criminals in column #C:1 is #BETWEEN:pair(4,6)",
+  "2026-08-30.json [3] unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,12),unit(between,pair(5,13)),criminal,2,4)
+  want: Exactly 2 of the 4 criminals neighboring #NAME:12 are #BETWEEN:pair(1,13)
+  got:  Exactly 2 of the 4 criminals neighboring #NAME:12 are #BETWEEN:pair(5,13)",
+  "2026-08-31.json [11] only_unit_has_exactly_n_traits(unit(neighbor,16),innocent,2)
+  want: #NAME:16 is the only one with exactly 2 innocent neighbors
+  got:  #NAME:16 is the only one with exactly 2 innocent neighbor",
+  "2026-08-31.json [12] unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(0,3)),unit(neighbor,0),criminal,1,2)
+  want: 1 of the 2 criminals #BETWEEN:pair(0,3) is #NAMES:0 neighbor
+  got:  Only 1 of the 2 criminals #BETWEEN:pair(0,3) is #NAMES:0 neighbor",
 ]
 `;
