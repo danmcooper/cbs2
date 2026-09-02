@@ -420,6 +420,15 @@ describe('generatePuzzle', () => {
     expect(p.people.every((q) => q.profession.length > 0)).toBe(true);
   });
 
+  it('marks the puzzle as the variant it was asked for, Dan by default', () => {
+    expect(puzzle.variant).toBe('dan');
+    const { puzzle: p } = generatePuzzle({
+      date: '2026-01-01', difficulty: 'Medium', band, seed: 3, mix, ...BOARD,
+      variant: 'dan-long',
+    });
+    expect(p.variant).toBe('dan-long');
+  });
+
   it('round-trips every generated clue exactly', () => {
     for (const person of puzzle.people) {
       if (!person.origHint) continue;

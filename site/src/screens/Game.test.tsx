@@ -49,6 +49,36 @@ function fakeTimersUser() {
 }
 const finishDelay = () => act(() => void vi.advanceTimersByTime(2700));
 
+describe('board width', () => {
+  const wrap = () => document.querySelector('.board-wrap') as HTMLElement;
+
+  it('leaves a board no wider than the source site\'s four columns alone', async () => {
+    await renderGame();
+    expect(wrap().style.transform).toBe('');
+  });
+
+  it('scales a wider board down to fit, and never up', async () => {
+    // Cards are a fixed 87px, so a fifth column is 92px the stylesheet's own
+    // breakpoints know nothing about — on a phone the board would run off the
+    // side of the page. Five columns is 5*87 + 4*5 gaps = 455px.
+    const wide = {
+      ...puzzle,
+      width: 5,
+      height: 1,
+      initialReveals: [0],
+      people: ['ana', 'bo', 'cy', 'dee', 'eli'].map((name, i) => ({
+        ...puzzle.people[0], name, criminal: i % 2 === 1, paths: i === 0 ? [] : [[0]],
+      })),
+    };
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(wide), { status: 200 })));
+    await renderGame();
+
+    expect(wrap().style.transform).toContain('455px');
+    // `min(1, ...)` is what keeps it from blowing the board up on a desktop.
+    expect(wrap().style.transform).toMatch(/^scale\(min\(1,/);
+  });
+});
+
 describe('Game', () => {
   it('loads the puzzle and renders the grid with initial reveals flipped, clue on the card', async () => {
     await renderGame();
@@ -170,6 +200,18 @@ describe('puzzle variant label', () => {
     finishDelay();
     expect(screen.getByRole('dialog').textContent).toContain('Jul 7th 2026 (Easy) · Dan');
   });
+
+  it('names a Dan Long puzzle by its own name, not its sibling\'s', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan-long' }), { status: 200 })),
+    );
+    const user = fakeTimersUser();
+    await renderGame(user);
+    expect(document.querySelector('.date-line span')?.textContent).toBe(
+      'Jul 7th 2026 (Easy) · Dan Long',
+    );
+  });
 });
 
 describe('corner tags', () => {
@@ -261,6 +303,30 @@ describe('results popup', () => {
       /^I solved the daily #CluesBySamByDan, Jul 7th 2026 \(Easy\), in \d{2}:\d{2}\n🟩🟩\n🟩🟩\nhttp:\/\/localhost:3000\/#\/play\/2026-07-07-dan$/,
     );
   });
+
+  // Every generated variant is a different puzzle at a different address, so
+  // the share link has to carry the variant's own suffix.
+  it('links a Dan Long puzzle to its own copy, not its sibling\'s', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan-long' }), { status: 200 })),
+    );
+    const user = fakeTimersUser();
+    render(<Game slug="2026-07-07-dan-long" />);
+    await screen.findAllByRole('group');
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
+      await user.click(screen.getByText(name));
+      await user.click(screen.getByRole('button', { name: verdict }));
+    }
+    finishDelay();
+
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    await user.click(screen.getByRole('button', { name: /copy text/i }));
+    expect(String(writeText.mock.calls[0]?.[0])).toContain(
+      'http://localhost:3000/#/play/2026-07-07-dan-long',
+    );
+  });
 });
 
 describe('revisiting a completed puzzle', () => {
@@ -303,6 +369,17 @@ describe('start popup', () => {
     expect(dialog.textContent).not.toContain('Clues by Sam');
     expect(dialog.textContent).toContain('Jul 7th 2026');
     expect(dialog.textContent).toContain('Difficulty: Easy');
+  });
+
+  it('names a Dan Long puzzle as one', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan-long' }), { status: 200 })),
+    );
+    render(<Game slug="2026-07-07-dan-long" />);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.textContent).toContain('A Dan Long puzzle');
+    expect(dialog.textContent).not.toContain('Clues by Sam');
   });
 
   it('does not show when localStorage already has guesses', async () => {

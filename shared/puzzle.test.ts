@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PuzzleValidationError, validatePuzzle } from './puzzle';
+import { PuzzleValidationError, VARIANTS, validatePuzzle } from './puzzle';
 
 function person(overrides: object = {}) {
   return {
@@ -97,16 +97,40 @@ describe('validatePuzzle', () => {
 });
 
 describe('validatePuzzle variant', () => {
-  it('accepts an absent variant and variant "dan"', () => {
+  it('accepts an absent variant and every generated one', () => {
     const base = puzzle();
     expect(validatePuzzle(base).variant).toBeUndefined();
-    expect(validatePuzzle({ ...base, variant: 'dan' }).variant).toBe('dan');
+    for (const variant of Object.keys(VARIANTS)) {
+      expect(validatePuzzle({ ...base, variant }).variant).toBe(variant);
+    }
   });
 
   it('rejects any other variant', () => {
     expect(() => validatePuzzle({ ...puzzle(), variant: 'real' })).toThrow(
       PuzzleValidationError,
     );
+    expect(() => validatePuzzle({ ...puzzle(), variant: 'dan-short' })).toThrow(
+      PuzzleValidationError,
+    );
     expect(() => validatePuzzle({ ...puzzle(), variant: 7 })).toThrow(PuzzleValidationError);
+  });
+});
+
+describe('VARIANTS', () => {
+  it('gives every generated variant a distinct suffix and label', () => {
+    const specs = Object.values(VARIANTS);
+    expect(specs.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(specs.map((s) => s.suffix)).size).toBe(specs.length);
+    expect(new Set(specs.map((s) => s.label)).size).toBe(specs.length);
+  });
+
+  // Filenames are `${date}${suffix}.json` and the manifest tells the variants
+  // apart by matching the suffix, so a suffix that is a prefix of another would
+  // make `-dan` swallow `-dan-long` depending on which pattern ran first.
+  it('names each variant so no suffix can be read as another', () => {
+    for (const [variant, spec] of Object.entries(VARIANTS)) {
+      expect(spec.suffix).toBe(`-${variant}`);
+      expect(spec.suffix).toMatch(/^-[a-z][a-z-]*[a-z]$/);
+    }
   });
 });

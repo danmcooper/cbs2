@@ -1,4 +1,4 @@
-import { type Person, type Puzzle, validatePuzzle } from '../puzzle';
+import { type Person, type Puzzle, type Variant, validatePuzzle } from '../puzzle';
 import { candidateHints, namedCards } from './candidates';
 // Type-only: corpus.ts reads the filesystem, and this import is erased at build time.
 import type { ClueMix } from './corpus';
@@ -248,6 +248,8 @@ export interface GenerateInput {
    */
   width?: number;
   height?: number;
+  /** Which generated sibling this is; stamped on the puzzle. Defaults to `dan`. */
+  variant?: Variant;
   maxAttempts?: number;
   trialsPerStep?: number;
   /**
@@ -677,7 +679,7 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
       height: grid.height,
       initialReveals,
       source: 'generated',
-      variant: 'dan',
+      variant: input.variant ?? 'dan',
       people,
       // `chain` proves the puzzle solvable; it does not describe how to hint it.
       // See `hintSteps`.

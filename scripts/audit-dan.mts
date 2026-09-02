@@ -12,10 +12,11 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Puzzle } from '../shared/puzzle.ts';
-import { validatePuzzle } from '../shared/puzzle.ts';
+import type { Puzzle, Variant } from '../shared/puzzle.ts';
+import { VARIANTS, validatePuzzle } from '../shared/puzzle.ts';
 import { namedCards } from '../shared/solver/candidates.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
+import { professionShapesFor } from '../shared/solver/generate.ts';
 import { parseHint } from '../shared/solver/hint.ts';
 import type { Bands } from '../shared/solver/difficulty.ts';
 import { bandsFor, classify, loadBands, measure } from '../shared/solver/difficulty.ts';
@@ -34,11 +35,21 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // A directory argument lets this be pointed at a scratch copy — which is how it
 // gets mutation-tested, without writing anything into the real archive.
 const PUZZLES = process.argv[2] ? path.resolve(process.argv[2]) : path.join(ROOT, 'puzzles');
-const DAN_FILE = /^\d{4}-\d{2}-\d{2}-dan\.json$/;
+// Anchored and built from the variant table, so adding a variant brings it into
+// the audit rather than quietly leaving it unaudited. The alternation is safe
+// against one suffix extending another because the pattern is anchored at both
+// ends: `-dan` cannot match `-dan-long.json` and still reach `\.json$`.
+const SUFFIXES = Object.values(VARIANTS).map((v) => v.suffix);
+const DAN_FILE = new RegExp(`^\\d{4}-\\d{2}-\\d{2}(${SUFFIXES.join('|')})\\.json$`);
 const REAL_FILE = /^\d{4}-\d{2}-\d{2}\.json$/;
+
+/** The letters a cast can draw a distinct initial from. Above this, the board
+ * has more cards than the alphabet has letters and repeats are forced. */
+const ALPHABET = 26;
 
 interface Loaded {
   file: string;
+  variant: Variant;
   puzzle: Puzzle;
   shape: Shape;
   clues: Clues;
@@ -80,8 +91,16 @@ async function archiveProse(files: string[]): Promise<Set<string>> {
 function load(file: string, puzzle: Puzzle): Loaded {
   const grid = makeGrid(puzzle.width, puzzle.height);
   const professions = puzzle.people.map((p) => p.profession);
+  // The filename is the claim under audit — the puzzle's own `variant` field is
+  // then checked against it rather than trusted.
+  const suffix = DAN_FILE.exec(file)?.[1];
+  const variant = (Object.keys(VARIANTS) as Variant[]).find(
+    (v) => VARIANTS[v].suffix === suffix,
+  );
+  if (!variant) throw new Error(`${file}: not a generated puzzle filename`);
   return {
     file,
+    variant,
     puzzle,
     shape: { grid, professions },
     clues: parseClues(puzzle.people.map((p) => p.origHint)),
@@ -90,14 +109,24 @@ function load(file: string, puzzle: Puzzle): Loaded {
 }
 
 /** Returns one message per failed check; empty means the puzzle is sound. */
-function audit(l: Loaded, banned: Set<string>, bands: Bands, shapes: Set<string>): string[] {
+function audit(
+  l: Loaded,
+  banned: Set<string>,
+  bands: Bands,
+  shapesFor: (size: number) => Set<string>,
+): string[] {
   const bad: string[] = [];
   const { puzzle, shape, clues, truth } = l;
   const size = shape.grid.size;
+  const shapes = shapesFor(size);
 
-  if (puzzle.variant !== 'dan') bad.push(`variant is ${String(puzzle.variant)}, expected 'dan'`);
+  if (puzzle.variant !== l.variant) {
+    bad.push(`variant is ${String(puzzle.variant)}, expected '${l.variant}'`);
+  }
   if (puzzle.source !== 'generated') bad.push(`source is ${puzzle.source}, expected 'generated'`);
-  if (`${puzzle.date}-dan.json` !== l.file) bad.push(`date ${puzzle.date} does not match filename`);
+  if (`${puzzle.date}${VARIANTS[l.variant].suffix}.json` !== l.file) {
+    bad.push(`date ${puzzle.date} does not match filename`);
+  }
 
   // Fairness. The strict form: every card recoverable from clue text alone,
   // with nothing handed to the player up front.
@@ -161,14 +190,20 @@ function audit(l: Loaded, banned: Set<string>, bands: Bands, shapes: Set<string>
 
   // Clues name people, so the player has to map a name back to a card. Every
   // archived puzzle makes that a glance rather than a scan by naming its cast
-  // in alphabetical reading order with a distinct initial per card.
+  // in alphabetical reading order with a distinct initial per card. A board
+  // with more cards than the alphabet has letters cannot manage the second
+  // half, so it is required to spend every letter before it repeats one.
   const names = puzzle.people.map((p) => p.name);
   if (names.join(',') !== [...names].sort().join(',')) {
     bad.push('names are not in alphabetical reading order');
   }
+  if (new Set(names).size !== names.length) {
+    bad.push(`${names.length - new Set(names).size} card(s) repeat a name`);
+  }
   const initials = new Set(names.map((n) => n[0]));
-  if (initials.size !== names.length) {
-    bad.push(`${names.length - initials.size} card(s) repeat a first initial`);
+  const wanted = Math.min(names.length, ALPHABET);
+  if (initials.size !== wanted) {
+    bad.push(`cast uses ${initials.size} initials for ${names.length} cards, expected ${wanted}`);
   }
 
   // "Only 1 of the 1 criminals ... is ..." reads as a slip and duplicates
@@ -207,11 +242,15 @@ function audit(l: Loaded, banned: Set<string>, bands: Bands, shapes: Set<string>
   // Real casts run 7 to 11 professions in ragged groups of mostly two and
   // three; generation used to deal a rigid five groups of four. Requiring an
   // exact archived shape is stricter than it has to be, but generation samples
-  // one wholesale, so anything else means the sampler broke.
+  // one wholesale, so anything else means the sampler broke. Every archived
+  // shape covers twenty cards, so on any other board the shapes to match are
+  // what `professionShapesFor` refits from them.
   const groups = new Map<string, number>();
   for (const p of puzzle.people) groups.set(p.profession, (groups.get(p.profession) ?? 0) + 1);
   const castShape = [...groups.values()].sort((a, b) => b - a).join(',');
-  if (!shapes.has(castShape)) bad.push(`profession shape [${castShape}] occurs in no real puzzle`);
+  if (!shapes.has(castShape)) {
+    bad.push(`profession shape [${castShape}] is not one refitted from a real puzzle`);
+  }
 
   // No puzzle should lean on one predicate harder than any real one does. The
   // archive's worst is 7 of the same across a puzzle; generation soft-caps at 2.
@@ -307,7 +346,7 @@ async function main(): Promise<void> {
   const dan = files.filter((f) => DAN_FILE.test(f)).sort();
   const real = files.filter((f) => REAL_FILE.test(f)).sort();
   if (dan.length === 0) {
-    console.error('no -dan.json files to audit');
+    console.error(`no generated puzzles to audit (${SUFFIXES.join(', ')})`);
     process.exit(1);
   }
 
@@ -316,8 +355,18 @@ async function main(): Promise<void> {
     JSON.parse(await readFile(path.join(ROOT, 'config', 'difficulty.json'), 'utf8')),
   );
   const mix = archiveClueMix(PUZZLES);
-  const shapes = new Set(mix.professionShapes.map((s) => s.join(',')));
-  console.log(`auditing ${dan.length} Dan puzzles against ${real.length} real ones`);
+  // Memoised per board size: refitting is deterministic but not free, and a
+  // full archive asks for the same two or three sizes over and over.
+  const shapeCache = new Map<number, Set<string>>();
+  const shapesFor = (size: number) => {
+    let set = shapeCache.get(size);
+    if (!set) {
+      set = new Set(professionShapesFor(mix.professionShapes, size).map((s) => s.join(',')));
+      shapeCache.set(size, set);
+    }
+    return set;
+  };
+  console.log(`auditing ${dan.length} generated puzzles against ${real.length} real ones`);
 
   const byLabel = new Map<string, number>();
   // Clue mix is a property of the whole set, not of any one puzzle, so it is
@@ -346,7 +395,7 @@ async function main(): Promise<void> {
         }
       }
       distinctPerPuzzle.push(here.size);
-      bad = audit(loaded, banned, bands, shapes);
+      bad = audit(loaded, banned, bands, shapesFor);
     } catch (e) {
       bad = [`threw: ${String(e)}`];
     }

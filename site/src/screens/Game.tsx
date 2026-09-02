@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Puzzle } from "../../../shared/puzzle";
-import { validatePuzzle } from "../../../shared/puzzle";
+import { VARIANTS, validatePuzzle } from "../../../shared/puzzle";
 import Grid from "../components/Grid";
 import { faceFor } from "../faces";
 import type { GameState, Guess } from "../game/reducer";
@@ -61,7 +61,7 @@ function shareLabel(puzzle: Puzzle): string {
 }
 
 function puzzleLabel(puzzle: Puzzle): string {
-  const dan = puzzle.variant === "dan" ? " · Dan" : "";
+  const dan = puzzle.variant ? ` · ${VARIANTS[puzzle.variant].label}` : "";
   return `${shareLabel(puzzle)}${dan}`;
 }
 
@@ -72,14 +72,39 @@ function puzzleLabel(puzzle: Puzzle): string {
  * baked-in address, which keeps it right in dev, preview, and production
  * without another thing to configure.
  */
+/** A card and the gap after it, in px — see `.card` and `.grid` in styles.css. */
+const CARD_W = 87;
+const GAP = 5;
+/** Columns the stylesheet's own breakpoints are written for: the source site's
+ * board, and every Dan puzzle that inherits it. */
+const NARROW_COLS = 4;
+
+/**
+ * A board wider than the source site's four columns is wider than a phone. The
+ * cards are a fixed size, so the only thing that fits is the whole board, and
+ * the stylesheet already scales it down for the same reason at its two narrow
+ * breakpoints. This generalises that to any column count — but only above four,
+ * so those breakpoints stay in sole charge of the boards they were measured on.
+ */
+function fitBoard(cols: number): React.CSSProperties | undefined {
+  if (cols <= NARROW_COLS) return undefined;
+  const natural = cols * CARD_W + (cols - 1) * GAP;
+  return {
+    transform: `scale(min(1, calc((100vw - 2rem) / ${natural}px)))`,
+    transformOrigin: 'top center',
+  };
+}
+
 function shareOf(puzzle: Puzzle): { tag: string; link: string } {
-  if (puzzle.variant !== "dan") {
+  if (!puzzle.variant) {
     return { tag: "#CluesBySam", link: "https://cluesbysam.com" };
   }
+  // Every generated variant is Dan's, so they share the tag; each is a
+  // different puzzle at a different address, so each links to its own.
   const { origin, pathname } = window.location;
   return {
     tag: "#CluesBySamByDan",
-    link: `${origin}${pathname}#/play/${puzzle.date}-dan`,
+    link: `${origin}${pathname}#/play/${puzzle.date}${VARIANTS[puzzle.variant].suffix}`,
   };
 }
 
@@ -466,7 +491,7 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
 
   return (
     <main className="game">
-      <div className="board-wrap">
+      <div className="board-wrap" style={fitBoard(puzzle.width)}>
         <Grid
           puzzle={puzzle}
           state={state}
@@ -595,7 +620,9 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
                 The date line and results modal already carry a "· Dan" suffix;
                 this is the first screen a player sees, so it says so plainly. */}
             <h2 className="start-title">
-              {puzzle.variant === "dan" ? "A Dan puzzle" : "Welcome to Clues by Sam!"}
+              {puzzle.variant
+                ? `A ${VARIANTS[puzzle.variant].label} puzzle`
+                : "Welcome to Clues by Sam!"}
             </h2>
             <p className="start-date">{formatDateOrdinal(puzzle.date)}</p>
             <p className="start-difficulty">

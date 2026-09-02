@@ -13,6 +13,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Puzzle } from '../shared/puzzle.ts';
+import { VARIANTS } from '../shared/puzzle.ts';
 import { forcedGivenSat, isUniquelySolvableSat, supports } from '../shared/solver/backbone.ts';
 import type { Shape } from '../shared/solver/enumerate.ts';
 import { makeGrid } from '../shared/solver/grid.ts';
@@ -22,7 +23,9 @@ import { type Clues, forcedGiven, isUniquelySolvable, parseClues } from '../shar
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUZZLES = process.argv[2] ? path.resolve(process.argv[2]) : path.join(ROOT, 'puzzles');
-const PUZZLE_FILE = /^\d{4}-\d{2}-\d{2}(-dan)?\.json$/;
+const PUZZLE_FILE = new RegExp(
+  `^\\d{4}-\\d{2}-\\d{2}(${Object.values(VARIANTS).map((v) => v.suffix).join('|')})?\\.json$`,
+);
 
 interface Loaded {
   file: string;

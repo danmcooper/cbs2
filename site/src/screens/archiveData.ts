@@ -53,7 +53,7 @@ export function sortDifficulties(difficulties: string[]): string[] {
 export interface ArchiveFilters {
   difficulty?: string;
   status?: PuzzleStatus;
-  variant?: 'real' | 'dan';
+  variant?: ManifestEntry['variant'];
 }
 
 export function filterEntries(entries: ManifestEntry[], filters: ArchiveFilters): ManifestEntry[] {
