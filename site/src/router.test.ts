@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { VARIANTS } from '../../shared/puzzle';
+import { ONE_OFFS, VARIANTS } from '../../shared/puzzle';
 import { parseHash } from './router';
 
 describe('parseHash', () => {
@@ -19,6 +19,17 @@ describe('parseHash', () => {
       });
     }
     expect(parseHash('#/play/2026-07-07-sam')).toEqual({ screen: 'archive' });
+  });
+
+  it('routes every one-off by its name, and nothing else that is not a date', () => {
+    for (const slug of Object.keys(ONE_OFFS)) {
+      expect(parseHash(`#/play/${slug}`)).toEqual({ screen: 'play', slug });
+    }
+    // The alternation is an allow-list, not a shape: a name that is not in
+    // `ONE_OFFS` is not a route, however much it looks like one that is. This is
+    // the whole of what "reachable only by knowing the name" rests on.
+    expect(parseHash('#/play/11x11')).toEqual({ screen: 'archive' });
+    expect(parseHash('#/play/10x10-dan')).toEqual({ screen: 'archive' });
   });
 
   // There was a case here for a suffix that extends another, back when `-dan`

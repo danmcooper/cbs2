@@ -12,8 +12,8 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Puzzle, Variant } from '../shared/puzzle.ts';
-import { VARIANTS, validatePuzzle } from '../shared/puzzle.ts';
+import type { OneOffSlug, Puzzle, Variant } from '../shared/puzzle.ts';
+import { ONE_OFFS, VARIANTS, validatePuzzle } from '../shared/puzzle.ts';
 import { namedCards } from '../shared/solver/candidates.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
 import { professionShapesFor } from '../shared/solver/generate.ts';
@@ -42,6 +42,24 @@ const PUZZLES = process.argv[2] ? path.resolve(process.argv[2]) : path.join(ROOT
 const SUFFIXES = Object.values(VARIANTS).map((v) => v.suffix);
 const DAN_FILE = new RegExp(`^\\d{4}-\\d{2}-\\d{2}(${SUFFIXES.join('|')})\\.json$`);
 const REAL_FILE = /^\d{4}-\d{2}-\d{2}\.json$/;
+// One-offs are named rather than dated, so nothing about the filename says they
+// are generated puzzles — the catalogue does. Auditing them is not optional
+// generosity: this is the only check a one-off gets, since it is absent from the
+// manifest, absent from the corpus, and not rebuilt by the daily workflow.
+const ONE_OFF_FILE = new RegExp(
+  `^(${Object.keys(ONE_OFFS)
+    .map((slug) => slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|')})\\.json$`,
+);
+
+/**
+ * How hard one predicate may be leaned on, measured over the archive: the worst
+ * real puzzle spends 7 of its 14 clue cards on `unit_shares_n_out_of_n_traits`.
+ * Both readings of that are kept, because on an archive-sized board they agree
+ * and on a large one only the share means anything — see where they are used.
+ */
+const ABSOLUTE_PRED_CAP = 7;
+const WORST_PRED_SHARE = 0.5;
 
 /** The letters a cast can draw a distinct initial from. Above this, the board
  * has more cards than the alphabet has letters and repeats are forced. */
@@ -50,6 +68,8 @@ const ALPHABET = 26;
 interface Loaded {
   file: string;
   variant: Variant;
+  /** The catalogue entry, when the file is a one-off rather than a dated puzzle. */
+  oneOff?: (typeof ONE_OFFS)[OneOffSlug];
   puzzle: Puzzle;
   shape: Shape;
   clues: Clues;
@@ -92,15 +112,19 @@ function load(file: string, puzzle: Puzzle): Loaded {
   const grid = makeGrid(puzzle.width, puzzle.height);
   const professions = puzzle.people.map((p) => p.profession);
   // The filename is the claim under audit — the puzzle's own `variant` field is
-  // then checked against it rather than trusted.
+  // then checked against it rather than trusted. A one-off's filename claims
+  // nothing, so its catalogue entry stands in as the claim instead.
+  const slug = file.slice(0, -'.json'.length);
+  const oneOff = Object.hasOwn(ONE_OFFS, slug) ? ONE_OFFS[slug as OneOffSlug] : undefined;
   const suffix = DAN_FILE.exec(file)?.[1];
-  const variant = (Object.keys(VARIANTS) as Variant[]).find(
-    (v) => VARIANTS[v].suffix === suffix,
-  );
+  const variant =
+    oneOff?.variant ??
+    (Object.keys(VARIANTS) as Variant[]).find((v) => VARIANTS[v].suffix === suffix);
   if (!variant) throw new Error(`${file}: not a generated puzzle filename`);
   return {
     file,
     variant,
+    oneOff,
     puzzle,
     shape: { grid, professions },
     clues: parseClues(puzzle.people.map((p) => p.origHint)),
@@ -124,7 +148,19 @@ function audit(
     bad.push(`variant is ${String(puzzle.variant)}, expected '${l.variant}'`);
   }
   if (puzzle.source !== 'generated') bad.push(`source is ${puzzle.source}, expected 'generated'`);
-  if (`${puzzle.date}${VARIANTS[l.variant].suffix}.json` !== l.file) {
+  if (l.oneOff) {
+    // A dated puzzle's filename is checkable on its own: it must be the date the
+    // file carries plus the variant's suffix. A one-off's name says none of
+    // that, so what it is held to instead is the catalogue entry it was built
+    // from — the board and the date `scripts/one-off.mts` was told to use.
+    const { width, height, date } = l.oneOff;
+    if (puzzle.width !== width || puzzle.height !== height) {
+      bad.push(`board is ${puzzle.width}x${puzzle.height}, catalogue says ${width}x${height}`);
+    }
+    if (puzzle.date !== date) {
+      bad.push(`date ${puzzle.date} does not match the catalogue's ${date}`);
+    }
+  } else if (`${puzzle.date}${VARIANTS[l.variant].suffix}.json` !== l.file) {
     bad.push(`date ${puzzle.date} does not match filename`);
   }
 
@@ -252,14 +288,33 @@ function audit(
     bad.push(`profession shape [${castShape}] is not one refitted from a real puzzle`);
   }
 
-  // No puzzle should lean on one predicate harder than any real one does. The
-  // archive's worst is 7 of the same across a puzzle; generation soft-caps at 2.
+  // No puzzle should lean on one predicate harder than any real one does.
+  // Generation soft-caps at 2; this is the backstop.
+  //
+  // "Harder" has to be a share, not a count. The archive's worst is 7 of the
+  // same — but that is 7 of 14 clue cards, and every real puzzle carries between
+  // 7 and 16. On a board with 62 of them a flat 7 is a far stricter test than
+  // any real puzzle ever sat, and it fails a puzzle drawing on 25 distinct
+  // predicates for concentrating a seventh of its clues where the archive's own
+  // worst concentrates half. Same problem, and same fix, as the difficulty bands
+  // and the profession shapes: a threshold counted in cards has to be refitted
+  // before it means anything on another board.
+  //
+  // Floored at the old absolute 7, so the two readings agree at 14 clue cards
+  // and the floor is what applies below that — which is what applied before.
+  // Only a board with 16 or more clue cards is allowed anything the flat cap
+  // would have refused, and the roomiest board in the archive spends 4 of its
+  // 15 on one predicate, three clear of the cap either way.
+  const clued = clues.filter((h) => h !== null).length;
+  const cap = Math.max(ABSOLUTE_PRED_CAP, Math.floor(WORST_PRED_SHARE * clued));
   const perPred = new Map<string, number>();
   for (const hint of clues) {
     if (hint) perPred.set(hint.pred, (perPred.get(hint.pred) ?? 0) + 1);
   }
   for (const [pred, n] of perPred) {
-    if (n > 7) bad.push(`uses ${pred} ${n} times — no real puzzle repeats one past 7`);
+    if (n > cap) {
+      bad.push(`uses ${pred} ${n} of ${clued} clues — no real puzzle leans past ${cap} here`);
+    }
   }
 
   // A clue may not name the card it sits on.
@@ -343,7 +398,7 @@ function audit(
 
 async function main(): Promise<void> {
   const files = await readdir(PUZZLES);
-  const dan = files.filter((f) => DAN_FILE.test(f)).sort();
+  const dan = files.filter((f) => DAN_FILE.test(f) || ONE_OFF_FILE.test(f)).sort();
   const real = files.filter((f) => REAL_FILE.test(f)).sort();
   if (dan.length === 0) {
     console.error(`no generated puzzles to audit (${SUFFIXES.join(', ')})`);

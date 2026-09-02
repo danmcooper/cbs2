@@ -40,6 +40,48 @@ export const VARIANTS = {
 export type Variant = keyof typeof VARIANTS;
 
 /**
+ * Puzzles addressed by a name instead of by a date.
+ *
+ * Everything else here belongs to a day and is listed in the archive. A one-off
+ * belongs to no day, and gets no listing: `regenerateManifest` only picks up
+ * date-shaped filenames, so `10x10.json` never reaches the manifest, the
+ * archive cannot show it, and nothing on the site links to it. Knowing the slug
+ * is the only way in. The scraper and the corpus are date-anchored in the same
+ * way, so a one-off never becomes a source of anything either.
+ *
+ * `audit-dan` is the exception, and deliberately: it re-derives a puzzle from
+ * the file rather than from the date, so there is nothing about a one-off it
+ * cannot check. It reads the entry here for the claims a filename would
+ * otherwise make — which variant, which board, which date.
+ *
+ * The board, the date the file carries, and the difficulty generation aimed at
+ * live here rather than only inside the file, because `scripts/one-off.mts`
+ * builds the file from them. Without that a one-off would be the one artifact
+ * in the repo that nothing could reproduce.
+ */
+export const ONE_OFFS = {
+  /**
+   * A hundred cards: five times the source site's board and nearly three times
+   * the largest day of our own week. Built once, by hand, because nothing that
+   * runs on a schedule could — an 8x8 is 89 seconds and this took 457, well past
+   * the daily workflow's timeout.
+   *
+   * The date is the day it was made. It means nothing here, but the format
+   * demands one, and a made-up date that looked significant would be worse than
+   * one that is merely true.
+   */
+  '10x10': {
+    width: 10,
+    height: 10,
+    date: '2026-09-02',
+    aimedAt: 'Medium',
+    variant: 'dan',
+  },
+} as const;
+
+export type OneOffSlug = keyof typeof ONE_OFFS;
+
+/**
  * What a puzzle advertises about itself in a list or a header.
  *
  * A real puzzle is always the source site's 4x5, so its size says nothing and

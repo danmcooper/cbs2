@@ -2,7 +2,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { VARIANTS } from '../shared/puzzle.ts';
+import { ONE_OFFS, VARIANTS } from '../shared/puzzle.ts';
 import { regenerateManifest } from './manifest.mts';
 
 function puzzle(date: string, id: string) {
@@ -82,6 +82,29 @@ describe('regenerateManifest', () => {
       JSON.stringify(puzzle('2026-07-01', 'aaaaaaaaaaaa')),
     );
     await expect(regenerateManifest(dir)).rejects.toThrow(/variant/);
+  });
+
+  // Being absent from the manifest is the entire mechanism behind a one-off:
+  // the archive lists what the manifest holds, so a puzzle the manifest never
+  // sees is a puzzle nothing on the site links to. `variantOf` already excludes
+  // it, by the same date check that excludes `draft-dan.json` — this pins that
+  // as a property something depends on rather than an accident of the regex.
+  it('leaves a named one-off out of the manifest', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'cbs-manifest-'));
+    await writeFile(
+      path.join(dir, '2026-07-01.json'),
+      JSON.stringify(puzzle('2026-07-01', 'aaaaaaaaaaaa')),
+    );
+    for (const slug of Object.keys(ONE_OFFS)) {
+      await writeFile(
+        path.join(dir, `${slug}.json`),
+        JSON.stringify({ ...puzzle('2026-07-01', 'bbbbbbbbbbbb'), variant: 'dan' }),
+      );
+    }
+
+    const entries = await regenerateManifest(dir);
+
+    expect(entries.map((e) => e.slug)).toEqual(['2026-07-01']);
   });
 
   // `variantOf` matches suffixes with `endsWith`, so what stops it from reading

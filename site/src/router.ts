@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { VARIANTS } from '../../shared/puzzle';
+import { ONE_OFFS, VARIANTS } from '../../shared/puzzle';
 
 export type Route = { screen: 'archive' } | { screen: 'play'; slug: string };
 
@@ -19,7 +19,18 @@ const SUFFIXES = Object.values(VARIANTS)
   .sort((a, b) => b.length - a.length)
   .join('|');
 
-const PLAY = new RegExp(`^#/play/(\\d{4}-\\d{2}-\\d{2}(?:${SUFFIXES})?)$`);
+/**
+ * A one-off is named rather than dated, so it needs its own alternative here —
+ * the dated pattern would send `#/play/10x10` to the archive, which on screen
+ * is the link doing nothing. Listing them by name is also the whole mechanism:
+ * a slug that is not in `ONE_OFFS` and is not a date is not a route, so the
+ * only named puzzles that open are the ones deliberately put here.
+ */
+const NAMED = Object.keys(ONE_OFFS)
+  .map((slug) => slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  .join('|');
+
+const PLAY = new RegExp(`^#/play/(\\d{4}-\\d{2}-\\d{2}(?:${SUFFIXES})?|${NAMED})$`);
 
 export function parseHash(hash: string): Route {
   const m = hash.match(PLAY);

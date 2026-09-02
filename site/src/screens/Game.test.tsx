@@ -310,6 +310,32 @@ describe('results popup', () => {
     );
   });
 
+  // A one-off is named rather than dated, so the address it lives at cannot be
+  // rebuilt from its date and variant — that would have shared a link to
+  // whatever `2026-07-07-dan` is. The slug the screen was opened at is the only
+  // thing that knows where the player actually is.
+  it('shares a one-off at the name it was opened under, not at its date', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ...puzzle, variant: 'dan' }), { status: 200 })),
+    );
+    const user = fakeTimersUser();
+    render(<Game slug="10x10" />);
+    await screen.findAllByRole('group');
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(screen.getByText('mira'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' }));
+    await user.click(screen.getByText('ozan'));
+    await user.click(screen.getByRole('button', { name: 'Innocent' }));
+    await user.click(screen.getByText('lena'));
+    await user.click(screen.getByRole('button', { name: 'Criminal' }));
+    finishDelay();
+
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    await user.click(screen.getByRole('button', { name: /copy text/i }));
+    expect(String(writeText.mock.calls[0]?.[0])).toContain('http://localhost:3000/#/play/10x10');
+  });
+
 });
 
 describe('revisiting a completed puzzle', () => {

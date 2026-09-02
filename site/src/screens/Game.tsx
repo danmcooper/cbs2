@@ -115,17 +115,19 @@ function useFitBoard(cols: number): React.CSSProperties | undefined {
   return room >= natural ? undefined : { zoom: room / natural };
 }
 
-function shareOf(puzzle: Puzzle): { tag: string; link: string } {
+function shareOf(puzzle: Puzzle, slug: string): { tag: string; link: string } {
   if (!puzzle.variant) {
     return { tag: "#CluesBySam", link: "https://cluesbysam.com" };
   }
   // Every generated variant is Dan's, so they share the tag; each is a
   // different puzzle at a different address, so each links to its own.
+  //
+  // The address is the slug this screen was opened at, not one rebuilt from the
+  // date and the variant. Those agree for a dated puzzle and do not for a
+  // one-off, which has a name instead of a date — `10x10` would have shared a
+  // link to whatever `2026-09-02-dan` happens to be.
   const { origin, pathname } = window.location;
-  return {
-    tag: "#CluesBySamByDan",
-    link: `${origin}${pathname}#/play/${puzzle.date}${VARIANTS[puzzle.variant].suffix}`,
-  };
+  return { tag: "#CluesBySamByDan", link: `${origin}${pathname}#/play/${slug}` };
 }
 
 // Results grid: green = clean solve, yellow square = had a bad answer,
@@ -155,10 +157,13 @@ const CELL_EMOJI: Record<CellColor, string> = {
 
 function ResultsModal({
   puzzle,
+  slug,
   state,
   onClose,
 }: {
   puzzle: Puzzle;
+  /** The address this puzzle was opened at, which is what the share text links. */
+  slug: string;
   state: GameState;
   onClose: () => void;
 }) {
@@ -176,7 +181,7 @@ function ResultsModal({
       .join("\n");
     // The tag and link already say which variant this is, so the shared label
     // drops the " · Dan" the on-screen heading carries.
-    const { tag, link } = shareOf(puzzle);
+    const { tag, link } = shareOf(puzzle, slug);
     await navigator.clipboard.writeText(
       `I solved the daily ${tag}, ${shareLabel(puzzle)}, in ${formatTime(state.elapsedMs)}\n${grid}\n${link}`,
     );
@@ -314,7 +319,7 @@ function wasReload(): boolean {
 // out before the results popup and post-solve controls appear.
 const RESULTS_DELAY_MS = 2700;
 
-function Board({ puzzle }: { puzzle: Puzzle }) {
+function Board({ puzzle, slug }: { puzzle: Puzzle; slug: string }) {
   const { state, dispatch } = useGameState(puzzle);
   const boardFit = useFitBoard(puzzle.width);
   const [guessing, setGuessing] = useState<number | null>(null);
@@ -633,6 +638,7 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
       {resultsOpen && (
         <ResultsModal
           puzzle={puzzle}
+          slug={slug}
           state={state}
           onClose={() => setResultsOpen(false)}
         />
@@ -710,5 +716,5 @@ export default function Game({ slug }: { slug: string }) {
       </main>
     );
   }
-  return <Board puzzle={puzzle} />;
+  return <Board puzzle={puzzle} slug={slug} />;
 }

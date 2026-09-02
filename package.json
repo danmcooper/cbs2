@@ -11,7 +11,8 @@
     "extract": "tsx scripts/extract.mts",
     "manifest": "tsx scripts/manifest.mts",
     "calibrate": "tsx scripts/calibrate.mts",
-    "generate": "tsx scripts/generate.mts"
+    "generate": "tsx scripts/generate.mts",
+    "one-off": "tsx scripts/one-off.mts"
   },
   "dependencies": {
     "react": "^19.2.7",
