@@ -85,14 +85,33 @@ const NARROW_COLS = 4;
  * the stylesheet already scales it down for the same reason at its two narrow
  * breakpoints. This generalises that to any column count — but only above four,
  * so those breakpoints stay in sole charge of the boards they were measured on.
+ *
+ * `zoom` rather than `transform: scale`, because a transform paints the board
+ * smaller without making its box any smaller. A 7-wide board is 639px and kept
+ * a 639px box whatever it looked like, so it overflowed its container, and an
+ * over-wide inline-block does not centre — it starts at the container's edge
+ * and spills off one side. That is the board sitting right of centre with its
+ * right-hand column off screen. Zoom scales the layout, so the box the page
+ * reserves is the board that gets drawn.
+ *
+ * The ratio is measured here rather than left to `calc((100vw - 2rem) / 639px)`
+ * in the stylesheet. Dividing a length by a length is CSS Values 4 and not
+ * something every browser we might be opened in will do; an unsupported value
+ * drops the whole declaration, which fails silently as no scaling at all. A
+ * number is a number everywhere.
  */
-function fitBoard(cols: number): React.CSSProperties | undefined {
+const GAME_PADDING = 32; // `.game`'s 1rem either side, at the default root size.
+
+function useFitBoard(cols: number): React.CSSProperties | undefined {
+  const [room, setRoom] = useState(() => window.innerWidth - GAME_PADDING);
+  useEffect(() => {
+    const onResize = () => setRoom(window.innerWidth - GAME_PADDING);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   if (cols <= NARROW_COLS) return undefined;
   const natural = cols * CARD_W + (cols - 1) * GAP;
-  return {
-    transform: `scale(min(1, calc((100vw - 2rem) / ${natural}px)))`,
-    transformOrigin: 'top center',
-  };
+  return room >= natural ? undefined : { zoom: room / natural };
 }
 
 function shareOf(puzzle: Puzzle): { tag: string; link: string } {
@@ -296,6 +315,7 @@ const RESULTS_DELAY_MS = 2700;
 
 function Board({ puzzle }: { puzzle: Puzzle }) {
   const { state, dispatch } = useGameState(puzzle);
+  const boardFit = useFitBoard(puzzle.width);
   const [guessing, setGuessing] = useState<number | null>(null);
   // A puzzle that loads already solved shows its results right away; the
   // 2.7s completion delay only applies to a live solve.
@@ -491,10 +511,10 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
 
   return (
     <main className="game">
-      <div className="board-wrap" style={fitBoard(puzzle.width)}>
-        {/* Inside the wrapper on purpose: `fitBoard` transforms it, and a
-            transform is a stacking context, so a dim outside it would paint
-            over the button row no matter what z-index the row asks for. */}
+      <div className="board-wrap" style={boardFit}>
+        {/* Inside the wrapper on purpose: the wrapper is zoomed and scrolls with
+            the board, so a dim outside it would neither line up with the board
+            nor stay clear of the button row. */}
         {paused && <div className="pause-overlay" />}
         <Grid
           puzzle={puzzle}

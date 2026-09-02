@@ -45,8 +45,17 @@ a {
   color: var(--text-muted);
 }
 
+/* Sized to whatever board it holds, then centred. A flat 420px was right while
+   every board was the source site's 4x5; a 7-wide board is 639px and simply
+   overflowed it, off to one side, because `text-align: center` centres an
+   inline-block only while it fits — past that it starts at the line's left edge
+   and spills right. `useFitBoard` keeps the board itself inside the viewport,
+   so sizing to it here cannot push anything off the screen. Everything else on
+   the screen lives inside `.board-wrap`, so nothing stretches with it. */
 .game {
-  max-width: 420px;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 0 1rem 1rem;
   text-align: center;
@@ -66,16 +75,18 @@ a {
     margin-top: 50px;
   }
 }
+/* The source site's own narrow breakpoints. Zoom rather than transform for the
+   same reason as `useFitBoard`: a transform would leave a full-width box behind
+   and put the board off-centre. A board wide enough for `useFitBoard` overrides
+   these from its inline style, having already been fitted to the viewport. */
 @media (max-width: 369px) {
   .board-wrap {
-    transform: scale(0.95);
-    transform-origin: top center;
+    zoom: 0.95;
   }
 }
 @media (max-width: 344px) {
   .board-wrap {
-    transform: scale(0.9);
-    transform-origin: top center;
+    zoom: 0.9;
   }
 }
 .archive-link {
@@ -130,10 +141,10 @@ a {
   user-select: none;
 }
 .pause-overlay {
-  /* Absolute, not fixed: a transformed ancestor becomes the containing block
-     for fixed descendants too, so `fixed` would size this to a scaled
-     `.board-wrap` on wide boards and to the viewport on narrow ones. Absolute
-     covers the wrapper either way. `.button-row` sits above it on z-index. */
+  /* Absolute, not fixed: a scaled ancestor becomes the containing block for
+     fixed descendants too, so `fixed` would size this to a zoomed `.board-wrap`
+     on wide boards and to the viewport on narrow ones. Absolute covers the
+     wrapper either way. `.button-row` sits above it on z-index. */
   position: absolute;
   inset: 0;
   /* Heavy dim: the board should be barely visible while paused. */
@@ -453,9 +464,16 @@ a {
   font-weight: 700;
 }
 
+/* Height rather than `inset: 0`, because on a phone `bottom: 0` on a fixed box
+   is the bottom of the *large* viewport — behind the browser's own bottom bar.
+   The modal then centres against a taller box than the one you can see and sits
+   low on the screen. `dvh` is the visible height, with `vh` behind it for
+   anything that does not know the unit. */
 .overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 auto 0;
+  height: 100vh;
+  height: 100dvh;
   background: var(--overlay);
   display: flex;
   align-items: center;

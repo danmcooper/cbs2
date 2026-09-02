@@ -52,30 +52,45 @@ const finishDelay = () => act(() => void vi.advanceTimersByTime(2700));
 describe('board width', () => {
   const wrap = () => document.querySelector('.board-wrap') as HTMLElement;
 
-  it('leaves a board no wider than the source site\'s four columns alone', async () => {
-    await renderGame();
-    expect(wrap().style.transform).toBe('');
+  // Cards are a fixed 87px, so a fifth column is 92px the stylesheet's own
+  // breakpoints know nothing about — on a phone the board would run off the
+  // side of the page. Five columns is 5*87 + 4*5 gaps = 455px.
+  const wide = () => ({
+    ...puzzle,
+    width: 5,
+    height: 1,
+    initialReveals: [0],
+    people: ['ana', 'bo', 'cy', 'dee', 'eli'].map((name, i) => ({
+      ...puzzle.people[0], name, criminal: i % 2 === 1, paths: i === 0 ? [] : [[0]],
+    })),
   });
 
-  it('scales a wider board down to fit, and never up', async () => {
-    // Cards are a fixed 87px, so a fifth column is 92px the stylesheet's own
-    // breakpoints know nothing about — on a phone the board would run off the
-    // side of the page. Five columns is 5*87 + 4*5 gaps = 455px.
-    const wide = {
-      ...puzzle,
-      width: 5,
-      height: 1,
-      initialReveals: [0],
-      people: ['ana', 'bo', 'cy', 'dee', 'eli'].map((name, i) => ({
-        ...puzzle.people[0], name, criminal: i % 2 === 1, paths: i === 0 ? [] : [[0]],
-      })),
-    };
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(wide), { status: 200 })));
+  const serve = (p: unknown) =>
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(p), { status: 200 })));
+  const windowWidth = (px: number) => vi.stubGlobal('innerWidth', px);
+
+  it('leaves a board no wider than the source site\'s four columns alone', async () => {
+    windowWidth(320); // narrower than the board: the stylesheet handles this one
+    await renderGame();
+    expect(wrap().style.zoom).toBe('');
+  });
+
+  it('scales a wider board down to the room it has', async () => {
+    serve(wide());
+    windowWidth(400); // 400 less `.game`'s 2rem of padding = 368px of room
     await renderGame();
 
-    expect(wrap().style.transform).toContain('455px');
-    // `min(1, ...)` is what keeps it from blowing the board up on a desktop.
-    expect(wrap().style.transform).toMatch(/^scale\(min\(1,/);
+    expect(Number(wrap().style.zoom)).toBeCloseTo(368 / 455, 5);
+  });
+
+  it('leaves a wider board that already fits at full size', async () => {
+    serve(wide());
+    windowWidth(1200);
+    await renderGame();
+
+    // Not `zoom: 1` but no zoom at all — scaling up would be worse than the
+    // overflow it exists to prevent, and this is the desktop case.
+    expect(wrap().style.zoom).toBe('');
   });
 });
 
@@ -511,11 +526,11 @@ describe('control bar', () => {
   // The dim outranks the board on z-index but is outranked by the button row,
   // which is the only thing that makes unpausing possible. That comparison only
   // happens if the two share a stacking context — and `.board-wrap` becomes one
-  // the moment it is transformed, which `fitBoard` does for every board wider
-  // than four columns and the stylesheet does on narrow phones. With the dim
-  // outside it, the whole subtree paints underneath, pause button included, and
-  // the puzzle can never be resumed. jsdom does no layout, so nesting is the
-  // part of that we can actually hold onto.
+  // the moment it is scaled, which `useFitBoard` does for a wide board on a
+  // narrow screen and the stylesheet does on narrow phones. With the dim outside
+  // it, the whole subtree paints underneath, pause button included, and the
+  // puzzle can never be resumed. jsdom does no layout, so nesting is the part of
+  // that we can actually hold onto.
   it('keeps the pause dim in the same stacking context as the buttons that outrank it', async () => {
     const user = userEvent.setup();
     await renderGame(user);
