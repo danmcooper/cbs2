@@ -60,6 +60,17 @@ a {
   padding: 0 1rem 1rem;
   text-align: center;
 }
+/* Reserves the room a fitted board actually takes up on screen. `.board-wrap`
+   is scaled with a transform, which paints it smaller without shrinking its
+   box, so `useFitBoard` sets the painted size here instead — on a separate
+   element, because everything inside `.board-wrap` (the pause dim, the mark
+   pickers) is positioned against the board at its natural size. Unsized on
+   every board that is not being fitted, where it shrink-wraps and centres like
+   the wrapper it holds. */
+.board-fit {
+  width: fit-content;
+  margin: 0 auto;
+}
 /* Shrinks to the grid's width so children can align to the grid edges.
    Top margin and small-screen scaling match the real site's breakpoints. */
 .board-wrap {
@@ -75,10 +86,12 @@ a {
     margin-top: 50px;
   }
 }
-/* The source site's own narrow breakpoints. Zoom rather than transform for the
-   same reason as `useFitBoard`: a transform would leave a full-width box behind
-   and put the board off-centre. A board wide enough for `useFitBoard` overrides
-   these from its inline style, having already been fitted to the viewport. */
+/* The source site's own narrow breakpoints. Zoom is right here where it is
+   wrong in `useFitBoard`: these barely scale at all, so the smallest text on a
+   card — the 10px grid reference — still lands at 9px and clears WebKit's floor
+   for drawing text, which is the thing that rules zoom out on a board scaled to
+   two-fifths. A board wide enough for `useFitBoard` has already been fitted to
+   the viewport and overrides these from its inline style. */
 @media (max-width: 369px) {
   .board-wrap {
     zoom: 0.95;

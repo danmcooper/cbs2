@@ -87,13 +87,52 @@ const NARROW_COLS = 4;
  * breakpoints. This generalises that to any column count — but only above four,
  * so those breakpoints stay in sole charge of the boards they were measured on.
  *
- * `zoom` rather than `transform: scale`, because a transform paints the board
- * smaller without making its box any smaller. A 7-wide board is 639px and kept
- * a 639px box whatever it looked like, so it overflowed its container, and an
- * over-wide inline-block does not centre — it starts at the container's edge
- * and spills off one side. That is the board sitting right of centre with its
- * right-hand column off screen. Zoom scales the layout, so the box the page
- * reserves is the board that gets drawn.
+ * `transform: scale` rather than `zoom`, because WebKit will not draw text
+ * below a 9px floor and `zoom` cannot get under it. Measured in Safari at the
+ * 10x10's own ratio of 0.4219: a card's box scales exactly, 87px to 36.7px,
+ * while its 11px profession is inflated to a computed 21.3px so that it still
+ * lands on 9px once zoomed — near twice the 4.64px the board asked for. The
+ * words then overflow cards a third their size. `text-size-adjust` does not
+ * reach this; it governs autosizing, which is a different mechanism, and
+ * neither `100%` nor `none` moves the number. A transform never touches
+ * font-size at all, so there is no size for WebKit to clamp: the same probe
+ * puts it at 4.64px, which is the ask.
+ *
+ * What `zoom` was doing for us was scaling the layout, so the box the page
+ * reserves is the board that gets drawn. A transform paints smaller without
+ * shrinking its box, and an over-wide inline-block does not centre — it starts
+ * at the container's edge and spills off one side, which is the board sitting
+ * right of centre with its right-hand column off screen. So `.board-fit` is
+ * given the painted size and `.board-wrap` keeps its natural one, which also
+ * leaves everything positioned against the real board: the pause dim covers it,
+ * and the mark pickers still hang off the right card.
+ *
+ * Negative margins were the tempting way to do that without another element,
+ * and they only half work. `margin-right` collapses the width, but WebKit does
+ * not let a negative `margin-bottom` shrink the line box an inline-block sits
+ * in — measured, the page went on reserving all 1359px of a 10x10 and left
+ * 800px of nothing under a board painted 573px tall. An explicit height on a
+ * box that is not the transformed one is the thing that actually holds.
+ *
+ * The height has to be measured rather than derived, because it depends on how
+ * many cards are showing clue text at this moment, hence the observer. Until
+ * the first measurement lands there is no height to set, and the board paints
+ * over the space below it for one frame rather than being clipped out of view.
+ *
+ * `.board-wrap` is switched to a block for the same reason it is scaled at all.
+ * Sizing the outer box fixes what the page lays out but not what it lets you
+ * scroll to: WebKit takes an inline-level box's contribution to scrollable
+ * overflow from its unscaled size, so a fitted 10x10 still offered 1359px of
+ * height and 915px of width to scroll through, almost all of it empty. A block
+ * at the same explicit width contributes its transformed size and does not.
+ * Clipping on the outer box would also have worked, and would have cut off the
+ * mark pickers, which hang deliberately over the right-hand edge.
+ *
+ * The inline `zoom: 1` is not redundant. The stylesheet's own narrow
+ * breakpoints zoom `.board-wrap`, and they are sized for the source site's
+ * four columns rather than for a board that has already been fitted here —
+ * left alone they would compound with the transform. They keep their boards;
+ * this overrides them on ours.
  *
  * The ratio is measured here rather than left to `calc((100vw - 2rem) / 639px)`
  * in the stylesheet. Dividing a length by a length is CSS Values 4 and not
@@ -103,16 +142,51 @@ const NARROW_COLS = 4;
  */
 const GAME_PADDING = 32; // `.game`'s 1rem either side, at the default root size.
 
-function useFitBoard(cols: number): React.CSSProperties | undefined {
+function useFitBoard(cols: number): {
+  ref: React.RefObject<HTMLDivElement | null>;
+  /** Sizes `.board-fit` to what gets painted. */
+  outer: React.CSSProperties | undefined;
+  /** Scales `.board-wrap`, which keeps its natural size. */
+  inner: React.CSSProperties | undefined;
+} {
+  const ref = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState(() => window.innerWidth - GAME_PADDING);
+  const [natural, setNatural] = useState(0);
+
   useEffect(() => {
     const onResize = () => setRoom(window.innerWidth - GAME_PADDING);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  if (cols <= NARROW_COLS) return undefined;
-  const natural = cols * CARD_W + (cols - 1) * GAP;
-  return room >= natural ? undefined : { zoom: room / natural };
+
+  // `offsetHeight` is the laid-out height, which a transform does not change,
+  // so measuring the element we are about to scale is not circular.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => setNatural(el.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const width = cols * CARD_W + (cols - 1) * GAP;
+  if (cols <= NARROW_COLS || room >= width) {
+    return { ref, outer: undefined, inner: undefined };
+  }
+  const scale = room / width;
+  return {
+    ref,
+    outer: { width: width * scale, ...(natural ? { height: natural * scale } : null) },
+    inner: {
+      zoom: 1,
+      display: "block",
+      width,
+      transform: `scale(${scale})`,
+      transformOrigin: "top left",
+    },
+  };
 }
 
 function shareOf(puzzle: Puzzle, slug: string): { tag: string; link: string } {
@@ -517,96 +591,98 @@ function Board({ puzzle, slug }: { puzzle: Puzzle; slug: string }) {
 
   return (
     <main className="game">
-      <div className="board-wrap" style={boardFit}>
-        {/* Inside the wrapper on purpose: the wrapper is zoomed and scrolls with
-            the board, so a dim outside it would neither line up with the board
-            nor stay clear of the button row. */}
-        {paused && <div className="pause-overlay" />}
-        <Grid
-          puzzle={puzzle}
-          state={state}
-          justFlipped={justFlipped}
-          pickerIndex={pickerIndex}
-          onOpen={setGuessing}
-          onCycleTag={(index) => dispatch({ type: "cycleTag", index })}
-          onOpenPicker={setPickerIndex}
-          onPickMark={(index, mark) => {
-            dispatch({ type: "setMark", index, mark });
-            setPickerIndex(null);
-          }}
-          onToggleClue={(index) => dispatch({ type: "toggleConsumed", index })}
-        />
-        <div className="controls">
-          <div className="button-row">
-            <button
-              className="btn-pause"
-              aria-label={paused ? "Unpause" : "Pause"}
-              disabled={state.completed}
-              onClick={togglePause}
-            >
-              {/* The action the button performs: bars while running, triangle
-                  while paused. Drawn rather than emoji, which vary by platform. */}
-              <svg viewBox="0 0 20 16" width="18" height="14" aria-hidden="true">
-                {paused ? (
-                  <path
-                    d="M6.9 2.6 C6.9 1.4 7.8 1 8.6 1.7 L13.9 7.1 C14.4 7.6 14.4 8.4 13.9 8.9 L8.6 14.3 C7.8 15 6.9 14.6 6.9 13.4 Z"
-                    fill="currentColor"
-                  />
-                ) : (
-                  <>
-                    <rect x="6.2" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
-                    <rect x="11" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
-                  </>
-                )}
-              </svg>
-            </button>
-            <button
-              disabled={
-                Object.keys(state.tags).length === 0 && Object.keys(state.marks).length === 0
-              }
-              onClick={() => dispatch({ type: "clearTags" })}
-            >
-              Clear Tags
-            </button>
-            <button onClick={() => setResetOpen(true)}>Reset</button>
-            <button
-              className="btn-hint"
-              disabled={!puzzle.hints || state.completed}
-              onClick={() => dispatch({ type: "hint", now: Date.now() })}
-            >
-              💡
-              {state.hint && state.hintRevealed
-                ? "Hide hint"
-                : state.hint
-                  ? "Show more"
-                  : "Show hint"}
-            </button>
+      <div className="board-fit" style={boardFit.outer}>
+        <div className="board-wrap" ref={boardFit.ref} style={boardFit.inner}>
+          {/* Inside the wrapper on purpose: the wrapper is zoomed and scrolls with
+              the board, so a dim outside it would neither line up with the board
+              nor stay clear of the button row. */}
+          {paused && <div className="pause-overlay" />}
+          <Grid
+            puzzle={puzzle}
+            state={state}
+            justFlipped={justFlipped}
+            pickerIndex={pickerIndex}
+            onOpen={setGuessing}
+            onCycleTag={(index) => dispatch({ type: "cycleTag", index })}
+            onOpenPicker={setPickerIndex}
+            onPickMark={(index, mark) => {
+              dispatch({ type: "setMark", index, mark });
+              setPickerIndex(null);
+            }}
+            onToggleClue={(index) => dispatch({ type: "toggleConsumed", index })}
+          />
+          <div className="controls">
+            <div className="button-row">
+              <button
+                className="btn-pause"
+                aria-label={paused ? "Unpause" : "Pause"}
+                disabled={state.completed}
+                onClick={togglePause}
+              >
+                {/* The action the button performs: bars while running, triangle
+                    while paused. Drawn rather than emoji, which vary by platform. */}
+                <svg viewBox="0 0 20 16" width="18" height="14" aria-hidden="true">
+                  {paused ? (
+                    <path
+                      d="M6.9 2.6 C6.9 1.4 7.8 1 8.6 1.7 L13.9 7.1 C14.4 7.6 14.4 8.4 13.9 8.9 L8.6 14.3 C7.8 15 6.9 14.6 6.9 13.4 Z"
+                      fill="currentColor"
+                    />
+                  ) : (
+                    <>
+                      <rect x="6.2" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
+                      <rect x="11" y="1.5" width="3.2" height="13" rx="1.4" fill="currentColor" />
+                    </>
+                  )}
+                </svg>
+              </button>
+              <button
+                disabled={
+                  Object.keys(state.tags).length === 0 && Object.keys(state.marks).length === 0
+                }
+                onClick={() => dispatch({ type: "clearTags" })}
+              >
+                Clear Tags
+              </button>
+              <button onClick={() => setResetOpen(true)}>Reset</button>
+              <button
+                className="btn-hint"
+                disabled={!puzzle.hints || state.completed}
+                onClick={() => dispatch({ type: "hint", now: Date.now() })}
+              >
+                💡
+                {state.hint && state.hintRevealed
+                  ? "Hide hint"
+                  : state.hint
+                    ? "Show more"
+                    : "Show hint"}
+              </button>
+            </div>
+            <p className="date-line">
+              <span>{puzzleLabel(puzzle)}</span>
+              <span className="timer" onClick={cycleTimerMode}>
+                {timerMode === "elapsed"
+                  ? `Elapsed: ${formatElapsed(sinceStart)}`
+                  : timerMode === "seconds"
+                    ? `Timed: ${formatTime(elapsed)}`
+                    : `Timed: < ${minutes} min`}
+              </span>
+            </p>
           </div>
-          <p className="date-line">
-            <span>{puzzleLabel(puzzle)}</span>
-            <span className="timer" onClick={cycleTimerMode}>
-              {timerMode === "elapsed"
-                ? `Elapsed: ${formatElapsed(sinceStart)}`
-                : timerMode === "seconds"
-                  ? `Timed: ${formatTime(elapsed)}`
-                  : `Timed: < ${minutes} min`}
-            </span>
+          {postComplete && (
+            <p className="completed">
+              Solved! {state.mistakes} mistakes · {formatTime(state.elapsedMs)}{" "}
+              <button
+                className="btn-results"
+                onClick={() => setResultsOpen(true)}
+              >
+                Results
+              </button>
+            </p>
+          )}
+          <p className="archive-link">
+            <a href="#/">← Archive</a>
           </p>
         </div>
-        {postComplete && (
-          <p className="completed">
-            Solved! {state.mistakes} mistakes · {formatTime(state.elapsedMs)}{" "}
-            <button
-              className="btn-results"
-              onClick={() => setResultsOpen(true)}
-            >
-              Results
-            </button>
-          </p>
-        )}
-        <p className="archive-link">
-          <a href="#/">← Archive</a>
-        </p>
       </div>
       {state.rejectedIndex !== null && state.rejectedGuess !== null && (
         <EvidenceModal
