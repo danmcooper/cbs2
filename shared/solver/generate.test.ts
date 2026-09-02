@@ -415,6 +415,26 @@ describe('orderPool', () => {
     expect(new Set(ordered).size).toBe(pool.length);
   });
 
+  // The weight fitter used to normalise with `Math.max(...weights)`, one weight
+  // per candidate. The archive's 4x5 board never came close to the argument
+  // limit; an 8x8 blew the call stack, and the RangeError surfaced from inside
+  // the fitter with nothing to connect it to board size. A 6x6 pool is enough
+  // candidates to have failed the old code, and cheap enough to keep here.
+  it('orders a pool far larger than the archive board produces', () => {
+    const bigBoard = makeBoard(
+      makeGrid(6, 6),
+      Array.from({ length: 36 }, (_, i) => ['cook', 'cop', 'pilot', 'painter', 'sleuth'][i % 5]),
+      Array.from({ length: 36 }, (_, i) => i % 4 === 0),
+    );
+    const bigPool = candidateHints(bigBoard);
+    expect(bigPool.length).toBeGreaterThan(pool.length);
+    const ordered = orderPool(makeRng(3), bigBoard, bigPool, mix);
+    expect(ordered.length).toBe(bigPool.length);
+    // Scoring a pool this size is seconds of work rather than the milliseconds
+    // the rest of this file takes, and it is the whole point of the test — the
+    // default timeout leaves it to flake on a loaded machine.
+  }, 30_000);
+
   it('is deterministic for a given seed', () => {
     const a = orderPool(makeRng(5), poolBoard, pool, mix).slice(0, 50).map(formatHint);
     const b = orderPool(makeRng(5), poolBoard, pool, mix).slice(0, 50).map(formatHint);

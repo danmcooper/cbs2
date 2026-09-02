@@ -57,6 +57,27 @@ describe('ClueText', () => {
     );
   });
 
+  // #PROFN carries no number of its own — the renderer cannot know one, because
+  // it works from the hint and never sees the board. Counting the cast is the
+  // site's job, which is the whole reason the token exists.
+  it('counts the cast for a #PROFN profession', () => {
+    const cast = [person('a', 'cook'), person('b', 'cook'), person('c', 'chef'),
+      person('d', 'cook')];
+    expect(renderClue('exactly 1 of #PROFN:cook has an innocent below them', {
+      people: cast, width: 2,
+    })).toBe('Exactly 1 of 3 cooks has an innocent below them');
+  });
+
+  // Plural from the count rather than from the token: a cast of one is "1 chef",
+  // not "1 chefs". Nothing else can decide this, since the renderer wrote the
+  // token before anyone had counted.
+  it('reads a cast of one as singular', () => {
+    const cast = [person('a', 'cook'), person('b', 'chef')];
+    expect(renderClue('exactly 1 of #PROFN:chef has an innocent below them', {
+      people: cast, width: 2,
+    })).toBe('Exactly 1 of 1 chef has an innocent below them');
+  });
+
   it('renders 1-based #C column tokens as letters', () => {
     // Real data: Jerry's "There is only one criminal in column #C:1" renders as column A.
     expect(renderClue('There is only one criminal in column #C:1')).toBe(

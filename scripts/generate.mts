@@ -5,17 +5,17 @@ import { VARIANTS, type Variant, validatePuzzle } from '../shared/puzzle.ts';
 import type { Band, Bands } from '../shared/solver/difficulty.ts';
 import { bandsFor, classify, loadBands } from '../shared/solver/difficulty.ts';
 import { archiveClueMix } from '../shared/solver/corpus.ts';
-import { GenerationError, generatePuzzle, makeRng } from '../shared/solver/generate.ts';
+import { GenerationError, generatePuzzle } from '../shared/solver/generate.ts';
 import { regenerateManifest } from './manifest.mts';
 
 /** One generated sibling to build for each date. */
 export interface VariantSpec {
   variant: Variant;
   /**
-   * The board to fill. `'inherit'` takes the real puzzle's own; `'random'`
-   * draws one for the date, which is what a Dan puzzle does.
+   * The board to fill. `'inherit'` takes the real puzzle's own; `'weekday'`
+   * reads it off the day of the week, which is what a Dan puzzle does.
    */
-  board: { width: number; height: number } | 'inherit' | 'random';
+  board: { width: number; height: number } | 'inherit' | 'weekday';
   /**
    * Appended to the date to make the rng seed, so two variants that happen to
    * share a board still get different puzzles. Empty for `dan`: its 56 files
@@ -43,36 +43,49 @@ export interface VariantSpec {
   contentSalt?: string;
 }
 
-/** The smallest and largest side a drawn board may have. */
-export const BOARD_MIN = 3;
-export const BOARD_MAX = 7;
+/**
+ * The board for each day of the week, growing from Monday to Sunday. Indexed
+ * the way `Date` numbers its days, Sunday first.
+ *
+ * A schedule rather than a draw, so the week has a shape you can feel — a 3x4
+ * to start it and a 6x6 to end it — and so you know what you are getting into
+ * before you open it. It also puts the expensive boards on fixed days instead
+ * of wherever the seed happened to drop them.
+ *
+ * Never shrinks across the week, but does not always grow either: Thursday and
+ * Friday are both 5x5. Seven days and a range this size do not divide evenly,
+ * and a repeat mid-week is a smaller lie than a jump at the weekend.
+ */
+export const WEEKDAY_BOARDS: readonly { width: number; height: number }[] = [
+  { width: 6, height: 6 }, // Sunday
+  { width: 3, height: 4 }, // Monday
+  { width: 4, height: 4 }, // Tuesday
+  { width: 4, height: 5 }, // Wednesday
+  { width: 5, height: 5 }, // Thursday
+  { width: 5, height: 5 }, // Friday
+  { width: 5, height: 6 }, // Saturday
+];
 
 /**
- * The board for one date: two independent draws from `BOARD_MIN..BOARD_MAX`,
- * the smaller taken as the width. Sorting them rather than drawing width and
- * height separately is what keeps every board portrait or square, and it
- * biases the draw toward the middle sizes — a 3x3 or a 7x7 needs both draws to
- * agree, where a 3x7 comes up either way round.
- *
- * Seeded, so a date's board is a property of the date: regenerating it, with
- * `--force` or on another machine, rebuilds the same shape.
+ * The board a date gets. Parsed as UTC so the day of the week is a property of
+ * the date string and not of the machine's timezone — `new Date('2026-09-02')`
+ * is already UTC midnight, but the explicit form says so.
  */
-export function randomBoard(seed: number): { width: number; height: number } {
-  const rng = makeRng(seed);
-  const span = BOARD_MAX - BOARD_MIN + 1;
-  const a = BOARD_MIN + Math.floor(rng() * span);
-  const b = BOARD_MIN + Math.floor(rng() * span);
-  return { width: Math.min(a, b), height: Math.max(a, b) };
+export function boardForDate(date: string): { width: number; height: number } {
+  const day = new Date(`${date}T00:00:00Z`).getUTCDay();
+  const board = WEEKDAY_BOARDS[day];
+  if (!board) throw new Error(`not a date: ${date}`);
+  return board;
 }
 
 /**
  * What a backfill builds: one Dan puzzle per date, on a board drawn for that
  * date. Cards are what generation costs — solving is exponential in them — so
- * the spread of board sizes is also a wide spread of build times, from a 3x3
- * in a tenth of a second to a 7x7 that is minutes of work.
+ * the spread of board sizes is also a wide spread of build times, from a 3x4
+ * in a fraction of a second to a 6x6 that is tens of seconds of work.
  */
 export const DEFAULT_VARIANTS: readonly VariantSpec[] = [
-  { variant: 'dan', board: 'random', seedSalt: '' },
+  { variant: 'dan', board: 'weekday', seedSalt: '' },
 ];
 
 export interface GenerateRunOptions {
@@ -200,13 +213,11 @@ export async function runGenerate(opts: GenerateRunOptions = {}): Promise<Genera
       real ??= validatePuzzle(
         JSON.parse(await readFile(path.join(puzzlesDir, `${date}.json`), 'utf8')),
       );
-      // The board draw gets its own seed key so that it is independent of the
-      // puzzle's: changing one variant's board must not reshuffle its contents.
       const board =
         spec.board === 'inherit'
           ? { width: real.width, height: real.height }
-          : spec.board === 'random'
-            ? randomBoard(seedForDate(`${date}${spec.seedSalt}-board`))
+          : spec.board === 'weekday'
+            ? boardForDate(date)
             : spec.board;
       inScope.push({ date, spec, aimedAt: real.difficulty, ...board });
     }

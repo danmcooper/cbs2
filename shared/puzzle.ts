@@ -29,14 +29,36 @@ export interface HintStep {
  */
 export const VARIANTS = {
   /**
-   * The only generated sibling. Its board is drawn per date rather than
-   * inherited from the real puzzle — see `randomBoard` in `scripts/generate.mts`
-   * — so a Dan puzzle is anywhere from 3x3 to 7x7.
+   * The only generated sibling. Its board is set by the day of the week rather
+   * than inherited from the real puzzle — see `WEEKDAY_BOARDS` in
+   * `scripts/generate.mts` — so a Dan puzzle grows from 3x4 on Monday to 6x6
+   * on Sunday.
    */
   dan: { suffix: '-dan', label: 'Dan' },
 } as const;
 
 export type Variant = keyof typeof VARIANTS;
+
+/**
+ * What a puzzle advertises about itself in a list or a header.
+ *
+ * A real puzzle is always the source site's 4x5, so its size says nothing and
+ * its difficulty label — which the source assigned and which our bands are
+ * calibrated against — says everything. A Dan puzzle is the other way round:
+ * the label is our own classifier's opinion of a puzzle nobody else has
+ * played, while the board changes with the day of the week and is the thing a
+ * player actually wants to know before starting.
+ */
+export function puzzleBillingOf(p: {
+  /** Absent on a `Puzzle`'s real puzzles, the literal `'real'` on a manifest entry. */
+  variant?: 'real' | Variant;
+  difficulty: string;
+  width: number;
+  height: number;
+}): string {
+  const generated = p.variant !== undefined && p.variant !== 'real';
+  return generated ? `${p.width}x${p.height}` : p.difficulty;
+}
 
 const VARIANT_NAMES = Object.keys(VARIANTS) as Variant[];
 

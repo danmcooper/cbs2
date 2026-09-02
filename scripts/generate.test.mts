@@ -9,7 +9,8 @@ import { makeGrid } from '../shared/solver/grid.ts';
 import { isUniquelySolvable, parseClues, solveChain } from '../shared/solver/solve.ts';
 import {
   DEFAULT_VARIANTS,
-  randomBoard,
+  boardForDate,
+  WEEKDAY_BOARDS,
   type GenerateProgress,
   type GenerateRunResult,
   type VariantSpec,
@@ -182,10 +183,10 @@ describe('runGenerate', () => {
   );
 
   it(
-    'draws the board from the date when the variant asks for a random one',
+    'takes the board from the day of the week when the variant asks for it',
     async () => {
       const { dir, bandsPath } = await fixture();
-      const variants: VariantSpec[] = [{ variant: 'dan', board: 'random', seedSalt: '' }];
+      const variants: VariantSpec[] = [{ variant: 'dan', board: 'weekday', seedSalt: '' }];
 
       const result = await runGenerate({ puzzlesDir: dir, bandsPath, variants });
 
@@ -193,22 +194,18 @@ describe('runGenerate', () => {
       const dan = validatePuzzle(
         JSON.parse(await readFile(path.join(dir, '2026-07-01-dan.json'), 'utf8')),
       );
-      // Whatever the draw gave, it is the draw for this date and it is a legal
-      // board — the shape itself is pinned by `randomBoard`'s own tests.
-      expect([dan.width, dan.height]).toEqual([
-        randomBoard(seedForDate('2026-07-01-board')).width,
-        randomBoard(seedForDate('2026-07-01-board')).height,
-      ]);
-      expect(dan.people).toHaveLength(dan.width * dan.height);
+      // 2026-07-01 is a Wednesday, which the schedule puts at 4x5.
+      expect([dan.width, dan.height]).toEqual([4, 5]);
+      expect(dan.people).toHaveLength(20);
     },
     120_000,
   );
 });
 
 describe('DEFAULT_VARIANTS', () => {
-  it('builds one Dan puzzle per date, on a board drawn for that date', () => {
+  it("builds one Dan puzzle per date, on that day of the week's board", () => {
     expect(DEFAULT_VARIANTS.map((v) => v.variant)).toEqual(['dan']);
-    expect(DEFAULT_VARIANTS[0].board).toBe('random');
+    expect(DEFAULT_VARIANTS[0].board).toBe('weekday');
   });
 
   it('keeps the Dan seed key bare and every variant distinct', () => {
@@ -218,34 +215,30 @@ describe('DEFAULT_VARIANTS', () => {
   });
 });
 
-describe('randomBoard', () => {
-  it('stays within 3..7 on both sides, and is never taller than it is wide', () => {
-    // Both sides are drawn from the same range and then sorted, so the board is
-    // always portrait or square — never wider than it is tall.
-    for (let i = 0; i < 500; i++) {
-      const { width, height } = randomBoard(i);
-      expect(width).toBeGreaterThanOrEqual(3);
-      expect(height).toBeLessThanOrEqual(7);
-      expect(width).toBeLessThanOrEqual(height);
+describe('boardForDate', () => {
+  it('grows across the week from Monday to Sunday', () => {
+    // 2026-08-31 is a Monday, so this walks a whole week in order.
+    const week = ['2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04',
+      '2026-09-05', '2026-09-06'].map(boardForDate);
+    expect(week.map((b) => `${b.width}x${b.height}`)).toEqual([
+      '3x4', '4x4', '4x5', '5x5', '5x5', '5x6', '6x6',
+    ]);
+    // Monotone in cards: a later day is never a smaller board than an earlier
+    // one. Not strictly increasing — Thursday and Friday are both 5x5.
+    for (let i = 1; i < week.length; i++) {
+      const cards = (b: { width: number; height: number }) => b.width * b.height;
+      expect(cards(week[i]), `step ${i}`).toBeGreaterThanOrEqual(cards(week[i - 1]));
     }
   });
 
-  it('reaches every size the range allows, corners included', () => {
-    const seen = new Set<string>();
-    for (let i = 0; i < 5_000; i++) {
-      const { width, height } = randomBoard(i);
-      seen.add(`${width}x${height}`);
-    }
-    // 3..7 choose 2 with repetition: fifteen distinct boards.
-    expect(seen.size).toBe(15);
-    expect(seen.has('3x3')).toBe(true);
-    expect(seen.has('7x7')).toBe(true);
+  it('is never wider than it is tall, so the board is portrait or square', () => {
+    for (const { width, height } of WEEKDAY_BOARDS) expect(width).toBeLessThanOrEqual(height);
   });
 
-  it('is a function of the seed alone, so a regenerated date keeps its board', () => {
-    expect(randomBoard(seedForDate('2026-07-01'))).toEqual(
-      randomBoard(seedForDate('2026-07-01')),
-    );
+  it('reads the day in UTC, so a date is the same board in every timezone', () => {
+    // Late enough in the day that a westward machine would still call it Sunday.
+    expect(boardForDate('2026-09-07')).toEqual({ width: 3, height: 4 });
+    expect(boardForDate('2026-09-06')).toEqual({ width: 6, height: 6 });
   });
 });
 

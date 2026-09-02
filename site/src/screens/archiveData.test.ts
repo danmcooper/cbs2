@@ -14,6 +14,8 @@ const entry = (
   id: overrides.id ?? 'a6f09e2713b2',
   difficulty: overrides.difficulty ?? 'Easy',
   title: overrides.title ?? 'T',
+  width: 4,
+  height: 5,
 });
 
 beforeEach(() => localStorage.clear());
@@ -83,8 +85,8 @@ describe('statusFor', () => {
 
 describe('filterEntries variant', () => {
   const entries: ManifestEntry[] = [
-    { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'Real' },
-    { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'bbbbbbbbbbbb', difficulty: 'Easy', title: 'Dan' },
+    { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'Real', width: 4, height: 5 },
+    { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'bbbbbbbbbbbb', difficulty: 'Easy', title: 'Dan', width: 6, height: 6 },
   ];
 
   it('keeps only the requested variant', () => {

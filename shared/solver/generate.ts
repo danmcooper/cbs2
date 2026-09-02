@@ -23,7 +23,7 @@ import {
   minimalPaths,
   solveChain,
 } from './solve';
-import { FLAVOUR, NAMES, TITLES, type VocabPerson, faceOf, professionsFor } from './vocab';
+import { FLAVOUR, TITLES, type VocabPerson, faceOf, namesFor, professionsFor } from './vocab';
 
 /** Every archived puzzle is 4x5, and so is every puzzle we ship. */
 const DEFAULT_WIDTH = 4;
@@ -195,7 +195,13 @@ function fitFeatureWeights(featureSets: readonly string[][], target: Record<stri
     weights = weights.map((w, i) =>
       featureSets[i].reduce((acc, f) => acc * (correction.get(f) as number), w),
     );
-    const max = Math.max(...weights);
+    // A fold rather than `Math.max(...weights)`: there is one weight per
+    // candidate hint, and the pool grows fast enough with the board that
+    // spreading it overflows the call stack — an 8x8 does it, and the failure
+    // reads as a mysterious RangeError from inside the fitter rather than as
+    // "too many arguments".
+    let max = 0;
+    for (const w of weights) if (w > max) max = w;
     if (max > 0) weights = weights.map((w) => w / max);
   }
   return weights;
@@ -439,8 +445,13 @@ export function castOf(
   professionShapes: readonly number[][],
   size: number = DEFAULT_SIZE,
 ): Cast {
+  // `namesFor`, not `NAMES`: the extra passes only come out for a board the
+  // base list cannot seat, so every board that fitted in 52 names deals exactly
+  // the cast it always did — adding to a bucket would otherwise change which
+  // name that bucket deals first, on every board at every size.
+  const vocabularyNames = namesFor(size);
   const buckets = new Map<string, VocabPerson[]>();
-  for (const person of NAMES) {
+  for (const person of vocabularyNames) {
     const initial = person.name[0];
     const bucket = buckets.get(initial);
     if (bucket) bucket.push(person);
@@ -458,7 +469,9 @@ export function castOf(
   for (let round = 0; people.length < size; round++) {
     const available = letters.filter((l) => (buckets.get(l) as VocabPerson[]).length > round);
     if (available.length === 0) {
-      throw new GenerationError(`only ${NAMES.length} names in the vocabulary for ${size} cards`);
+      throw new GenerationError(
+        `only ${vocabularyNames.length} names in the vocabulary for ${size} cards`,
+      );
     }
     for (const letter of available) {
       if (people.length >= size) break;
@@ -684,7 +697,9 @@ export function generatePuzzle(input: GenerateInput): GenerateResult {
         profession: cast.professions[i],
         gender: cast.genders[i],
         criminal,
-        clue: hint ? render(hint) : flavour[flavourAt++ % flavour.length],
+        // A generated board runs to 49 cards and twenty-one professions, where
+        // "Exactly 1 cook has …" leaves you counting cooks before you can use it.
+        clue: hint ? render(hint, { professionTotals: true }) : flavour[flavourAt++ % flavour.length],
         origHint: hint ? formatHint(hint) : null,
         paths: paths[i],
         face: cast.faces[i],

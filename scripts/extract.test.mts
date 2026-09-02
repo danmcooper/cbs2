@@ -47,6 +47,7 @@ describe('runExtract', () => {
       {
         date: '2026-07-07', slug: '2026-07-07', variant: 'real',
         id: 'a6f09e2713b2', difficulty: 'Easy', title: 'A tiny test mystery',
+        width: 2, height: 2,
       },
     ]);
   });

@@ -92,7 +92,7 @@
       "profession": "cook",
       "gender": "male",
       "criminal": false,
-      "clue": "Only one #PROF:builder has an innocent directly below them",
+      "clue": "Exactly 1 of #PROFN:builder has an innocent directly below them",
       "origHint": "n_in_unit_have_trait_in_dir(unit(profession,builder),innocent,0,1,1)",
       "paths": [
         [

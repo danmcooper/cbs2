@@ -377,6 +377,56 @@ describe('adjacency and direction clue templates', () => {
   });
 });
 
+// `professionTotals` is an extension, off unless generation asks for it: the
+// source site never states a profession's total, and `corpus.test.ts` measures
+// the default rendering against every real puzzle. It exists because a 6x6
+// board has more professions than you can count at a glance, so "Exactly 1 cook
+// has …" leaves a player counting cooks before the clue is usable.
+describe('profession totals', () => {
+  const rt = (s: string) => render(parseHint(s), { professionTotals: true });
+
+  it('says how many there are in total, in each shape that counts a profession', () => {
+    expect(rt('n_professions_have_trait_in_dir(painter,innocent,1,0,2)')).toBe(
+      'Exactly 2 of #PROFN:painter have an innocent directly to the right of them',
+    );
+    expect(rt('n_professions_have_trait_in_dir(cook,innocent,-1,0,1)')).toBe(
+      'Exactly 1 of #PROFN:cook has an innocent directly to the left of them',
+    );
+    expect(rt('n_in_unit_have_trait_in_dir(unit(profession,cook),innocent,0,1,1)')).toBe(
+      'Exactly 1 of #PROFN:cook has an innocent directly below them',
+    );
+    expect(
+      rt('only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(profession,cook),innocent,2)'),
+    ).toBe('Exactly 1 of #PROFN:cook has exactly 2 innocent neighbors');
+  });
+
+  // Zero of them is a "None of …" rather than an "Exactly 0 of …", matching the
+  // archive's own habit of writing "No cook has …" instead of "0 cooks have …".
+  it('says none rather than exactly zero', () => {
+    expect(rt('n_professions_have_trait_in_dir(singer,innocent,-1,0,0)')).toBe(
+      'None of #PROFN:singer has an innocent directly to the left of them',
+    );
+  });
+
+  // The clue is about the difference between two professions, and two totals in
+  // one sentence bury it. Nothing in these shapes counts one profession's
+  // members, so the option has nothing to add and leaves them alone.
+  it('leaves profession comparisons and non-profession units untouched', () => {
+    for (const hint of [
+      // Comparisons: the claim is the difference, and two totals bury it.
+      'more_traits_in_unit_than_unit(unit(profession,judge),unit(profession,mechanic),criminal)',
+      'equal_number_of_traits_in_units(unit(profession,coder),unit(profession,cook),innocent)',
+      // No count of one profession's members to put a total against.
+      'odd_number_of_traits_in_unit(unit(profession,scientist),innocent)',
+      // Same shapes as above, over units that are not professions at all.
+      'n_in_unit_have_trait_in_dir(unit(row,2),innocent,0,1,2)',
+      'only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(col,1),innocent,2)',
+    ]) {
+      expect(rt(hint), hint).toBe(r(hint));
+    }
+  });
+});
+
 describe('unsupported shapes', () => {
   it('throws rather than inventing a phrasing', () => {
     expect(() => r('number_of_traits_in_unit(unit(profession,cook),innocent,2)')).toThrow(

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Puzzle } from "../../../shared/puzzle";
-import { VARIANTS, validatePuzzle } from "../../../shared/puzzle";
+import { VARIANTS, puzzleBillingOf, validatePuzzle } from "../../../shared/puzzle";
 import Grid from "../components/Grid";
 import { faceFor } from "../faces";
 import type { GameState, Guess } from "../game/reducer";
@@ -57,7 +57,8 @@ function formatDateOrdinal(date: string): string {
 }
 
 function shareLabel(puzzle: Puzzle): string {
-  return `${formatDateOrdinal(puzzle.date)} (${puzzle.difficulty})`;
+  // "(Tricky)" for a real puzzle, "(6x6)" for a Dan one — see `puzzleBillingOf`.
+  return `${formatDateOrdinal(puzzle.date)} (${puzzleBillingOf(puzzle)})`;
 }
 
 function puzzleLabel(puzzle: Puzzle): string {
@@ -648,8 +649,12 @@ function Board({ puzzle }: { puzzle: Puzzle }) {
                 : "Welcome to Clues by Sam!"}
             </h2>
             <p className="start-date">{formatDateOrdinal(puzzle.date)}</p>
+            {/* A Dan puzzle's difficulty label is our own classifier's reading
+                of a puzzle nobody else has played; its board is the day of the
+                week and is what a player is actually sizing up. */}
             <p className="start-difficulty">
-              Difficulty: <b>{puzzle.difficulty}</b>
+              {puzzle.variant ? "Board" : "Difficulty"}:{" "}
+              <b>{puzzleBillingOf(puzzle)}</b>
             </p>
             <button
               className="btn-start"

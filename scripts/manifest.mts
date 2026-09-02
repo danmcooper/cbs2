@@ -12,6 +12,13 @@ export interface ManifestEntry {
   id: string;
   difficulty: string;
   title: string;
+  /**
+   * The board, so the archive can show a generated puzzle's size without
+   * fetching the puzzle itself. A real puzzle is always the source site's 4x5
+   * and says nothing by saying so; a Dan puzzle's size is the day's headline.
+   */
+  width: number;
+  height: number;
 }
 
 // Longest suffix first, so `-dan-long` is tried before `-dan` and a file cannot
@@ -58,6 +65,8 @@ export async function regenerateManifest(puzzlesDir: string): Promise<ManifestEn
       id: puzzle.id,
       difficulty: puzzle.difficulty,
       title: puzzle.title,
+      width: puzzle.width,
+      height: puzzle.height,
     });
   }
   // Newest first; within a date, the real puzzle first and the generated ones

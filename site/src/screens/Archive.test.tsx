@@ -5,10 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Archive from './Archive';
 
 const manifest = [
-  { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second' },
-  { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'dddddddddddd', difficulty: 'Hard', title: 'Second (Dan)' },
-  { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First' },
-  { date: '2026-07-01', slug: '2026-07-01-dan', variant: 'dan', id: 'eeeeeeeeeeee', difficulty: 'Tricky', title: 'First (Dan)' },
+  { date: '2026-07-03', slug: '2026-07-03', variant: 'real', id: 'bbbbbbbbbbbb', difficulty: 'Hard', title: 'Second', width: 4, height: 5 },
+  { date: '2026-07-03', slug: '2026-07-03-dan', variant: 'dan', id: 'dddddddddddd', difficulty: 'Hard', title: 'Second (Dan)', width: 6, height: 6 },
+  { date: '2026-07-01', slug: '2026-07-01', variant: 'real', id: 'aaaaaaaaaaaa', difficulty: 'Easy', title: 'First', width: 4, height: 5 },
+  { date: '2026-07-01', slug: '2026-07-01-dan', variant: 'dan', id: 'eeeeeeeeeeee', difficulty: 'Tricky', title: 'First (Dan)', width: 3, height: 4 },
 ];
 
 beforeEach(() => {
@@ -30,6 +30,22 @@ describe('Archive', () => {
     expect(links[0].textContent).toContain('Hard');
     expect(links[0].textContent).toContain('unplayed');
     expect(links[1].textContent).toContain('done');
+  });
+
+  // Every real puzzle is the source site's 4x5, so a size column would say the
+  // same thing on every row; a Dan puzzle's board is the day of the week and is
+  // the thing worth knowing before opening it.
+  it('bills a real puzzle by difficulty and a Dan one by its board', async () => {
+    const user = userEvent.setup();
+    render(<Archive />);
+    await screen.findByText('July 2026');
+    // The source filter defaults to Real, so both kinds have to be asked for.
+    await user.selectOptions(screen.getByLabelText(/source/i), 'both');
+    const links = screen.getAllByRole('link');
+    expect(within(links[0]).getByText('Hard')).toBeTruthy();
+    expect(within(links[1]).getByText('6x6')).toBeTruthy();
+    expect(links[1].textContent).not.toContain('Hard');
+    expect(within(links[3]).getByText('3x4')).toBeTruthy();
   });
 
   it('groups puzzles under a year section', async () => {

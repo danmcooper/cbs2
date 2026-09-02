@@ -6,6 +6,33 @@ const name = (i: number) => `#NAME:${i}`;
 const names = (i: number) => `#NAMES:${i}`;
 const prof = (p: string) => `#PROF:${p}`;
 const profs = (p: string) => `#PROFS:${p}`;
+/**
+ * "3 teachers" — the profession's whole cast, not just the ones being counted.
+ * Expanded by the site, which has the board and can count; the renderer works
+ * from the hint alone and has no way to know.
+ */
+const profN = (p: string) => `#PROFN:${p}`;
+
+/**
+ * How much the renderer says beyond what the source site says.
+ *
+ * `professionTotals` turns "Exactly 1 cook has an innocent directly below them"
+ * into "Exactly 1 of 3 cooks has …". The source never states the total, which is
+ * fine on its 4x5 board where you can count five cooks at a glance and less fine
+ * on a 7x7 with twenty-one professions. Off by default so that `render` stays a
+ * claim about what the source would write, which is what the archive fidelity
+ * test in corpus.test.ts checks; generation turns it on.
+ *
+ * Only for clues that put a number on one profession's members. A comparison
+ * between two professions ("more criminal judges than criminal mechanics") is
+ * about the difference, and two totals in one sentence obscure it rather than
+ * help.
+ */
+export interface RenderOptions {
+  professionTotals?: boolean;
+}
+
+const NO_EXTRAS: RenderOptions = {};
 const col = (n: number) => `#C:${n}`;
 const between = (a: number, b: number) => `#BETWEEN:pair(${a},${b})`;
 
@@ -130,14 +157,15 @@ function pairOfSameKind<U extends Unit>(u1: U, u2: Unit): asserts u2 is U {
 }
 
 /** Subject phrase for direction clues: "3 persons on the edges" / "2 #PROFS:cook". */
-function dirSubject(u: Unit, n: number): string {
+function dirSubject(u: Unit, n: number, o: RenderOptions): string {
   if (u.kind === 'profession') {
+    if (o.professionTotals) return `Exactly ${n} of ${profN(u.name)}`;
     return n === 1 ? `Only one ${prof(u.name)}` : `${n} ${profs(u.name)}`;
   }
   return n === 1 ? `Only one person ${wherePerson(u)}` : `${n} persons ${wherePerson(u)}`;
 }
 
-export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
+export const RENDERERS: Record<string, (a: HintArg[], o: RenderOptions) => string> = {
   has_trait: (a) => {
     const t = argTrait(a, 1);
     return `${name(argIndex(a, 0))} is ${t === 'innocent' ? 'innocent' : 'a criminal'}`;
@@ -431,22 +459,27 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
   all_traits_are_neighbors_in_unit: (a) =>
     `All ${argTrait(a, 1)}s ${where(argUnit(a, 0))} are connected`,
 
-  only_one_person_in_unit_has_exactly_n_trait_neighbors: (a) => {
+  only_one_person_in_unit_has_exactly_n_trait_neighbors: (a, o) => {
     const u = argUnit(a, 0);
     const t = argTrait(a, 1);
     const n = argNum(a, 2);
-    const head = u.kind === 'profession' ? `Only one ${prof(u.name)}` : `Only one person ${wherePerson(u)}`;
+    const head =
+      u.kind !== 'profession'
+        ? `Only one person ${wherePerson(u)}`
+        : o.professionTotals
+          ? `Exactly 1 of ${profN(u.name)}`
+          : `Only one ${prof(u.name)}`;
     const tail =
       n === 0 ? `no ${t} neighbors` : n === 1 ? `exactly one ${t} neighbor` : `exactly ${n} ${t} neighbors`;
     return `${head} has ${tail}`;
   },
 
-  n_in_unit_have_trait_in_dir: (a) => {
+  n_in_unit_have_trait_in_dir: (a, o) => {
     const u = argUnit(a, 0);
     const t = argTrait(a, 1);
     const n = argNum(a, 4);
     const verb = n === 1 ? 'has' : 'have';
-    return `${dirSubject(u, n)} ${verb} ${article(t)} ${dirPhrase(argNum(a, 2), argNum(a, 3))}`;
+    return `${dirSubject(u, n, o)} ${verb} ${article(t)} ${dirPhrase(argNum(a, 2), argNum(a, 3))}`;
   },
 
   n_t_in_unit_have_trait_in_dir: (a) => {
@@ -466,14 +499,17 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
     return `${head} ${where(u)} ${verb} ${article(t2)} ${dirPhrase(argNum(a, 3), argNum(a, 4))}`;
   },
 
-  n_professions_have_trait_in_dir: (a) => {
+  n_professions_have_trait_in_dir: (a, o) => {
     const p = argProfession(a, 0);
     const t = argTrait(a, 1);
     const n = argNum(a, 4);
     // Zero of them is a "No X has ..." in the archive (puzzles/2026-09-01.json),
     // never a "0 Xs have ...". The other counts keep their own phrasings.
-    const head =
-      n === 0
+    const head = o.professionTotals
+      ? n === 0
+        ? `None of ${profN(p)} has`
+        : `Exactly ${n} of ${profN(p)} ${n === 1 ? 'has' : 'have'}`
+      : n === 0
         ? `No ${prof(p)} has`
         : n === 1
           ? `Exactly 1 ${prof(p)} has`
@@ -482,10 +518,10 @@ export const RENDERERS: Record<string, (a: HintArg[]) => string> = {
   },
 };
 
-export function render(h: Hint): string {
+export function render(h: Hint, options: RenderOptions = NO_EXTRAS): string {
   const fn = RENDERERS[h.pred];
   if (!fn) throw new UnsupportedShapeError(h.pred);
-  return fn(h.args);
+  return fn(h.args, options);
 }
 
 export function canRender(h: Hint): boolean {

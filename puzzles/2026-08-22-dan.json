@@ -1,2231 +1,1199 @@
 {
   "formatVersion": 1,
-  "id": "a3ccce48523b",
+  "id": "9595961a4c96",
   "date": "2026-08-22",
-  "title": "Nobody Left the Courtyard",
-  "difficulty": "Medium",
-  "width": 7,
-  "height": 7,
+  "title": "The Bell Rang Anyway",
+  "difficulty": "Hard",
+  "width": 5,
+  "height": 6,
   "initialReveals": [
-    12
+    10
   ],
   "source": "generated",
   "variant": "dan",
   "people": [
     {
-      "name": "Ada",
+      "name": "Anouk",
       "profession": "judge",
       "gender": "female",
-      "criminal": false,
-      "clue": "#NAME:39 is one of 2 innocents #BETWEEN:pair(38,41)",
-      "origHint": "is_one_of_n_traits_in_unit(unit(between,pair(38,41)),39,innocent,2)",
+      "criminal": true,
+      "clue": "#NAME:5 is one of 9 criminals on the edges",
+      "origHint": "is_one_of_n_traits_in_unit(unit(edge,void),5,criminal,9)",
       "paths": [
         [
-          16,
           19,
-          25,
-          30,
-          37
-        ],
-        [
-          2,
-          16,
-          19,
-          37
+          23,
+          29
         ]
       ],
       "face": "👩‍⚖️"
     },
     {
-      "name": "Anouk",
-      "profession": "mechanic",
-      "gender": "female",
-      "criminal": true,
-      "clue": "There are more criminal #PROFS:guard than criminal #PROFS:mechanic",
-      "origHint": "more_traits_in_unit_than_unit(unit(profession,guard),unit(profession,mechanic),criminal)",
-      "paths": [
-        [
-          8,
-          10,
-          16,
-          37,
-          43
-        ]
-      ],
-      "face": "👩‍🔧"
-    },
-    {
       "name": "Boris",
-      "profession": "builder",
+      "profession": "doctor",
       "gender": "male",
-      "criminal": true,
-      "clue": "#NAME:28 is a criminal",
-      "origHint": "has_trait(28,criminal)",
+      "criminal": false,
+      "clue": "There are exactly 3 criminals #BETWEEN:pair(6,16)",
+      "origHint": "number_of_traits_in_unit(unit(between,pair(6,16)),criminal,3)",
       "paths": [
         [
-          25,
-          30,
-          45,
-          46
+          9
         ]
       ],
-      "face": "👷‍♂️"
-    },
-    {
-      "name": "Bram",
-      "profession": "sleuth",
-      "gender": "male",
-      "criminal": true,
-      "clue": "I only work weekends, so ask someone on shift.",
-      "origHint": null,
-      "paths": [
-        [
-          17,
-          29,
-          35,
-          46
-        ]
-      ],
-      "face": "🕵️‍♂️"
+      "face": "👨‍⚕️"
     },
     {
       "name": "Carys",
       "profession": "cop",
       "gender": "female",
       "criminal": false,
-      "clue": "I did not check the clock once.",
-      "origHint": null,
+      "clue": "Only one person #BETWEEN:pair(26,29) has exactly one criminal neighbor",
+      "origHint": "only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(between,pair(26,29)),criminal,1)",
       "paths": [
         [
-          17,
-          22,
-          27,
-          29,
-          35,
-          37,
-          38,
-          42,
-          43,
-          44,
-          45,
-          47
+          16,
+          26
         ],
         [
-          0,
-          1,
-          17,
-          29,
-          35,
-          37,
-          38,
-          41,
-          43,
-          44,
-          46
+          7,
+          26
         ]
       ],
       "face": "👮‍♀️"
     },
     {
       "name": "Cleo",
-      "profession": "clerk",
+      "profession": "singer",
       "gender": "female",
-      "criminal": true,
-      "clue": "Both innocents #BETWEEN:pair(15,18) are connected",
-      "origHint": "both_traits_are_neighbors_in_unit(unit(between,pair(15,18)),innocent)",
-      "paths": [
-        [
-          8,
-          37,
-          43
-        ]
-      ],
-      "face": "👩‍💼"
-    },
-    {
-      "name": "Desmond",
-      "profession": "guard",
-      "gender": "male",
-      "criminal": true,
+      "criminal": false,
       "clue": "I never remember faces.",
       "origHint": null,
       "paths": [
         [
-          1,
-          43
+          6,
+          19,
+          23,
+          29
+        ],
+        [
+          0,
+          6
         ]
       ],
-      "face": "💂‍♂️"
+      "face": "👩‍🎤"
     },
     {
-      "name": "Elin",
-      "profession": "clerk",
-      "gender": "female",
-      "criminal": true,
-      "clue": "Column #C:5 is the only column with exactly one criminal",
-      "origHint": "only_unit_has_exactly_n_traits(unit(col,5),criminal,1)",
+      "name": "Desmond",
+      "profession": "ninja",
+      "gender": "male",
+      "criminal": false,
+      "clue": "I only work weekends, so ask someone on shift.",
+      "origHint": null,
       "paths": [
         [
-          16,
-          37
+          14,
+          24
         ]
       ],
-      "face": "👩‍💼"
+      "face": "🥷"
     },
     {
       "name": "Esme",
-      "profession": "singer",
+      "profession": "doctor",
       "gender": "female",
-      "criminal": false,
-      "clue": "2 persons #BETWEEN:pair(6,27) have a criminal directly to the left of them",
-      "origHint": "n_in_unit_have_trait_in_dir(unit(between,pair(6,27)),criminal,-1,0,2)",
+      "criminal": true,
+      "clue": "Nothing to report from where I stood.",
+      "origHint": null,
       "paths": [
         [
-          16,
-          37
+          0
         ]
       ],
-      "face": "👩‍🎤"
-    },
-    {
-      "name": "Fabio",
-      "profession": "scientist",
-      "gender": "male",
-      "criminal": false,
-      "clue": "Both innocents #BETWEEN:pair(23,25) are connected",
-      "origHint": "both_traits_are_neighbors_in_unit(unit(between,pair(23,25)),innocent)",
-      "paths": [
-        [
-          46
-        ]
-      ],
-      "face": "👨‍🔬"
+      "face": "👩‍⚕️"
     },
     {
       "name": "Ferran",
-      "profession": "superhero",
-      "gender": "male",
-      "criminal": false,
-      "clue": "Only one person in a corner has exactly one criminal neighbor",
-      "origHint": "only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(corner,void),criminal,1)",
-      "paths": [
-        [
-          46
-        ]
-      ],
-      "face": "🦸‍♂️"
-    },
-    {
-      "name": "Golda",
-      "profession": "cop",
-      "gender": "female",
-      "criminal": false,
-      "clue": "I could not hear a thing over the fan.",
-      "origHint": null,
-      "paths": [
-        [
-          16,
-          37
-        ]
-      ],
-      "face": "👮‍♀️"
-    },
-    {
-      "name": "Greta",
-      "profession": "singer",
-      "gender": "female",
-      "criminal": false,
-      "clue": "#NAME:30 is one of #NAMES:23 4 innocent neighbors",
-      "origHint": "is_one_of_n_traits_in_unit(unit(neighbor,23),30,innocent,4)",
-      "paths": [],
-      "face": "👩‍🎤"
-    },
-    {
-      "name": "Hamish",
-      "profession": "doctor",
-      "gender": "male",
-      "criminal": false,
-      "clue": "All innocents #BETWEEN:pair(8,10) are connected",
-      "origHint": "all_traits_are_neighbors_in_unit(unit(between,pair(8,10)),innocent)",
-      "paths": [
-        [
-          37
-        ]
-      ],
-      "face": "👨‍⚕️"
-    },
-    {
-      "name": "Hugo",
-      "profession": "farmer",
-      "gender": "male",
-      "criminal": false,
-      "clue": "Somebody moved my chair, that is all I know.",
-      "origHint": null,
-      "paths": [
-        [
-          19,
-          26,
-          34,
-          35,
-          46,
-          47
-        ],
-        [
-          1,
-          19,
-          26,
-          34,
-          35,
-          47
-        ]
-      ],
-      "face": "👨‍🌾"
-    },
-    {
-      "name": "Ines",
-      "profession": "student",
-      "gender": "female",
-      "criminal": true,
-      "clue": "#NAME:36 has exactly 6 criminal neighbors",
-      "origHint": "number_of_traits_in_unit(unit(neighbor,36),criminal,6)",
-      "paths": [
-        [
-          5,
-          25,
-          30,
-          45,
-          46
-        ]
-      ],
-      "face": "👩‍🎓"
-    },
-    {
-      "name": "Iris",
-      "profession": "painter",
-      "gender": "female",
-      "criminal": true,
-      "clue": "All innocents in row 2 are connected",
-      "origHint": "all_traits_are_neighbors_in_unit(unit(row,2),innocent)",
-      "paths": [
-        [
-          24,
-          46
-        ],
-        [
-          9,
-          24
-        ]
-      ],
-      "face": "👩‍🎨"
-    },
-    {
-      "name": "Janko",
-      "profession": "painter",
-      "gender": "male",
-      "criminal": false,
-      "clue": "#NAME:22 is one of 2 innocents #BETWEEN:pair(1,29)",
-      "origHint": "is_one_of_n_traits_in_unit(unit(between,pair(1,29)),22,innocent,2)",
-      "paths": [
-        [
-          5,
-          25,
-          30,
-          45,
-          46
-        ]
-      ],
-      "face": "👨‍🎨"
-    },
-    {
-      "name": "Jonas",
-      "profession": "builder",
-      "gender": "male",
-      "criminal": false,
-      "clue": "Exactly 1 #PROF:pilot has a criminal directly below them",
-      "origHint": "n_professions_have_trait_in_dir(pilot,criminal,0,1,1)",
-      "paths": [
-        [
-          7,
-          46
-        ]
-      ],
-      "face": "👷‍♂️"
-    },
-    {
-      "name": "Katia",
-      "profession": "guard",
-      "gender": "female",
-      "criminal": false,
-      "clue": "No one #BETWEEN:pair(0,2) has more than 2 criminal neighbors",
-      "origHint": "max_number_of_traits_in_neighbors_in_unit(unit(between,pair(0,2)),criminal,2)",
-      "paths": [
-        [
-          43
-        ]
-      ],
-      "face": "💂‍♀️"
-    },
-    {
-      "name": "Kira",
-      "profession": "scientist",
-      "gender": "female",
-      "criminal": true,
-      "clue": "The window was fogged over.",
-      "origHint": null,
-      "paths": [
-        [
-          17,
-          18,
-          22,
-          29,
-          35,
-          37,
-          40,
-          43,
-          44,
-          45,
-          46,
-          47
-        ]
-      ],
-      "face": "👩‍🔬"
-    },
-    {
-      "name": "Lorenzo",
-      "profession": "builder",
-      "gender": "male",
-      "criminal": true,
-      "clue": "There are more criminals in row 5 than innocents in row 4",
-      "origHint": "more_traits_in_unit_than_traits_in_unit(unit(row,5),criminal,unit(row,4),innocent)",
-      "paths": [
-        [
-          22,
-          27,
-          42,
-          47
-        ],
-        [
-          1,
-          22,
-          42,
-          43,
-          47
-        ]
-      ],
-      "face": "👷‍♂️"
-    },
-    {
-      "name": "Lucian",
-      "profession": "judge",
-      "gender": "male",
-      "criminal": false,
-      "clue": "#NAME:46 has more innocent neighbors than #NAME:0",
-      "origHint": "more_traits_in_unit_than_unit(unit(neighbor,46),unit(neighbor,0),innocent)",
-      "paths": [
-        [
-          17
-        ]
-      ],
-      "face": "👨‍⚖️"
-    },
-    {
-      "name": "Maud",
-      "profession": "guard",
-      "gender": "female",
-      "criminal": true,
-      "clue": "Row 7 is the only row with exactly 7 criminals",
-      "origHint": "only_unit_has_exactly_n_traits(unit(row,7),criminal,7)",
-      "paths": [
-        [
-          24,
-          30
-        ],
-        [
-          12,
-          24
-        ]
-      ],
-      "face": "💂‍♀️"
-    },
-    {
-      "name": "Mira",
-      "profession": "superhero",
-      "gender": "female",
-      "criminal": false,
-      "clue": "Only 1 of the 2 criminals #BETWEEN:pair(9,30) is #NAMES:31 neighbor",
-      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(between,pair(9,30)),unit(neighbor,31),criminal,1,2)",
-      "paths": [
-        [
-          9
-        ]
-      ],
-      "face": "🦸"
-    },
-    {
-      "name": "Nils",
-      "profession": "singer",
-      "gender": "male",
-      "criminal": false,
-      "clue": "#NAME:23 is one of 4 criminals in column #C:3",
-      "origHint": "is_one_of_n_traits_in_unit(unit(col,3),23,criminal,4)",
-      "paths": [
-        [
-          9,
-          24,
-          30
-        ],
-        [
-          9,
-          12,
-          24
-        ]
-      ],
-      "face": "👨‍🎤"
-    },
-    {
-      "name": "Novak",
-      "profession": "coder",
-      "gender": "male",
-      "criminal": true,
-      "clue": "I was facing the other way.",
-      "origHint": null,
-      "paths": [
-        [
-          8,
-          37,
-          43
-        ]
-      ],
-      "face": "👨‍💻"
-    },
-    {
-      "name": "Odette",
-      "profession": "teacher",
-      "gender": "female",
-      "criminal": false,
-      "clue": "I have nothing useful to add, sorry.",
-      "origHint": null,
-      "paths": [
-        [
-          25,
-          26,
-          42,
-          47
-        ]
-      ],
-      "face": "👩‍🏫"
-    },
-    {
-      "name": "Orla",
-      "profession": "judge",
-      "gender": "female",
-      "criminal": true,
-      "clue": "There are exactly 4 criminals #BETWEEN:pair(43,46)",
-      "origHint": "number_of_traits_in_unit(unit(between,pair(43,46)),criminal,4)",
-      "paths": [
-        [
-          2
-        ]
-      ],
-      "face": "👩‍⚖️"
-    },
-    {
-      "name": "Pavel",
       "profession": "clerk",
       "gender": "male",
       "criminal": true,
-      "clue": "There's an odd number of innocents #BETWEEN:pair(1,5)",
-      "origHint": "odd_number_of_traits_in_unit(unit(between,pair(1,5)),innocent)",
+      "clue": "Only one person in row 2 has a criminal directly above them",
+      "origHint": "n_in_unit_have_trait_in_dir(unit(row,2),criminal,0,-1,1)",
       "paths": [
         [
-          16,
-          17,
-          37
+          19,
+          23,
+          29
         ]
       ],
       "face": "👨‍💼"
     },
     {
-      "name": "Piet",
-      "profession": "student",
-      "gender": "male",
-      "criminal": false,
-      "clue": "Exactly 2 criminals in row 7 are #BETWEEN:pair(45,46)",
-      "origHint": "units_share_n_traits(unit(row,7),unit(between,pair(45,46)),criminal,2)",
-      "paths": [
-        [
-          12
-        ]
-      ],
-      "face": "👨‍🎓"
-    },
-    {
-      "name": "Quinn",
-      "profession": "pilot",
+      "name": "Golda",
+      "profession": "cop",
       "gender": "female",
       "criminal": true,
-      "clue": "I stayed where I was told to stay.",
-      "origHint": null,
+      "clue": "Only one innocent #BETWEEN:pair(18,28) has an innocent directly to the right of them",
+      "origHint": "n_t_in_unit_have_trait_in_dir(unit(between,pair(18,28)),innocent,innocent,1,0,1)",
       "paths": [
         [
-          12,
-          17,
-          26,
-          27,
-          42,
-          47
-        ],
-        [
-          1,
-          12,
-          17,
-          26,
-          42,
-          43,
-          47
+          16
         ]
       ],
-      "face": "👩‍✈️"
+      "face": "👮‍♀️"
     },
     {
-      "name": "Rafael",
-      "profession": "doctor",
+      "name": "Hamish",
+      "profession": "builder",
       "gender": "male",
       "criminal": false,
-      "clue": "I was halfway out the door.",
+      "clue": "Ask someone with a better view.",
       "origHint": null,
       "paths": [
         [
-          7,
-          46
+          18,
+          28
         ]
       ],
+      "face": "👷‍♂️"
+    },
+    {
+      "name": "Ines",
+      "profession": "guard",
+      "gender": "female",
+      "criminal": true,
+      "clue": "Both innocents #BETWEEN:pair(0,2) are connected",
+      "origHint": "both_traits_are_neighbors_in_unit(unit(between,pair(0,2)),innocent)",
+      "paths": [
+        [
+          14,
+          29
+        ],
+        [
+          10,
+          14
+        ]
+      ],
+      "face": "💂‍♀️"
+    },
+    {
+      "name": "Janko",
+      "profession": "doctor",
+      "gender": "male",
+      "criminal": true,
+      "clue": "Exactly 2 of #NAMES:24 4 innocent neighbors also neighbor #NAME:22",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,24),unit(neighbor,22),innocent,2,4)",
+      "paths": [],
       "face": "👨‍⚕️"
     },
     {
-      "name": "Rosa",
-      "profession": "coder",
+      "name": "Katia",
+      "profession": "cop",
       "gender": "female",
       "criminal": true,
-      "clue": "I had my hands full at the time.",
+      "clue": "I was looking for my keys.",
       "origHint": null,
       "paths": [
         [
-          25,
-          37,
-          38,
-          40,
-          43
-        ],
-        [
-          0,
-          25,
-          37,
-          38,
-          41,
-          43
+          1
         ]
       ],
-      "face": "👩‍💻"
+      "face": "👮‍♀️"
     },
     {
-      "name": "Stefan",
-      "profession": "coder",
+      "name": "Kira",
+      "profession": "farmer",
+      "gender": "female",
+      "criminal": false,
+      "clue": "I would rather not guess.",
+      "origHint": null,
+      "paths": [
+        [
+          18,
+          26
+        ]
+      ],
+      "face": "👩‍🌾"
+    },
+    {
+      "name": "Lorenzo",
+      "profession": "farmer",
       "gender": "male",
       "criminal": true,
-      "clue": "There are at least 2 innocents #BETWEEN:pair(14,17)",
-      "origHint": "min_number_of_traits_in_unit(unit(between,pair(14,17)),innocent,2)",
+      "clue": "Only one person #BETWEEN:pair(20,21) has exactly 6 criminal neighbors",
+      "origHint": "only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(between,pair(20,21)),criminal,6)",
       "paths": [
         [
-          21,
-          30,
-          32,
-          47
+          18,
+          23,
+          28
         ]
       ],
-      "face": "👨‍💻"
+      "face": "👨‍🌾"
     },
     {
-      "name": "Suri",
+      "name": "Maud",
       "profession": "sleuth",
       "gender": "female",
-      "criminal": true,
-      "clue": "Only one person #BETWEEN:pair(2,16) has exactly 5 criminal neighbors",
-      "origHint": "only_one_person_in_unit_has_exactly_n_trait_neighbors(unit(between,pair(2,16)),criminal,5)",
+      "criminal": false,
+      "clue": "Exactly 1 of #PROFN:builder has an innocent directly to the right of them",
+      "origHint": "n_professions_have_trait_in_dir(builder,innocent,1,0,1)",
       "paths": [
         [
-          15,
-          30,
-          45
+          29
         ]
       ],
       "face": "🕵️‍♀️"
     },
     {
-      "name": "Tessa",
-      "profession": "teacher",
+      "name": "Nils",
+      "profession": "coder",
+      "gender": "male",
+      "criminal": true,
+      "clue": "I keep out of other people’s business.",
+      "origHint": null,
+      "paths": [
+        [
+          16,
+          18,
+          26
+        ]
+      ],
+      "face": "👨‍💻"
+    },
+    {
+      "name": "Orla",
+      "profession": "scientist",
+      "gender": "female",
+      "criminal": true,
+      "clue": "#NAME:7 is one of #NAMES:11 6 criminal neighbors",
+      "origHint": "is_one_of_n_traits_in_unit(unit(neighbor,11),7,criminal,6)",
+      "paths": [
+        [
+          19
+        ]
+      ],
+      "face": "👩‍🔬"
+    },
+    {
+      "name": "Piet",
+      "profession": "sleuth",
+      "gender": "male",
+      "criminal": false,
+      "clue": "I was sorting the post.",
+      "origHint": null,
+      "paths": [
+        [
+          18,
+          26
+        ]
+      ],
+      "face": "🕵️‍♂️"
+    },
+    {
+      "name": "Quinn",
+      "profession": "guard",
+      "gender": "female",
+      "criminal": true,
+      "clue": "#NAME:28 and #NAME:26 have 2 criminal neighbors in common",
+      "origHint": "units_share_n_traits(unit(neighbor,28),unit(neighbor,26),criminal,2)",
+      "paths": [
+        [
+          0,
+          2,
+          6,
+          10,
+          16,
+          24,
+          26
+        ]
+      ],
+      "face": "💂‍♀️"
+    },
+    {
+      "name": "Rafael",
+      "profession": "judge",
+      "gender": "male",
+      "criminal": false,
+      "clue": "There's an odd number of criminal #PROFS:scientist",
+      "origHint": "odd_number_of_traits_in_unit(unit(profession,scientist),criminal)",
+      "paths": [
+        [
+          10
+        ]
+      ],
+      "face": "👨‍⚖️"
+    },
+    {
+      "name": "Rosa",
+      "profession": "singer",
+      "gender": "female",
+      "criminal": false,
+      "clue": "I had my hands full at the time.",
+      "origHint": null,
+      "paths": [
+        [
+          16,
+          22,
+          26,
+          27
+        ],
+        [
+          1,
+          16,
+          22
+        ]
+      ],
+      "face": "👩‍🎤"
+    },
+    {
+      "name": "Suri",
+      "profession": "singer",
       "gender": "female",
       "criminal": false,
       "clue": "I had a headache and closed my eyes.",
       "origHint": null,
       "paths": [
         [
-          25,
-          30,
-          45,
-          46,
-          48
+          11,
+          22
+        ],
+        [
+          1,
+          22
         ]
       ],
-      "face": "👩‍🏫"
+      "face": "👩‍🎤"
     },
     {
       "name": "Tomas",
-      "profession": "cook",
+      "profession": "guard",
       "gender": "male",
-      "criminal": false,
-      "clue": "Exactly 2 of the 6 innocents in row 2 are #NAMES:20 neighbors",
-      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(row,2),unit(neighbor,20),innocent,2,6)",
-      "paths": [
-        [
-          45
-        ]
-      ],
-      "face": "👨‍🍳"
-    },
-    {
-      "name": "Ulla",
-      "profession": "ninja",
-      "gender": "female",
       "criminal": true,
-      "clue": "There's an equal number of criminals in columns #C:3 and #C:6",
-      "origHint": "equal_number_of_traits_in_units(unit(col,3),unit(col,6),criminal)",
+      "clue": "Exactly 2 of #NAMES:16 4 criminal neighbors also neighbor #NAME:17",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(neighbor,16),unit(neighbor,17),criminal,2,4)",
       "paths": [
         [
           18
         ]
       ],
-      "face": "🥷"
+      "face": "💂‍♂️"
+    },
+    {
+      "name": "Ulla",
+      "profession": "coder",
+      "gender": "female",
+      "criminal": false,
+      "clue": "There are as many criminal #PROFS:judge as there are innocent #PROFS:clerk",
+      "origHint": "equal_traits_in_unit_and_traits_in_unit(unit(profession,judge),criminal,unit(profession,clerk),innocent)",
+      "paths": [
+        [
+          7,
+          10
+        ]
+      ],
+      "face": "👩‍💻"
     },
     {
       "name": "Vera",
-      "profession": "cop",
-      "gender": "female",
-      "criminal": false,
-      "clue": "I lost track of everyone after lunch.",
-      "origHint": null,
-      "paths": [
-        [
-          18,
-          22,
-          37,
-          45,
-          47
-        ],
-        [
-          0
-        ]
-      ],
-      "face": "👮‍♀️"
-    },
-    {
-      "name": "Viktor",
       "profession": "sleuth",
-      "gender": "male",
-      "criminal": false,
-      "clue": "#NAME:12 and #NAME:45 have an equal number of criminal neighbors",
-      "origHint": "equal_number_of_traits_in_units(unit(neighbor,12),unit(neighbor,45),criminal)",
-      "paths": [
-        [
-          18,
-          22,
-          37,
-          45,
-          47
-        ],
-        [
-          0,
-          18,
-          41
-        ]
-      ],
-      "face": "🕵️‍♂️"
-    },
-    {
-      "name": "Wim",
-      "profession": "firefighter",
-      "gender": "male",
+      "gender": "female",
       "criminal": true,
-      "clue": "Nothing to report from where I stood.",
-      "origHint": null,
+      "clue": "There are exactly 4 innocents in column #C:5",
+      "origHint": "number_of_traits_in_unit(unit(col,5),innocent,4)",
       "paths": [
         [
-          8,
-          10,
-          18,
-          22,
-          37,
-          43,
-          45,
-          47
-        ],
-        [
-          0,
-          22,
-          37,
-          45,
-          47
+          7,
+          10
         ]
       ],
-      "face": "👨‍🚒"
+      "face": "🕵️‍♀️"
     },
     {
       "name": "Wren",
-      "profession": "farmer",
+      "profession": "builder",
       "gender": "female",
       "criminal": true,
-      "clue": "There's an odd number of innocents #BETWEEN:pair(24,27)",
-      "origHint": "odd_number_of_traits_in_unit(unit(between,pair(24,27)),innocent)",
-      "paths": [
-        [
-          23
-        ]
-      ],
-      "face": "👩‍🌾"
-    },
-    {
-      "name": "Xavi",
-      "profession": "scientist",
-      "gender": "male",
-      "criminal": true,
-      "clue": "#NAME:19 is one of two or more innocents neighboring #NAME:26",
-      "origHint": "is_not_only_trait_in_unit(unit(neighbor,26),19,innocent)",
-      "paths": [
-        [
-          28
-        ]
-      ],
-      "face": "👨‍🔬"
-    },
-    {
-      "name": "Xenia",
-      "profession": "firefighter",
-      "gender": "female",
-      "criminal": true,
-      "clue": "I was reading the noticeboard.",
+      "clue": "My shift had already ended.",
       "origHint": null,
       "paths": [
         [
-          25,
-          30,
-          45,
-          46
+          13,
+          16,
+          22,
+          26
+        ],
+        [
+          0,
+          1,
+          16,
+          18,
+          22,
+          24,
+          26,
+          28
         ]
       ],
-      "face": "👩‍🚒"
+      "face": "👷‍♀️"
     },
     {
-      "name": "Yara",
+      "name": "Xavi",
+      "profession": "coder",
+      "gender": "male",
+      "criminal": true,
+      "clue": "Only 1 of the 3 innocents in column #C:3 is #NAMES:1 neighbor",
+      "origHint": "unit_shares_n_out_of_n_traits_with_unit(unit(col,3),unit(neighbor,1),innocent,1,3)",
+      "paths": [
+        [
+          14,
+          29
+        ],
+        [
+          10,
+          14
+        ]
+      ],
+      "face": "👨‍💻"
+    },
+    {
+      "name": "Xenia",
       "profession": "farmer",
       "gender": "female",
       "criminal": true,
-      "clue": "Exactly 1 innocent #BETWEEN:pair(35,37) is in column #C:3",
-      "origHint": "units_share_n_traits(unit(between,pair(35,37)),unit(col,3),innocent,1)",
+      "clue": "I was on the phone with my sister.",
+      "origHint": null,
       "paths": [
         [
-          30
+          0,
+          2,
+          6,
+          16,
+          24,
+          26
         ]
       ],
       "face": "👩‍🌾"
     },
     {
       "name": "Yusuf",
-      "profession": "doctor",
+      "profession": "builder",
       "gender": "male",
-      "criminal": true,
-      "clue": "2 persons #BETWEEN:pair(2,3) have an innocent directly below them",
-      "origHint": "n_in_unit_have_trait_in_dir(unit(between,pair(2,3)),innocent,0,1,2)",
+      "criminal": false,
+      "clue": "Both criminals in column #C:4 are connected",
+      "origHint": "both_traits_are_neighbors_in_unit(unit(col,4),criminal)",
       "paths": [
         [
-          30
+          0,
+          2,
+          6,
+          16,
+          24,
+          26
         ]
       ],
-      "face": "👨‍⚕️"
-    },
-    {
-      "name": "Zeno",
-      "profession": "ninja",
-      "gender": "male",
-      "criminal": true,
-      "clue": "#NAME:25 is one of 4 innocents in row 4",
-      "origHint": "is_one_of_n_traits_in_unit(unit(row,4),25,innocent,4)",
-      "paths": [
-        [
-          23
-        ]
-      ],
-      "face": "🥷"
+      "face": "👷‍♂️"
     },
     {
       "name": "Zola",
-      "profession": "pilot",
+      "profession": "clerk",
       "gender": "female",
-      "criminal": true,
-      "clue": "Exactly 1 #PROF:scientist has a criminal directly above them",
-      "origHint": "n_professions_have_trait_in_dir(scientist,criminal,0,-1,1)",
+      "criminal": false,
+      "clue": "Exactly 1 of #PROFN:judge has an innocent directly above them",
+      "origHint": "n_professions_have_trait_in_dir(judge,innocent,0,-1,1)",
       "paths": [
         [
-          23
+          10
         ]
       ],
-      "face": "👩‍✈️"
+      "face": "👩‍💼"
     }
   ],
   "hints": [
     {
       "flipped": [
-        16,
         19,
-        25,
-        30,
-        37
-      ],
-      "clues": [
-        16,
-        19,
-        25,
-        37
-      ],
-      "reveals": [
-        0,
-        2,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
         23,
-        44
-      ]
-    },
-    {
-      "flipped": [
-        2,
-        16,
-        19,
-        37
+        29
       ],
       "clues": [
-        16,
-        19,
-        37
-      ],
-      "reveals": [
-        0,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13
-      ]
-    },
-    {
-      "flipped": [
-        8,
-        10,
-        16,
-        37,
-        43
-      ],
-      "clues": [
-        8,
-        10,
-        16,
-        37,
-        43
-      ],
-      "reveals": [
-        1,
-        5,
-        7,
-        9,
-        11,
-        12,
-        13,
-        19,
-        26
-      ]
-    },
-    {
-      "flipped": [
-        25,
-        30,
-        45,
-        46
-      ],
-      "clues": [
-        25,
-        45,
-        46
-      ],
-      "reveals": [
-        2,
-        9,
-        10,
-        16,
-        23,
-        37,
-        44
-      ]
-    },
-    {
-      "flipped": [
-        17,
-        29,
-        35,
-        46
-      ],
-      "clues": [
-        17,
-        35,
-        46
-      ],
-      "reveals": [
-        2,
-        3,
-        9,
-        10,
-        16,
-        22
-      ]
-    },
-    {
-      "flipped": [
-        17,
-        22,
-        27,
-        29,
-        35,
-        37,
-        38,
-        42,
-        43,
-        44,
-        45,
-        47
-      ],
-      "clues": [
-        17,
-        22,
-        29,
-        35,
-        37,
-        38,
-        42,
-        43,
-        47
-      ],
-      "reveals": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        9,
-        10,
-        11,
-        12,
-        13,
-        16,
-        19,
-        21,
-        23,
-        24,
-        25,
-        26,
-        30,
-        33,
-        39,
-        40
-      ]
-    },
-    {
-      "flipped": [
-        0,
-        1,
-        17,
-        29,
-        35,
-        37,
-        38,
-        41,
-        43,
-        44,
-        46
-      ],
-      "clues": [
-        0,
-        1,
-        17,
-        29,
-        35,
-        37,
-        38,
-        43,
-        46
-      ],
-      "reveals": [
-        2,
-        3,
-        4,
-        5,
-        6,
-        9,
-        10,
-        12,
-        13,
-        16,
-        19,
-        22,
-        23,
-        26,
-        30,
-        33,
-        39,
-        40,
-        47
-      ]
-    },
-    {
-      "flipped": [
-        8,
-        37,
-        43
-      ],
-      "clues": [
-        8,
-        37,
-        43
-      ],
-      "reveals": [
-        5,
-        12,
-        13,
-        19,
-        26
-      ]
-    },
-    {
-      "flipped": [
-        1,
-        43
-      ],
-      "clues": [
-        1,
-        43
-      ],
-      "reveals": [
-        6,
-        19,
         23
+      ],
+      "reveals": [
+        0,
+        6
+      ]
+    },
+    {
+      "flipped": [
+        9
+      ],
+      "clues": [
+        9
+      ],
+      "reveals": [
+        1
       ]
     },
     {
       "flipped": [
         16,
-        37
+        26
       ],
       "clues": [
         16,
-        37
-      ],
-      "reveals": [
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13
-      ]
-    },
-    {
-      "flipped": [
-        46
-      ],
-      "clues": [
-        46
-      ],
-      "reveals": [
-        9,
-        10
-      ]
-    },
-    {
-      "flipped": [
-        37
-      ],
-      "clues": [
-        37
-      ],
-      "reveals": [
-        12,
-        13
-      ]
-    },
-    {
-      "flipped": [
-        19,
-        26,
-        34,
-        35,
-        46,
-        47
-      ],
-      "clues": [
-        19,
-        34,
-        35,
-        46,
-        47
-      ],
-      "reveals": [
-        9,
-        10,
-        14,
-        25
-      ]
-    },
-    {
-      "flipped": [
-        1,
-        19,
-        26,
-        34,
-        35,
-        47
-      ],
-      "clues": [
-        19,
-        34,
-        35,
-        47
-      ],
-      "reveals": [
-        14,
-        25
-      ]
-    },
-    {
-      "flipped": [
-        5,
-        25,
-        30,
-        45,
-        46
-      ],
-      "clues": [
-        5,
-        25,
-        45,
-        46
+        26
       ],
       "reveals": [
         2,
-        9,
-        10,
-        15,
-        16,
-        17,
-        18,
-        23,
-        37,
-        44
-      ]
-    },
-    {
-      "flipped": [
-        24,
-        46
-      ],
-      "clues": [
-        24,
-        46
-      ],
-      "reveals": [
-        9,
-        10,
-        16
-      ]
-    },
-    {
-      "flipped": [
-        9,
-        24
-      ],
-      "clues": [
-        24
-      ],
-      "reveals": [
-        16
-      ]
-    },
-    {
-      "flipped": [
-        7,
-        46
-      ],
-      "clues": [
         7
-      ],
-      "reveals": [
-        4,
-        11,
-        18,
-        25,
-        32,
-        39
       ]
     },
     {
       "flipped": [
-        43
+        7,
+        26
       ],
       "clues": [
-        43
+        26
       ],
       "reveals": [
-        19
+        2
       ]
     },
     {
       "flipped": [
-        17,
-        18,
-        22,
-        29,
-        35,
-        37,
-        40,
-        43,
-        44,
-        45,
-        46,
-        47
+        6,
+        19,
+        23,
+        29
       ],
       "clues": [
-        17,
-        18,
-        22,
-        29,
-        35,
-        37,
-        40,
-        43
+        6,
+        23
+      ],
+      "reveals": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "flipped": [
+        0,
+        6
+      ],
+      "clues": [
+        6
       ],
       "reveals": [
         1,
         2,
         3,
-        6,
-        9,
-        10,
-        11,
-        12,
-        13,
-        16,
+        4
+      ]
+    },
+    {
+      "flipped": [
+        14,
+        24
+      ],
+      "clues": [
+        14,
+        24
+      ],
+      "reveals": [
+        4,
         19,
-        20,
-        38,
-        39
+        26
       ]
     },
     {
       "flipped": [
-        22,
-        27,
-        42,
-        47
+        0
       ],
       "clues": [
-        42,
-        47
+        0
       ],
       "reveals": [
-        21,
-        23,
-        25
+        5
       ]
     },
     {
       "flipped": [
-        1,
-        22,
-        42,
-        43,
-        47
+        16
       ],
       "clues": [
-        1,
-        42,
-        43,
-        47
+        16
       ],
       "reveals": [
-        6,
-        19,
-        21,
-        23,
-        25
+        7
       ]
     },
     {
       "flipped": [
-        17
-      ],
-      "clues": [
-        17
-      ],
-      "reveals": [
-        22
-      ]
-    },
-    {
-      "flipped": [
-        24,
-        30
-      ],
-      "clues": [
-        24
-      ],
-      "reveals": [
-        23
-      ]
-    },
-    {
-      "flipped": [
-        12,
-        24
-      ],
-      "clues": [
-        12,
-        24
-      ],
-      "reveals": [
-        23,
-        30
-      ]
-    },
-    {
-      "flipped": [
-        9
-      ],
-      "clues": [
-        9
-      ],
-      "reveals": [
-        24
-      ]
-    },
-    {
-      "flipped": [
-        9,
-        24,
-        30
-      ],
-      "clues": [
-        9,
-        24
-      ],
-      "reveals": [
-        16,
-        23,
-        25
-      ]
-    },
-    {
-      "flipped": [
-        9,
-        12,
-        24
-      ],
-      "clues": [
-        9,
-        12,
-        24
-      ],
-      "reveals": [
-        16,
-        23,
-        25,
-        30
-      ]
-    },
-    {
-      "flipped": [
-        25,
-        26,
-        42,
-        47
-      ],
-      "clues": [
-        25,
-        42,
-        47
-      ],
-      "reveals": [
-        23,
-        24,
-        27
-      ]
-    },
-    {
-      "flipped": [
-        2
-      ],
-      "clues": [
-        2
-      ],
-      "reveals": [
+        18,
         28
+      ],
+      "clues": [
+        28
+      ],
+      "reveals": [
+        3,
+        8
       ]
     },
     {
       "flipped": [
-        16,
-        17,
-        37
+        14,
+        29
       ],
       "clues": [
-        16,
-        17,
-        37
+        14
       ],
       "reveals": [
-        1,
-        7,
-        8,
         9,
+        26
+      ]
+    },
+    {
+      "flipped": [
         10,
-        11,
-        12,
-        13,
-        15,
-        22,
+        14
+      ],
+      "clues": [
+        10,
+        14
+      ],
+      "reveals": [
+        9,
+        19,
+        26,
         29
       ]
     },
     {
       "flipped": [
-        12
+        1
       ],
       "clues": [
-        12
-      ],
-      "reveals": [
-        30
-      ]
-    },
-    {
-      "flipped": [
-        12,
-        17,
-        26,
-        27,
-        42,
-        47
-      ],
-      "clues": [
-        12,
-        17,
-        42,
-        47
-      ],
-      "reveals": [
-        15,
-        16,
-        21,
-        22,
-        23,
-        24,
-        25,
-        29,
-        30,
-        31
-      ]
-    },
-    {
-      "flipped": [
-        1,
-        12,
-        17,
-        26,
-        42,
-        43,
-        47
-      ],
-      "clues": [
-        1,
-        12,
-        17,
-        42,
-        43,
-        47
+        1
       ],
       "reveals": [
         6,
-        8,
-        15,
-        16,
-        19,
-        21,
-        22,
-        23,
-        24,
-        25,
-        27,
-        29,
-        30,
-        31
-      ]
-    },
-    {
-      "flipped": [
-        25,
-        37,
-        38,
-        40,
-        43
-      ],
-      "clues": [
-        25,
-        37,
-        38,
-        43
-      ],
-      "reveals": [
-        5,
-        12,
-        13,
-        19,
-        23,
-        26,
-        33,
-        47
-      ]
-    },
-    {
-      "flipped": [
-        0,
-        25,
-        37,
-        38,
-        41,
-        43
-      ],
-      "clues": [
-        0,
-        25,
-        37,
-        38,
-        43
-      ],
-      "reveals": [
-        5,
-        12,
-        13,
-        19,
-        23,
-        26,
-        33,
-        39,
-        40,
-        47
-      ]
-    },
-    {
-      "flipped": [
-        21,
-        30,
-        32,
-        47
-      ],
-      "clues": [
-        21,
-        47
-      ],
-      "reveals": [
-        25,
-        28,
-        29,
-        31,
-        33,
-        34
-      ]
-    },
-    {
-      "flipped": [
-        15,
-        30,
-        45
-      ],
-      "clues": [
-        15,
-        45
-      ],
-      "reveals": [
-        28,
-        29,
-        35,
-        37,
-        42,
-        43,
-        44
-      ]
-    },
-    {
-      "flipped": [
-        25,
-        30,
-        45,
-        46,
-        48
-      ],
-      "clues": [
-        25,
-        45,
-        46,
-        48
-      ],
-      "reveals": [
-        2,
-        9,
-        10,
-        13,
-        16,
-        23,
-        36,
-        37,
-        44
-      ]
-    },
-    {
-      "flipped": [
-        45
-      ],
-      "clues": [
-        45
-      ],
-      "reveals": [
-        37
-      ]
-    },
-    {
-      "flipped": [
-        18
-      ],
-      "clues": [
-        18
-      ],
-      "reveals": [
-        38
-      ]
-    },
-    {
-      "flipped": [
-        18,
-        22,
-        37,
-        45,
-        47
-      ],
-      "clues": [
-        18,
-        22,
-        37
-      ],
-      "reveals": [
-        1,
-        9,
-        10,
         11,
-        12,
-        13,
-        38,
-        39,
-        40
-      ]
-    },
-    {
-      "flipped": [
-        0
-      ],
-      "clues": [
-        0
-      ],
-      "reveals": [
-        39
-      ]
-    },
-    {
-      "flipped": [
-        0,
-        18,
-        41
-      ],
-      "clues": [
-        0,
-        18
-      ],
-      "reveals": [
-        38,
-        39,
-        40
-      ]
-    },
-    {
-      "flipped": [
-        8,
-        10,
-        18,
-        22,
-        37,
-        43,
-        45,
-        47
-      ],
-      "clues": [
-        8,
-        10,
-        18,
-        22,
-        37,
-        43
-      ],
-      "reveals": [
-        1,
-        5,
-        7,
-        9,
-        11,
-        12,
-        13,
-        19,
-        26,
-        38,
-        39,
-        40,
-        41
-      ]
-    },
-    {
-      "flipped": [
-        0,
-        22,
-        37,
-        45,
-        47
-      ],
-      "clues": [
-        0,
-        22,
-        37
-      ],
-      "reveals": [
-        1,
-        9,
-        10,
-        11,
-        12,
-        13,
-        39,
-        41
-      ]
-    },
-    {
-      "flipped": [
-        23
-      ],
-      "clues": [
-        23
-      ],
-      "reveals": [
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48
-      ]
-    },
-    {
-      "flipped": [
-        28
-      ],
-      "clues": [
-        28
-      ],
-      "reveals": [
-        43,
-        44,
-        45,
-        46
-      ]
-    },
-    {
-      "flipped": [
-        30
-      ],
-      "clues": [
-        30
-      ],
-      "reveals": [
-        45,
-        46
-      ]
-    },
-    {
-      "flipped": [
-        2,
-        7,
-        19
-      ],
-      "clues": [
-        19
-      ],
-      "reveals": [
-        0,
-        8,
-        9
-      ]
-    },
-    {
-      "flipped": [
-        8,
-        10,
-        17,
-        24,
-        35
-      ],
-      "clues": [
-        35
-      ],
-      "reveals": [
-        1,
-        2,
-        3,
-        15,
         16
       ]
     },
     {
       "flipped": [
-        13,
-        36,
-        48
-      ],
-      "clues": [
-        48
-      ],
-      "reveals": [
-        2
-      ]
-    },
-    {
-      "flipped": [
-        5,
-        6,
-        20,
-        37,
-        39,
-        40
-      ],
-      "clues": [
-        40
-      ],
-      "reveals": [
-        4,
-        11,
-        13,
         18,
-        19,
-        38,
-        44,
-        46
-      ]
-    },
-    {
-      "flipped": [
-        4,
-        11,
-        13,
+        26
+      ],
+      "clues": [
         18,
-        19,
-        38,
-        40,
-        44,
-        46
-      ],
-      "clues": [
-        40
+        26
       ],
       "reveals": [
-        5,
-        6,
-        20,
-        37,
-        39
-      ]
-    },
-    {
-      "flipped": [
-        8,
-        9,
-        10,
-        11,
-        37
-      ],
-      "clues": [
-        37
-      ],
-      "reveals": [
-        7,
         12,
-        13
-      ]
-    },
-    {
-      "flipped": [
-        7,
-        37
-      ],
-      "clues": [
-        37
-      ],
-      "reveals": [
-        8,
-        9,
-        10,
-        11,
-        12,
-        13
-      ]
-    },
-    {
-      "flipped": [
-        2,
-        48
-      ],
-      "clues": [
-        48
-      ],
-      "reveals": [
-        13,
-        36
-      ]
-    },
-    {
-      "flipped": [
-        15,
-        16,
-        34
-      ],
-      "clues": [
-        34
-      ],
-      "reveals": [
-        14,
-        17
-      ]
-    },
-    {
-      "flipped": [
-        8,
-        10,
         17,
-        35
-      ],
-      "clues": [
-        35
-      ],
-      "reveals": [
-        15
+        22,
+        27
       ]
     },
     {
       "flipped": [
-        5,
-        9,
-        26,
-        30,
-        33,
-        37,
-        38,
-        47
+        18,
+        23,
+        28
       ],
       "clues": [
-        38
+        28
+      ],
+      "reveals": [
+        3,
+        8,
+        13
+      ]
+    },
+    {
+      "flipped": [
+        29
+      ],
+      "clues": [
+        29
+      ],
+      "reveals": [
+        14
+      ]
+    },
+    {
+      "flipped": [
+        16,
+        18,
+        26
+      ],
+      "clues": [
+        16,
+        18,
+        26
       ],
       "reveals": [
         2,
+        5,
+        6,
+        7,
+        10,
         12,
+        15,
+        17,
+        22,
+        27
+      ]
+    },
+    {
+      "flipped": [
+        19
+      ],
+      "clues": [
+        19
+      ],
+      "reveals": [
+        16
+      ]
+    },
+    {
+      "flipped": [
+        0,
+        2,
+        6,
+        10,
         16,
+        24,
+        26
+      ],
+      "clues": [
+        0,
+        2,
+        6,
+        10,
+        16,
+        24,
+        26
+      ],
+      "reveals": [
+        1,
+        3,
+        4,
+        5,
+        7,
+        18,
         19,
         23,
-        40,
-        44
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "flipped": [
+        10
+      ],
+      "clues": [
+        10
+      ],
+      "reveals": [
+        19,
+        29
+      ]
+    },
+    {
+      "flipped": [
+        16,
+        22,
+        26,
+        27
+      ],
+      "clues": [
+        16,
+        22,
+        26
+      ],
+      "reveals": [
+        2,
+        5,
+        6,
+        7,
+        10,
+        12,
+        15,
+        17,
+        20
       ]
     },
     {
       "flipped": [
         1,
+        16,
+        22
+      ],
+      "clues": [
+        1,
+        16,
+        22
+      ],
+      "reveals": [
+        5,
+        6,
+        7,
+        11,
+        12,
+        20,
+        21
+      ]
+    },
+    {
+      "flipped": [
+        11,
+        22
+      ],
+      "clues": [
+        22
+      ],
+      "reveals": [
+        12,
+        21
+      ]
+    },
+    {
+      "flipped": [
+        1,
+        22
+      ],
+      "clues": [
+        1,
+        22
+      ],
+      "reveals": [
+        6,
+        11,
+        12,
+        16,
+        21
+      ]
+    },
+    {
+      "flipped": [
+        18
+      ],
+      "clues": [
+        18
+      ],
+      "reveals": [
+        22,
+        27
+      ]
+    },
+    {
+      "flipped": [
+        7,
+        10
+      ],
+      "clues": [
+        7,
+        10
+      ],
+      "reveals": [
+        19,
+        23,
+        24,
+        29
+      ]
+    },
+    {
+      "flipped": [
+        13,
+        16,
+        22,
+        26
+      ],
+      "clues": [
+        13,
+        16,
+        22,
+        26
+      ],
+      "reveals": [
         2,
-        3,
-        9,
-        10,
+        5,
+        6,
+        7,
         15,
+        25
+      ]
+    },
+    {
+      "flipped": [
+        0,
+        1,
+        16,
+        18,
+        22,
+        24,
+        26,
+        28
+      ],
+      "clues": [
+        0,
         16,
         22,
         24,
-        35
-      ],
-      "clues": [
-        35
-      ],
-      "reveals": [
-        8,
-        17
-      ]
-    },
-    {
-      "flipped": [
-        22,
-        24,
-        27,
-        47
-      ],
-      "clues": [
-        47
-      ],
-      "reveals": [
-        21,
-        23,
-        25,
-        26
-      ]
-    },
-    {
-      "flipped": [
-        21,
-        23,
         26,
-        47
-      ],
-      "clues": [
-        47
+        28
       ],
       "reveals": [
-        22,
-        24,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        10,
+        12,
+        15,
+        17,
+        20,
         25,
         27
       ]
     },
     {
       "flipped": [
-        47
+        0,
+        2,
+        6,
+        16,
+        24,
+        26
       ],
       "clues": [
-        47
+        0,
+        2,
+        6,
+        16,
+        24,
+        26
       ],
       "reveals": [
-        25
+        1,
+        3,
+        4,
+        5,
+        7,
+        23,
+        27,
+        28
       ]
     },
     {
       "flipped": [
-        21,
-        22,
-        24,
-        25,
-        27,
-        30,
-        32
+        9,
+        24
       ],
       "clues": [
-        21
+        24
       ],
       "reveals": [
-        23,
-        26,
-        28,
-        29,
-        31,
-        33,
-        34
+        4,
+        14,
+        19,
+        29
+      ]
+    },
+    {
+      "flipped": [
+        12,
+        16,
+        17
+      ],
+      "clues": [
+        16
+      ],
+      "reveals": [
+        5,
+        6,
+        7,
+        10,
+        15
       ]
     },
     {
       "flipped": [
         2,
-        12,
-        16,
+        26
+      ],
+      "clues": [
+        26
+      ],
+      "reveals": [
+        7
+      ]
+    },
+    {
+      "flipped": [
+        4,
+        14,
         19,
-        23,
-        38,
-        40,
-        44
+        24,
+        29
       ],
       "clues": [
-        38
+        24
       ],
       "reveals": [
-        5,
-        9,
-        26,
-        30,
-        33,
-        37,
-        47
+        9
       ]
     },
     {
       "flipped": [
-        15,
-        30,
-        37
-      ],
-      "clues": [
-        15
-      ],
-      "reveals": [
-        28,
-        29,
-        35,
-        42,
-        43,
-        44
-      ]
-    },
-    {
-      "flipped": [
-        5,
-        10,
         12,
+        21,
+        22
+      ],
+      "clues": [
+        22
+      ],
+      "reveals": [
+        11
+      ]
+    },
+    {
+      "flipped": [
+        22,
+        26,
+        27
+      ],
+      "clues": [
+        26
+      ],
+      "reveals": [
+        12,
+        17
+      ]
+    },
+    {
+      "flipped": [
+        17,
+        20,
+        22
+      ],
+      "clues": [
+        22
+      ],
+      "reveals": [
+        10,
+        15
+      ]
+    },
+    {
+      "flipped": [
+        8,
+        28
+      ],
+      "clues": [
+        28
+      ],
+      "reveals": [
+        3,
+        18
+      ]
+    },
+    {
+      "flipped": [
+        10,
+        15,
+        22
+      ],
+      "clues": [
+        22
+      ],
+      "reveals": [
+        17,
+        20
+      ]
+    },
+    {
+      "flipped": [
+        12,
+        17,
+        26
+      ],
+      "clues": [
+        26
+      ],
+      "reveals": [
+        22,
+        27
+      ]
+    },
+    {
+      "flipped": [
         13,
-        40,
-        47
+        28
+      ],
+      "clues": [
+        28
+      ],
+      "reveals": [
+        3,
+        23
+      ]
+    },
+    {
+      "flipped": [
+        7,
+        23,
+        28,
+        29
+      ],
+      "clues": [
+        7
+      ],
+      "reveals": [
+        24
+      ]
+    },
+    {
+      "flipped": [
+        13,
+        17,
+        20
+      ],
+      "clues": [
+        13
+      ],
+      "reveals": [
+        15,
+        16,
+        22,
+        25,
+        26,
+        27
+      ]
+    },
+    {
+      "flipped": [
+        10,
+        18
       ],
       "clues": [
         10
       ],
       "reveals": [
-        41
+        19,
+        23,
+        28,
+        29
       ]
     }
   ]

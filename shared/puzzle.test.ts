@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PuzzleValidationError, VARIANTS, validatePuzzle } from './puzzle';
+import { PuzzleValidationError, VARIANTS, puzzleBillingOf, validatePuzzle } from './puzzle';
 
 function person(overrides: object = {}) {
   return {
@@ -113,6 +113,25 @@ describe('validatePuzzle variant', () => {
       PuzzleValidationError,
     );
     expect(() => validatePuzzle({ ...puzzle(), variant: 7 })).toThrow(PuzzleValidationError);
+  });
+});
+
+describe('puzzleBillingOf', () => {
+  const base = { difficulty: 'Tricky', width: 4, height: 5 };
+
+  // A real puzzle's board is always the source site's 4x5, so its size says
+  // nothing; the difficulty is the source's own and is the whole billing.
+  it('bills a real puzzle by difficulty', () => {
+    expect(puzzleBillingOf(base)).toBe('Tricky');
+    expect(puzzleBillingOf({ ...base, variant: 'real' })).toBe('Tricky');
+  });
+
+  // A generated puzzle's difficulty is our classifier's reading of a puzzle
+  // nobody else has played; its board changes with the day of the week and is
+  // what a player is actually sizing up.
+  it('bills a generated puzzle by its board', () => {
+    expect(puzzleBillingOf({ ...base, variant: 'dan', width: 6, height: 6 })).toBe('6x6');
+    expect(puzzleBillingOf({ ...base, variant: 'dan', width: 3, height: 4 })).toBe('3x4');
   });
 });
 

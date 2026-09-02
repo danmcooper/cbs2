@@ -207,13 +207,15 @@ describe('puzzle variant label', () => {
     );
     const user = fakeTimersUser();
     await renderGame(user);
-    expect(document.querySelector('.date-line span')?.textContent).toBe('Jul 7th 2026 (Easy) · Dan');
+    // A Dan puzzle is billed by its board, not by a difficulty label our own
+    // classifier assigned to a puzzle nobody else has played. The fixture is 2x2.
+    expect(document.querySelector('.date-line span')?.textContent).toBe('Jul 7th 2026 (2x2) · Dan');
     for (const [name, verdict] of [['mira', 'Criminal'], ['ozan', 'Innocent'], ['lena', 'Criminal']] as const) {
       await user.click(screen.getByText(name));
       await user.click(screen.getByRole('button', { name: verdict }));
     }
     finishDelay();
-    expect(screen.getByRole('dialog').textContent).toContain('Jul 7th 2026 (Easy) · Dan');
+    expect(screen.getByRole('dialog').textContent).toContain('Jul 7th 2026 (2x2) · Dan');
   });
 
 });
@@ -304,7 +306,7 @@ describe('results popup', () => {
     const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
     await user.click(screen.getByRole('button', { name: /copy text/i }));
     expect(String(writeText.mock.calls[0]?.[0])).toMatch(
-      /^I solved the daily #CluesBySamByDan, Jul 7th 2026 \(Easy\), in \d{2}:\d{2}\n🟩🟩\n🟩🟩\nhttp:\/\/localhost:3000\/#\/play\/2026-07-07-dan$/,
+      /^I solved the daily #CluesBySamByDan, Jul 7th 2026 \(2x2\), in \d{2}:\d{2}\n🟩🟩\n🟩🟩\nhttp:\/\/localhost:3000\/#\/play\/2026-07-07-dan$/,
     );
   });
 
@@ -349,7 +351,9 @@ describe('start popup', () => {
     expect(dialog.textContent).toContain('A Dan puzzle');
     expect(dialog.textContent).not.toContain('Clues by Sam');
     expect(dialog.textContent).toContain('Jul 7th 2026');
-    expect(dialog.textContent).toContain('Difficulty: Easy');
+    // The board rather than the difficulty, and named as such.
+    expect(dialog.textContent).toContain('Board: 2x2');
+    expect(dialog.textContent).not.toContain('Difficulty');
   });
 
   it('does not show when localStorage already has guesses', async () => {

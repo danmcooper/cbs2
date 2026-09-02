@@ -130,8 +130,16 @@ function segmentText(seg: ClueSegment, props: ClueTextProps): string {
       const name = capitalize(p.name);
       return seg.possessive ? (name.endsWith('s') ? `${name}'` : `${name}'s`) : name;
     }
-    case 'prof':
-      return seg.plural ? (seg.word === 'witch' ? 'witches' : `${seg.word}s`) : seg.word;
+    case 'prof': {
+      // A counted profession takes its number from the board, and its plural from
+      // that number rather than from the token — a cast of one reads "1 cook".
+      const n = seg.counted
+        ? props.people.filter((p) => p.profession === seg.word).length
+        : null;
+      const plural = n === null ? seg.plural : n !== 1;
+      const word = plural ? (seg.word === 'witch' ? 'witches' : `${seg.word}s`) : seg.word;
+      return n === null ? word : `${n} ${word}`;
+    }
     case 'column':
       // #C:n is 1-based ("column #C:1" is column A); the word "column" is in the source text.
       return seg.column >= 1 ? columnLetter(seg.column - 1) : rawToken(seg);

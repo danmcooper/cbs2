@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ManifestEntry } from '../../../scripts/manifest.mts';
-import { VARIANTS, type Variant } from '../../../shared/puzzle';
+import { VARIANTS, puzzleBillingOf, type Variant } from '../../../shared/puzzle';
 import { useFetch } from '../useFetch';
 import { filterEntries, groupByMonth, groupByYear, sortDifficulties, statusFor, type PuzzleStatus } from './archiveData';
 
@@ -122,7 +122,11 @@ export default function Archive() {
                       {source === 'both' && entry.variant !== 'real' && (
                         <span className="arch-source">{VARIANTS[entry.variant].label}</span>
                       )}
-                      <span className="arch-difficulty">{entry.difficulty}</span>
+                      {/* Difficulty for a real puzzle, board size for a Dan one
+                          — see `puzzleBillingOf`. The difficulty filter above
+                          still works on Dan entries; the label is just not the
+                          useful thing to print for them. */}
+                      <span className="arch-billing">{puzzleBillingOf(entry)}</span>
                       <span className={`arch-status status-${statusFor(entry.id).replace(' ', '-')}`}>
                         {statusFor(entry.id)}
                       </span>

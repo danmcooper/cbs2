@@ -40,6 +40,62 @@ export const NAMES: VocabPerson[] = [
   { name: 'Zola', gender: 'female' }, { name: 'Anton', gender: 'male' },
 ];
 
+/**
+ * Two more passes through the alphabet, held back the way `EXTRA_PROFESSIONS`
+ * is and for a stronger reason.
+ *
+ * `castOf` shuffles each initial's bucket and deals round-robin, so a name
+ * added to a bucket changes which name that bucket deals first — on every
+ * board, at every size. Appending these to `NAMES` outright would therefore
+ * re-roll the cast of every puzzle already generated, for no gain on any board
+ * that never needed them. Gated by `namesFor`, a board of 52 cards or fewer
+ * draws exactly the cast it always did, bit for bit.
+ *
+ * 104 names covers a 10x10, which is the largest board the rest of the
+ * pipeline will build.
+ */
+export const EXTRA_NAMES: VocabPerson[] = [
+  { name: 'Bea', gender: 'female' }, { name: 'Ciaran', gender: 'male' },
+  { name: 'Delia', gender: 'female' }, { name: 'Emre', gender: 'male' },
+  { name: 'Fenna', gender: 'female' }, { name: 'Gustav', gender: 'male' },
+  { name: 'Hilde', gender: 'female' }, { name: 'Ivo', gender: 'male' },
+  { name: 'Juno', gender: 'female' }, { name: 'Kai', gender: 'male' },
+  { name: 'Lise', gender: 'female' }, { name: 'Marek', gender: 'male' },
+  { name: 'Nadia', gender: 'female' }, { name: 'Oskar', gender: 'male' },
+  { name: 'Petra', gender: 'female' }, { name: 'Radek', gender: 'male' },
+  { name: 'Sanna', gender: 'female' }, { name: 'Tibor', gender: 'male' },
+  { name: 'Ursa', gender: 'female' }, { name: 'Vasco', gender: 'male' },
+  { name: 'Willa', gender: 'female' }, { name: 'Xander', gender: 'male' },
+  { name: 'Yelena', gender: 'female' }, { name: 'Zoran', gender: 'male' },
+  { name: 'Alma', gender: 'female' }, { name: 'Balint', gender: 'male' },
+  { name: 'Cora', gender: 'female' }, { name: 'Dario', gender: 'male' },
+  { name: 'Edda', gender: 'female' }, { name: 'Felix', gender: 'male' },
+  { name: 'Gwen', gender: 'female' }, { name: 'Henrik', gender: 'male' },
+  { name: 'Ilse', gender: 'female' }, { name: 'Jarek', gender: 'male' },
+  { name: 'Kaisa', gender: 'female' }, { name: 'Lasse', gender: 'male' },
+  { name: 'Mette', gender: 'female' }, { name: 'Nuno', gender: 'male' },
+  { name: 'Oona', gender: 'female' }, { name: 'Prosper', gender: 'male' },
+  { name: 'Renata', gender: 'female' }, { name: 'Sander', gender: 'male' },
+  { name: 'Thea', gender: 'female' }, { name: 'Umberto', gender: 'male' },
+  { name: 'Vanja', gender: 'female' }, { name: 'Wolfe', gender: 'male' },
+  { name: 'Ximena', gender: 'female' }, { name: 'Yannick', gender: 'male' },
+  { name: 'Zuza', gender: 'female' }, { name: 'Arno', gender: 'male' },
+  { name: 'Britt', gender: 'female' }, { name: 'Casper', gender: 'male' },
+];
+
+/** Every name that can appear in a file, for the same reason as `ALL_PROFESSIONS`. */
+export const ALL_NAMES: VocabPerson[] = [...NAMES, ...EXTRA_NAMES];
+
+/**
+ * The names a board of `size` cards may draw from: the original 52 unless the
+ * board has more cards than that, in which case all of them. The threshold is
+ * `NAMES.length` rather than a number written out, because the only thing that
+ * should ever pull in the extras is a board the base list cannot seat.
+ */
+export function namesFor(size: number): VocabPerson[] {
+  return size > NAMES.length ? ALL_NAMES : NAMES;
+}
+
 /** Keys and emoji taken from the profession face map the site already ships
  * (`site/src/faces.ts`); each pluralises with a plain -s. */
 export const PROFESSIONS: VocabProfession[] = [
@@ -80,8 +136,44 @@ export const EXTRA_PROFESSIONS: VocabProfession[] = [
   { key: 'superhero', male: '🦸‍♂️', female: '🦸' },
 ];
 
+/**
+ * A third tier, for boards past anything the daily schedule reaches.
+ *
+ * Twenty-one professions is plenty up to a 6x6, and badly short of enough on a
+ * 10x10: a hundred cards divided twenty-one ways is a cast of five to a
+ * profession, against roughly two on the source site's own board. Every
+ * profession clue then talks about a fifth of the grid at once, which is both
+ * duller to read and weaker to deduce from. Thirty-six brings a hundred cards
+ * back to under three each, near where the archive sits.
+ *
+ * All of these are in `site/src/faces.ts` already and all take a plain -s, so
+ * they render and pluralise without a special case. The source site itself
+ * dresses its cast up like this for themed puzzles, so it is not out of
+ * character — but they only come out on a board no daily puzzle can be.
+ */
+export const WIDE_PROFESSIONS: VocabProfession[] = [
+  { key: 'clown', male: '🤡', female: '🤡' },
+  { key: 'vampire', male: '🧛‍♂️', female: '🧛‍♀️' },
+  { key: 'zombie', male: '🧟', female: '🧟' },
+  { key: 'ghost', male: '👻', female: '👻' },
+  { key: 'skeleton', male: '💀', female: '💀' },
+  { key: 'bride', male: '👰', female: '👰' },
+  { key: 'santa', male: '🎅', female: '🤶' },
+  { key: 'snowboarder', male: '🏂', female: '🏂' },
+  { key: 'skier', male: '⛷️', female: '⛷️' },
+  { key: 'robot', male: '🤖', female: '🤖' },
+  { key: 'alien', male: '👽', female: '👽' },
+  { key: 'koala', male: '🐨', female: '🐨' },
+  { key: 'owl', male: '🦉', female: '🦉' },
+  { key: 'dolphin', male: '🐬', female: '🐬' },
+  { key: 'elephant', male: '🐘', female: '🐘' },
+];
+
+/** The base sixteen plus the extras: what a board bigger than the source's draws from. */
+export const WIDER_PROFESSIONS: VocabProfession[] = [...PROFESSIONS, ...EXTRA_PROFESSIONS];
+
 /** Every profession that can appear in a file, for lookups like `faceOf`. */
-export const ALL_PROFESSIONS: VocabProfession[] = [...PROFESSIONS, ...EXTRA_PROFESSIONS];
+export const ALL_PROFESSIONS: VocabProfession[] = [...WIDER_PROFESSIONS, ...WIDE_PROFESSIONS];
 
 /**
  * The board the source site ships is 4x5. At or below that, the cast is drawn
@@ -89,9 +181,18 @@ export const ALL_PROFESSIONS: VocabProfession[] = [...PROFESSIONS, ...EXTRA_PROF
  */
 export const BASE_PROFESSION_LIMIT = 20;
 
+/**
+ * The largest board that ever shipped here — the old 7x7 ceiling, and well
+ * above the 6x6 the weekday schedule tops out at. Only a deliberate one-off
+ * goes past it, so pinning the third tier here means no puzzle that exists or
+ * can be scheduled changes its cast.
+ */
+export const WIDE_PROFESSION_LIMIT = 49;
+
 /** The professions a board of `size` cards may draw from. */
 export function professionsFor(size: number): VocabProfession[] {
-  return size > BASE_PROFESSION_LIMIT ? ALL_PROFESSIONS : PROFESSIONS;
+  if (size > WIDE_PROFESSION_LIMIT) return ALL_PROFESSIONS;
+  return size > BASE_PROFESSION_LIMIT ? WIDER_PROFESSIONS : PROFESSIONS;
 }
 
 export function faceOf(profession: string, gender: 'male' | 'female'): string {

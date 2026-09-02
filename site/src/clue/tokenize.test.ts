@@ -21,15 +21,26 @@ describe('tokenizeClue', () => {
   it('tokenizes professions, columns, and between-pairs', () => {
     expect(tokenizeClue('The #PROF:coder and two #PROFS:chef in #C:2')).toEqual([
       { kind: 'text', text: 'The ' },
-      { kind: 'prof', word: 'coder', plural: false },
+      { kind: 'prof', word: 'coder', plural: false, counted: false },
       { kind: 'text', text: ' and two ' },
-      { kind: 'prof', word: 'chef', plural: true },
+      { kind: 'prof', word: 'chef', plural: true, counted: false },
       { kind: 'text', text: ' in ' },
       { kind: 'column', column: 2 },
     ]);
     expect(tokenizeClue('one innocent #BETWEEN:pair(7,11)')).toEqual([
       { kind: 'text', text: 'one innocent ' },
       { kind: 'between', a: 7, b: 11 },
+    ]);
+  });
+
+  // #PROFN is ours rather than the source's: the renderer emits it when a clue
+  // counts one profession's members, and only the site can say how many there
+  // are, because only the site has the board.
+  it('marks a #PROFN profession as counted so the site fills in the total', () => {
+    expect(tokenizeClue('Exactly 1 of #PROFN:cook has')).toEqual([
+      { kind: 'text', text: 'Exactly 1 of ' },
+      { kind: 'prof', word: 'cook', plural: true, counted: true },
+      { kind: 'text', text: ' has' },
     ]);
   });
 

@@ -35,6 +35,7 @@ describe('regenerateManifest', () => {
     expect(entries[0]).toEqual({
       date: '2026-07-03', slug: '2026-07-03', variant: 'real',
       id: 'bbbbbbbbbbbb', difficulty: 'Easy', title: 'Title 2026-07-03',
+      width: 1, height: 2,
     });
     expect(entries[1].variant).toBe('dan');
     const onDisk = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'));
