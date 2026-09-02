@@ -37,12 +37,35 @@ export function parseHash(hash: string): Route {
   return m ? { screen: 'play', slug: m[1] } : { screen: 'archive' };
 }
 
+/** Identifies a route, so a re-read that found no change can keep the old one. */
+const keyOf = (route: Route) => (route.screen === 'play' ? `play/${route.slug}` : route.screen);
+
 export function useRoute(): Route {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
   useEffect(() => {
-    const onChange = () => setRoute(parseHash(window.location.hash));
-    window.addEventListener('hashchange', onChange);
-    return () => window.removeEventListener('hashchange', onChange);
+    const sync = () =>
+      setRoute((prev) => {
+        const next = parseHash(window.location.hash);
+        return keyOf(prev) === keyOf(next) ? prev : next;
+      });
+    // `hashchange` is the event for a hash that changes while the page is
+    // watching. A tab on a phone is often not watching: it comes back from the
+    // back/forward cache, or the browser hands an incoming link to a tab it had
+    // frozen, and the page can find itself showing one route at an address that
+    // says another. Neither of those fires `hashchange`; `pageshow` covers the
+    // first and `visibilitychange` the second, so re-read on all three.
+    //
+    // Re-reading is only safe because it is cheap and idempotent: a parse and,
+    // when the route has not moved, the same object back, so a tab that is
+    // merely being switched to does not re-render or lose its game state.
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('pageshow', sync);
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      window.removeEventListener('hashchange', sync);
+      window.removeEventListener('pageshow', sync);
+      document.removeEventListener('visibilitychange', sync);
+    };
   }, []);
   return route;
 }
