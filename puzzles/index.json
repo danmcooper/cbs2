@@ -1,5 +1,25 @@
 [
   {
+    "date": "2026-09-05",
+    "slug": "2026-09-05",
+    "variant": "real",
+    "id": "fabf1225a6ad",
+    "difficulty": "Hard",
+    "title": "One innocent is not getting much sympathy",
+    "width": 4,
+    "height": 5
+  },
+  {
+    "date": "2026-09-05",
+    "slug": "2026-09-05-dan",
+    "variant": "dan",
+    "id": "a096456075e7",
+    "difficulty": "Tricky",
+    "title": "Sunday Inventory",
+    "width": 5,
+    "height": 6
+  },
+  {
     "date": "2026-09-04",
     "slug": "2026-09-04",
     "variant": "real",
