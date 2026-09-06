@@ -1,5 +1,25 @@
 [
   {
+    "date": "2026-09-06",
+    "slug": "2026-09-06",
+    "variant": "real",
+    "id": "4b6a9de3f21b",
+    "difficulty": "Hard",
+    "title": "One criminal is phenomenal at picking apples",
+    "width": 4,
+    "height": 5
+  },
+  {
+    "date": "2026-09-06",
+    "slug": "2026-09-06-dan",
+    "variant": "dan",
+    "id": "ac85c2af2181",
+    "difficulty": "Hard",
+    "title": "Whose Coat Is on the Hook",
+    "width": 6,
+    "height": 6
+  },
+  {
     "date": "2026-09-05",
     "slug": "2026-09-05",
     "variant": "real",
