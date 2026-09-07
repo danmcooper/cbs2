@@ -1,5 +1,25 @@
 [
   {
+    "date": "2026-09-07",
+    "slug": "2026-09-07",
+    "variant": "real",
+    "id": "eb9b08fd8839",
+    "difficulty": "Easy",
+    "title": "The criminals have read different rules",
+    "width": 4,
+    "height": 5
+  },
+  {
+    "date": "2026-09-07",
+    "slug": "2026-09-07-dan",
+    "variant": "dan",
+    "id": "929805c84fa1",
+    "difficulty": "Tricky",
+    "title": "Twenty Faces, Five Lies",
+    "width": 3,
+    "height": 4
+  },
+  {
     "date": "2026-09-06",
     "slug": "2026-09-06",
     "variant": "real",
